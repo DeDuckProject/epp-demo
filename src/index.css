@@ -1,3 +1,7 @@
+@import './styles/styles.css';
+
+/* Any additional global styles can go here */
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
