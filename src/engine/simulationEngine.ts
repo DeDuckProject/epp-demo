@@ -1,4 +1,4 @@
-import { DensityMatrix, QubitPair, SimulationParameters, SimulationState } from './types';
+import { DensityMatrix, QubitPair, SimulationParameters, SimulationState, PurificationStep } from './types';
 import { calculateBellBasisFidelity } from './mathUtils';
 import { createNoisyEPR } from './quantumStates';
 import { depolarize, bilateralCNOT } from './operations';
@@ -30,7 +30,8 @@ export class SimulationEngine {
     return {
       pairs,
       round: 0,
-      complete: false
+      complete: false,
+      purificationStep: 'initial'
     };
   }
   
@@ -44,41 +45,83 @@ export class SimulationEngine {
         fidelity: calculateBellBasisFidelity(wernerMatrix)
       };
     });
+    
+    this.state.purificationStep = 'twirled';
   }
   
-  // Step 2 & 3: Apply Bilateral CNOT and measurement in parallel
-  private applyPurificationRound(): void {
+  // Step 2: Apply Bilateral CNOT
+  private applyBilateralCNOT(): void {
     if (this.state.pairs.length < 2) {
       this.state.complete = true;
+      this.state.purificationStep = 'completed';
       return;
     }
     
-    // First round requires depolarization to Werner form
-    if (this.state.round === 0) {
-      this.depolarizeAllPairs();
-    }
+    const controlPairs: QubitPair[] = [];
+    const targetPairs: QubitPair[] = [];
     
     // Group pairs for purification
-    const newPairs: QubitPair[] = [];
+    for (let i = 0; i < this.state.pairs.length; i++) {
+      if (i % 2 === 0) {
+        controlPairs.push(this.state.pairs[i]);
+      } else {
+        targetPairs.push(this.state.pairs[i]);
+      }
+    }
     
-    // Process pairs two at a time
-    for (let i = 0; i < this.state.pairs.length - 1; i += 2) {
-      const controlPair = this.state.pairs[i];
-      const targetPair = this.state.pairs[i + 1];
+    this.state.pendingPairs = {
+      controlPairs,
+      targetPairs
+    };
+    
+    this.state.purificationStep = 'cnot';
+  }
+  
+  // Step 3: Perform measurement
+  private performMeasurement(): void {
+    if (!this.state.pendingPairs) {
+      console.error("No pending pairs to measure");
+      return;
+    }
+    
+    const { controlPairs, targetPairs } = this.state.pendingPairs;
+    const results = [];
+    
+    // Process pairs
+    for (let i = 0; i < Math.min(controlPairs.length, targetPairs.length); i++) {
+      const controlPair = controlPairs[i];
+      const targetPair = targetPairs[i];
       
       // Apply bilateral CNOT
       const result = bilateralCNOT(controlPair.densityMatrix, targetPair.densityMatrix);
       
-      // If measurement successful, keep the improved control pair
-      if (result.afterMeasurement.successful) {
-        const improvedMatrix = result.afterMeasurement.controlPair;
-        const newFidelity = calculateBellBasisFidelity(improvedMatrix);
-        
-        newPairs.push({
+      results.push({
+        control: {
           id: controlPair.id,
-          densityMatrix: improvedMatrix,
-          fidelity: newFidelity
-        });
+          densityMatrix: result.afterMeasurement.controlPair,
+          fidelity: calculateBellBasisFidelity(result.afterMeasurement.controlPair)
+        },
+        successful: result.afterMeasurement.successful
+      });
+    }
+    
+    this.state.pendingPairs.results = results;
+    this.state.purificationStep = 'measured';
+  }
+  
+  // Step 4: Discard failed pairs
+  private discardFailedPairs(): void {
+    if (!this.state.pendingPairs || !this.state.pendingPairs.results) {
+      console.error("No measurement results to process");
+      return;
+    }
+    
+    const newPairs: QubitPair[] = [];
+    
+    // Keep only successful pairs
+    for (const result of this.state.pendingPairs.results) {
+      if (result.successful) {
+        newPairs.push(result.control);
       }
     }
     
@@ -88,20 +131,64 @@ export class SimulationEngine {
     }
     
     this.state.pairs = newPairs;
+    this.state.pendingPairs = undefined;
+    this.state.purificationStep = 'completed';
     this.state.round++;
     
     // Check if we've reached our target or can't purify further
     if (this.state.pairs.length < 2 || 
         (this.state.pairs.length > 0 && this.state.pairs[0].fidelity >= this.params.targetFidelity)) {
       this.state.complete = true;
+    } else {
+      // Reset to initial state for the next round
+      this.state.purificationStep = 'initial';
     }
   }
   
   // Public methods
   
+  public nextStep(): SimulationState {
+    if (this.state.complete) {
+      return this.getCurrentState();
+    }
+    
+    switch (this.state.purificationStep) {
+      case 'initial':
+        this.depolarizeAllPairs();
+        break;
+      case 'twirled':
+        this.applyBilateralCNOT();
+        break;
+      case 'cnot':
+        this.performMeasurement();
+        break;
+      case 'measured':
+        this.discardFailedPairs();
+        break;
+      case 'completed':
+        // Should not happen, but handle it gracefully
+        this.state.purificationStep = 'initial';
+        break;
+    }
+    
+    return this.getCurrentState();
+  }
+  
   public step(): SimulationState {
+    // Complete a full round of purification
     if (!this.state.complete) {
-      this.applyPurificationRound();
+      if (this.state.purificationStep === 'initial') {
+        this.depolarizeAllPairs();
+      }
+      if (this.state.purificationStep === 'twirled') {
+        this.applyBilateralCNOT();
+      }
+      if (this.state.purificationStep === 'cnot') {
+        this.performMeasurement();
+      }
+      if (this.state.purificationStep === 'measured') {
+        this.discardFailedPairs();
+      }
     }
     return this.getCurrentState();
   }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { SimulationParameters, SimulationState } from '../engine/types';
 import { SimulationController } from '../controller/simulationController';
+import { SimulationState, SimulationParameters } from '../engine/types';
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
 
@@ -8,8 +8,8 @@ const App: React.FC = () => {
   const [state, setState] = useState<SimulationState | null>(null);
   const [controller, setController] = useState<SimulationController | null>(null);
   
-  // Initialize the simulation controller
   useEffect(() => {
+    // Initialize controller with default parameters
     const initialParams: SimulationParameters = {
       initialPairs: 10,
       noiseParameter: 0.3,
@@ -18,83 +18,39 @@ const App: React.FC = () => {
     
     const newController = new SimulationController(
       initialParams,
-      (newState) => setState(newState)
+      (newState: SimulationState) => setState(newState)
     );
     
     setController(newController);
-    
-    // Cleanup function
-    return () => {
-      // No cleanup needed for now
-    };
   }, []);
   
-  // Handler functions
-  const handleRunStep = () => {
-    controller?.step();
-  };
-  
-  const handleRunAll = () => {
-    controller?.runUntilComplete();
-  };
-  
-  const handleReset = () => {
-    controller?.reset();
-  };
-  
-  const handleParametersChanged = (params: SimulationParameters) => {
-    controller?.updateParameters(params);
-  };
-  
-  // If controller or state is not yet initialized, show loading
   if (!controller || !state) {
     return <div>Loading simulation...</div>;
   }
   
   return (
-    <div className="quantum-purification-app">
+    <div className="app-container">
       <header>
-        <h1>Quantum Purification Simulator</h1>
-        <h2>BBPSSW Protocol</h2>
+        <h1>Quantum Entanglement Purification Simulator</h1>
       </header>
       
-      <div className="main-container">
-        <ControlPanel
-          onRunStep={handleRunStep}
-          onRunAll={handleRunAll}
-          onReset={handleReset}
-          onParametersChanged={handleParametersChanged}
-          isComplete={state.complete}
-          currentRound={state.round}
-          pairsRemaining={state.pairs.length}
-        />
-        
-        <div className="simulation-display">
-          <h2>EPR Pairs ({state.pairs.length})</h2>
-          <EnsembleDisplay pairs={state.pairs} />
+      <main>
+        <div className="simulation-area">
+          <EnsembleDisplay pairs={state.pairs} pendingPairs={state.pendingPairs} />
           
-          {state.pairs.length > 0 && (
-            <div className="fidelity-info">
-              <h3>Current Best Fidelity: {state.pairs[0].fidelity.toFixed(4)}</h3>
-              {state.complete && (
-                <div className="completion-message">
-                  Purification complete! Final fidelity: {state.pairs[0].fidelity.toFixed(4)}
-                </div>
-              )}
-            </div>
-          )}
-          
-          {state.pairs.length === 0 && (
-            <div className="completion-message error">
-              All pairs were discarded during purification. Try again with more initial pairs or less noise.
-            </div>
-          )}
+          <ControlPanel
+            onNextStep={() => controller.nextStep()}
+            onCompleteRound={() => controller.completeRound()}
+            onRunAll={() => controller.runUntilComplete()}
+            onReset={() => controller.reset()}
+            onParametersChanged={(params) => controller.updateParameters(params)}
+            isComplete={state.complete}
+            currentRound={state.round}
+            currentStep={state.purificationStep}
+            pairsRemaining={state.pairs.length}
+          />
         </div>
-      </div>
-      
-      <footer>
-        <p>BBPSSW Protocol: Bennett, Brassard, Popescu, Schumacher, Smolin, Wootters (1996)</p>
-      </footer>
+      </main>
     </div>
   );
 };

@@ -1,23 +1,27 @@
 import React, { useState } from 'react';
-import { SimulationParameters } from '../engine/types';
+import { SimulationParameters, PurificationStep } from '../engine/types';
 
 interface ControlPanelProps {
-  onRunStep: () => void;
+  onNextStep: () => void;
+  onCompleteRound: () => void;
   onRunAll: () => void;
   onReset: () => void;
   onParametersChanged: (params: SimulationParameters) => void;
   isComplete: boolean;
   currentRound: number;
+  currentStep: PurificationStep;
   pairsRemaining: number;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
-  onRunStep,
+  onNextStep,
+  onCompleteRound,
   onRunAll,
   onReset,
   onParametersChanged,
   isComplete,
   currentRound,
+  currentStep,
   pairsRemaining
 }) => {
   const [initialPairs, setInitialPairs] = useState(10);
@@ -31,6 +35,22 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       targetFidelity
     });
   };
+  
+  // Helper function to get the name of the current/next step
+  const getStepName = (step: PurificationStep): string => {
+    switch(step) {
+      case 'initial': return 'Twirl';
+      case 'twirled': return 'Apply CNOT';
+      case 'cnot': return 'Measure';
+      case 'measured': return 'Process Results';
+      case 'completed': return 'Start Next Round';
+    }
+  };
+  
+  // Get next step button text
+  const nextStepText = isComplete 
+    ? 'Complete' 
+    : `Next Step: ${getStepName(currentStep)}`;
   
   return (
     <div className="control-panel">
@@ -80,14 +100,20 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       
       <div className="simulation-controls">
         <h3>Simulation</h3>
-        <button onClick={onRunStep} disabled={isComplete}>Next Step</button>
+        <button onClick={onNextStep} disabled={isComplete}>
+          {nextStepText}
+        </button>
+        <button onClick={onCompleteRound} disabled={isComplete}>
+          Complete Round
+        </button>
         <button onClick={onRunAll} disabled={isComplete}>Run All</button>
         <button onClick={onReset}>Reset</button>
       </div>
       
       <div className="status-section">
         <h3>Status</h3>
-        <p>Current Round: {currentRound}</p>
+        <p>Distillation Round: {currentRound}</p>
+        <p>Current Step: {currentStep}</p>
         <p>Pairs Remaining: {pairsRemaining}</p>
         <p>Status: {isComplete ? 'Complete' : 'In Progress'}</p>
       </div>

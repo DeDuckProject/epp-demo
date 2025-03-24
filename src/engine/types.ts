@@ -17,8 +17,19 @@ export type SimulationParameters = {
   targetFidelity: number;  // Purification target
 };
 
-export type SimulationState = {
+export type PurificationStep = 'initial' | 'twirled' | 'cnot' | 'measured' | 'completed';
+
+export interface SimulationState {
   pairs: QubitPair[];
   round: number;
   complete: boolean;
-}; 
+  purificationStep: PurificationStep;  // Track which step we're on within a round
+  pendingPairs?: { // Store intermediate state during a round
+    controlPairs: QubitPair[];
+    targetPairs: QubitPair[];
+    results?: {
+      control: QubitPair;
+      successful: boolean;
+    }[];
+  };
+} 

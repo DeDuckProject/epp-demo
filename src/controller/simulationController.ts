@@ -13,6 +13,22 @@ export class SimulationController {
     this.onStateChange(this.engine.getCurrentState());
   }
   
+  public nextStep(): void {
+    const newState = this.engine.nextStep();
+    this.onStateChange(newState);
+  }
+  
+  public completeRound(): void {
+    let state = this.engine.getCurrentState();
+    
+    // If we're already at the completed step, this will do nothing
+    while (!state.complete && state.purificationStep !== 'completed') {
+      state = this.engine.nextStep();
+    }
+    
+    this.onStateChange(state);
+  }
+  
   public step(): void {
     const newState = this.engine.step();
     this.onStateChange(newState);
