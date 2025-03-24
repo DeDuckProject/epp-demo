@@ -1,7 +1,7 @@
 import { DensityMatrix, QubitPair, SimulationParameters, SimulationState, PurificationStep } from './types';
 import { calculateBellBasisFidelity } from './mathUtils';
 import { createNoisyEPR } from './quantumStates';
-import { depolarize, bilateralCNOT } from './operations';
+import { depolarize, bilateralCNOT, exchangePsiMinusPhiPlus } from './operations';
 
 export class SimulationEngine {
   private params: SimulationParameters;
@@ -49,7 +49,21 @@ export class SimulationEngine {
     this.state.purificationStep = 'twirled';
   }
   
-  // Step 2: Apply Bilateral CNOT
+  // Step 2: Exchange |Ψ⁻⟩ and |Φ⁺⟩ components
+  private exchangePsiPhiComponents(): void {
+    this.state.pairs = this.state.pairs.map(pair => {
+      const exchangedMatrix = exchangePsiMinusPhiPlus(pair.densityMatrix);
+      return {
+        ...pair,
+        densityMatrix: exchangedMatrix,
+        fidelity: calculateBellBasisFidelity(exchangedMatrix)
+      };
+    });
+    
+    this.state.purificationStep = 'exchanged';
+  }
+  
+  // Step 3: Apply Bilateral CNOT
   private applyBilateralCNOT(): void {
     if (this.state.pairs.length < 2) {
       this.state.complete = true;
@@ -77,7 +91,7 @@ export class SimulationEngine {
     this.state.purificationStep = 'cnot';
   }
   
-  // Step 3: Perform measurement
+  // Step 4: Perform measurement
   private performMeasurement(): void {
     if (!this.state.pendingPairs) {
       console.error("No pending pairs to measure");
@@ -109,7 +123,7 @@ export class SimulationEngine {
     this.state.purificationStep = 'measured';
   }
   
-  // Step 4: Discard failed pairs
+  // Step 5: Discard failed pairs
   private discardFailedPairs(): void {
     if (!this.state.pendingPairs || !this.state.pendingPairs.results) {
       console.error("No measurement results to process");
@@ -157,6 +171,9 @@ export class SimulationEngine {
         this.depolarizeAllPairs();
         break;
       case 'twirled':
+        this.exchangePsiPhiComponents();
+        break;
+      case 'exchanged':
         this.applyBilateralCNOT();
         break;
       case 'cnot':
@@ -181,6 +198,9 @@ export class SimulationEngine {
         this.depolarizeAllPairs();
       }
       if (this.state.purificationStep === 'twirled') {
+        this.exchangePsiPhiComponents();
+      }
+      if (this.state.purificationStep === 'exchanged') {
         this.applyBilateralCNOT();
       }
       if (this.state.purificationStep === 'cnot') {

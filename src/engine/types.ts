@@ -17,7 +17,7 @@ export type SimulationParameters = {
   targetFidelity: number;  // Purification target
 };
 
-export type PurificationStep = 'initial' | 'twirled' | 'cnot' | 'measured' | 'completed';
+export type PurificationStep = 'initial' | 'twirled' | 'exchanged' | 'cnot' | 'measured' | 'completed';
 
 export interface SimulationState {
   pairs: QubitPair[];

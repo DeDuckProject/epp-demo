@@ -40,10 +40,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   const getStepName = (step: PurificationStep): string => {
     switch(step) {
       case 'initial': return 'Twirl';
-      case 'twirled': return 'Apply CNOT';
+      case 'twirled': return 'Exchange States';
+      case 'exchanged': return 'Apply CNOT';
       case 'cnot': return 'Measure';
       case 'measured': return 'Process Results';
       case 'completed': return 'Start Next Round';
+      default: return `Unknown step: ${step}`;
     }
   };
   

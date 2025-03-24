@@ -137,7 +137,9 @@ export const transformToComputationalBasis = (rho: DensityMatrix): DensityMatrix
   return matrixMultiply(temp, Udagger);
 };
 
-// Calculate fidelity in Bell basis - it's simply the first diagonal element
+// Calculate fidelity in Bell basis - it's the element corresponding to our target state
 export const calculateBellBasisFidelity = (rho: DensityMatrix): number => {
+  // After exchange, our target state is |Φ⁺⟩ (index 0)
+  // Before exchange, our target state is |Ψ⁻⟩ (index 3)
   return rho[0][0].real;
 }; 

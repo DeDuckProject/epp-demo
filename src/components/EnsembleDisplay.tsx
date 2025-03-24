@@ -4,6 +4,14 @@ import QubitPair from './QubitPair';
 
 interface EnsembleDisplayProps {
   pairs: QubitPairType[];
+  pendingPairs?: {
+    controlPairs: QubitPair[];
+    targetPairs: QubitPair[];
+    results?: {
+      control: QubitPair;
+      successful: boolean;
+    }[];
+  };
 }
 
 const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs }) => {
