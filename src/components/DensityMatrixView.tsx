@@ -59,12 +59,6 @@ const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ matrix }) => {
                 <td 
                   key={cellIdx}
                   className={rowIdx !== cellIdx ? 'off-diagonal' : 'diagonal'}
-                  style={{ 
-                    opacity: Math.max(0.1, Math.abs(cell.real) + Math.abs(cell.imag)),
-                    color: rowIdx !== cellIdx && (Math.abs(cell.real) > 0.001 || Math.abs(cell.imag) > 0.001)
-                      ? 'red'  // Highlight off-diagonal elements
-                      : 'black'
-                  }}
                 >
                   {formatComplex(cell)}
                 </td>
