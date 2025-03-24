@@ -123,7 +123,7 @@ export class SimulationEngine {
     this.state.purificationStep = 'measured';
   }
   
-  // Step 5: Discard failed pairs
+  // Step 5: Discard failed pairs and prepare for next round
   private discardFailedPairs(): void {
     if (!this.state.pendingPairs || !this.state.pendingPairs.results) {
       console.error("No measurement results to process");
@@ -135,7 +135,16 @@ export class SimulationEngine {
     // Keep only successful pairs
     for (const result of this.state.pendingPairs.results) {
       if (result.successful) {
-        newPairs.push(result.control);
+        // First swap back |Φ⁺⟩ and |Ψ⁻⟩
+        const swappedBack = exchangePsiMinusPhiPlus(result.control.densityMatrix);
+        // Then twirl to create Werner state with |Ψ⁻⟩ as target
+        const wernerState = depolarize(swappedBack);
+        
+        newPairs.push({
+          id: result.control.id,
+          densityMatrix: wernerState,
+          fidelity: calculateBellBasisFidelity(wernerState)
+        });
       }
     }
     
