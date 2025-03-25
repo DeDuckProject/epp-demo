@@ -5,10 +5,10 @@ import QubitPair from './QubitPair';
 interface EnsembleDisplayProps {
   pairs: QubitPairType[];
   pendingPairs?: {
-    controlPairs: QubitPair[];
-    targetPairs: QubitPair[];
+    controlPairs: QubitPairType[];
+    targetPairs: QubitPairType[];
     results?: {
-      control: QubitPair;
+      control: QubitPairType;
       successful: boolean;
     }[];
   };
