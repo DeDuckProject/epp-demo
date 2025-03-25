@@ -32,7 +32,7 @@ const QubitPair: React.FC<QubitPairProps> = ({ pair, location }) => {
       onMouseLeave={() => setShowMatrix(false)}
     >
       <div className="qubit-info">
-        <div className="qubit-id">Q{pair.id}</div>
+        {/* <div className="qubit-id">Q{pair.id}</div> */}
         <div className="qubit-fidelity">{pair.fidelity.toFixed(3)}</div>
       </div>
       
