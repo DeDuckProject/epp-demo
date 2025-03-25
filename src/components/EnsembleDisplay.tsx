@@ -12,16 +12,41 @@ interface EnsembleDisplayProps {
       successful: boolean;
     }[];
   };
+  purificationStep: string;
 }
 
-const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs }) => {
+const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, purificationStep }) => {
+  // Determine which pairs will be discarded in the measured step
+  const willBeDiscarded = (pair: QubitPairType): boolean => {
+    if (purificationStep !== 'measured' || !pendingPairs || !pendingPairs.results) {
+      return false;
+    }
+    
+    // Target pairs are always discarded
+    if (pendingPairs.targetPairs.some(p => p.id === pair.id)) {
+      return true;
+    }
+    
+    // Failed control pairs are discarded
+    const matchingResult = pendingPairs.results.find(result => 
+      result.control.id === pair.id
+    );
+    
+    return matchingResult ? !matchingResult.successful : false;
+  };
+  
   return (
     <div className="ensemble-display">
       <div className="participant-section">
         <div className="participant-label alice-label">Alice</div>
         <div className="pair-row alice-row">
           {pairs.map(pair => (
-            <QubitPair key={pair.id} pair={pair} location="alice" />
+            <QubitPair 
+              key={pair.id} 
+              pair={pair} 
+              location="alice" 
+              willBeDiscarded={willBeDiscarded(pair)}
+            />
           ))}
         </div>
       </div>
@@ -30,7 +55,12 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs }) => {
         <div className="participant-label bob-label">Bob</div>
         <div className="pair-row bob-row">
           {pairs.map(pair => (
-            <QubitPair key={pair.id} pair={pair} location="bob" />
+            <QubitPair 
+              key={pair.id} 
+              pair={pair} 
+              location="bob" 
+              willBeDiscarded={willBeDiscarded(pair)}
+            />
           ))}
         </div>
       </div>
@@ -40,7 +70,7 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs }) => {
         {pairs.map((pair, index) => (
           <div 
             key={`line-${pair.id}`} 
-            className="entanglement-line"
+            className={`entanglement-line ${willBeDiscarded(pair) ? 'will-be-discarded' : ''}`}
             style={{ 
               left: `${50 + index * 100}px`,
             }}

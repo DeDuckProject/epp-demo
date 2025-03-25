@@ -5,25 +5,32 @@ import DensityMatrixView from './DensityMatrixView';
 interface QubitPairProps {
   pair: QubitPairType;
   location: 'alice' | 'bob';
+  willBeDiscarded?: boolean; // New prop to indicate pairs that will be discarded
 }
 
-const QubitPair: React.FC<QubitPairProps> = ({ pair, location }) => {
+const QubitPair: React.FC<QubitPairProps> = ({ pair, location, willBeDiscarded = false }) => {
   const [showMatrix, setShowMatrix] = useState(false);
   
   // Map fidelity to a more vibrant color gradient
   const getFidelityColor = () => {
+    if (willBeDiscarded) {
+      return 'rgba(180, 180, 180, 0.5)'; // Grey color for pairs to be discarded
+    }
     const hue = Math.floor(120 * pair.fidelity); // 0 is red, 120 is green
     return `hsla(${hue}, 80%, 60%, 0.8)`;
   };
   
   // Calculate an opacity/glow based on fidelity
   const getBorderGlow = () => {
+    if (willBeDiscarded) {
+      return 'none'; // No glow for pairs to be discarded
+    }
     return `0 0 ${Math.floor(pair.fidelity * 15)}px rgba(46, 204, 113, ${pair.fidelity.toFixed(1)})`;
   };
   
   return (
     <div 
-      className={`qubit-pair ${location}`}
+      className={`qubit-pair ${location} ${willBeDiscarded ? 'will-be-discarded' : ''}`}
       style={{ 
         boxShadow: getBorderGlow(),
         border: `3px solid ${getFidelityColor()}`

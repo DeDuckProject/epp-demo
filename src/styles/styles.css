@@ -466,4 +466,29 @@ footer {
 
 .pairs-container::-webkit-scrollbar-thumb:hover {
   background-color: #bbb;
+}
+
+/* Add new styles for greyed out pairs */
+.qubit-pair.will-be-discarded {
+  opacity: 0.5;
+  background: linear-gradient(135deg, #cccccc, #dddddd) !important;
+  border-color: #999 !important;
+  box-shadow: none !important;
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+}
+
+.qubit-pair.will-be-discarded .qubit-fidelity {
+  background: rgba(180, 180, 180, 0.7);
+  color: #666;
+}
+
+.qubit-pair.will-be-discarded:hover {
+  transform: scale(1.05);
+  opacity: 0.6;
+}
+
+.entanglement-line.will-be-discarded {
+  background: rgba(180, 180, 180, 0.3);
+  opacity: 0.5;
 } 

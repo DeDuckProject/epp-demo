@@ -36,7 +36,11 @@ const App: React.FC = () => {
       
       <main>
         <div className="simulation-area">
-          <EnsembleDisplay pairs={state.pairs} pendingPairs={state.pendingPairs} />
+          <EnsembleDisplay 
+            pairs={state.pairs} 
+            pendingPairs={state.pendingPairs} 
+            purificationStep={state.purificationStep} 
+          />
           
           <ControlPanel
             onNextStep={() => controller.nextStep()}
