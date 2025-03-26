@@ -195,7 +195,7 @@ button:disabled {
 
 .alice-label {
   background-color: #f8d7da;
-  color: #721c24;
+  color: #0c5460;
 }
 
 .bob-label {
@@ -251,7 +251,7 @@ button:disabled {
 }
 
 .qubit-pair.alice {
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
 }
 
 .qubit-pair.bob {
