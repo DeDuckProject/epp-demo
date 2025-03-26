@@ -266,6 +266,10 @@ button:disabled {
   border-color: #3498db;
 }
 
+.pair-role{
+  height: 40px;
+}
+
 .qubit-info {
   text-align: center;
   display: flex;

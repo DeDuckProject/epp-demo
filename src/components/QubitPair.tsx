@@ -5,10 +5,20 @@ import DensityMatrixView from './DensityMatrixView';
 interface QubitPairProps {
   pair: QubitPairType;
   location: 'alice' | 'bob';
-  willBeDiscarded?: boolean; // New prop to indicate pairs that will be discarded
+  willBeDiscarded?: boolean;
+  pairRole?: 'control' | 'target'; // New prop to indicate pair role
+  partnerId?: number; // New prop to indicate which pair it's connected to
+  purificationStep: string; // Add this to show connection at the right steps
 }
 
-const QubitPair: React.FC<QubitPairProps> = ({ pair, location, willBeDiscarded = false }) => {
+const QubitPair: React.FC<QubitPairProps> = ({ 
+  pair, 
+  location, 
+  willBeDiscarded = false,
+  pairRole,
+  partnerId,
+  purificationStep
+}) => {
   const [showMatrix, setShowMatrix] = useState(false);
   
   // Map fidelity to a more vibrant color gradient
@@ -27,20 +37,34 @@ const QubitPair: React.FC<QubitPairProps> = ({ pair, location, willBeDiscarded =
     }
     return `0 0 ${Math.floor(pair.fidelity * 15)}px rgba(46, 204, 113, ${pair.fidelity.toFixed(1)})`;
   };
+
+  // Determine if this pair should show connection
+  const showConnection = ['cnot', 'measured', 'completed'].includes(purificationStep) && pairRole;
+  
+  // Get class for role-based styling
+  const getRoleClass = () => {
+    if (!pairRole) return '';
+    return pairRole === 'control' ? 'control-pair' : 'target-pair';
+  };
   
   return (
     <div 
-      className={`qubit-pair ${location} ${willBeDiscarded ? 'will-be-discarded' : ''}`}
+      className={`qubit-pair ${location} ${willBeDiscarded ? 'will-be-discarded' : ''} ${showConnection ? getRoleClass() : ''}`}
       style={{ 
         boxShadow: getBorderGlow(),
         border: `3px solid ${getFidelityColor()}`
       }}
       onMouseEnter={() => setShowMatrix(true)}
       onMouseLeave={() => setShowMatrix(false)}
+      data-pair-id={pair.id}
+      data-partner-id={partnerId}
     >
       <div className="qubit-info">
         {/* <div className="qubit-id">Q{pair.id}</div> */}
         <div className="qubit-fidelity">{pair.fidelity.toFixed(3)}</div>
+        {pairRole && showConnection && (
+          <div className={`pair-role ${pairRole}`}/>
+        )}
       </div>
       
       {showMatrix && (
