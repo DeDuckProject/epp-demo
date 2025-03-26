@@ -50,7 +50,7 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
           ))}
         </div>
       </div>
-      
+      <div className="qubit-pair-connections"></div>
       <div className="participant-section">
         <div className="participant-label bob-label">Bob</div>
         <div className="pair-row bob-row">
@@ -65,14 +65,16 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
         </div>
       </div>
       
-      {/* Add entanglement lines */}
+      {/* Update entanglement lines */}
       <div className="pair-connections">
         {pairs.map((pair, index) => (
           <div 
             key={`line-${pair.id}`} 
             className={`entanglement-line ${willBeDiscarded(pair) ? 'will-be-discarded' : ''}`}
             style={{ 
-              left: `${50 + index * 100}px`,
+              left: `${117 + index * 76}px`,  // 25px offset to center on qubit + 70px spacing (50px width + 20px gap)
+              top: '75px', // Position between the two rows
+              height: '30px' // Connect the vertical space between rows
             }}
           />
         ))}

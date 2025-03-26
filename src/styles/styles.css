@@ -223,14 +223,15 @@ button:disabled {
   pointer-events: none;
 }
 
+.qubit-pair-connections{
+  height: 20px;
+}
+
 /* Entanglement lines */
 .entanglement-line {
   position: absolute;
   width: 2px;
-  height: 40px;
   background: rgba(52, 152, 219, 0.5);
-  left: 30px;
-  top: 30px;
 }
 
 /* Qubit Pair - Updated to be smaller and maintain circular shape */
