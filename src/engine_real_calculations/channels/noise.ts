@@ -38,7 +38,7 @@ export function applyDepolarizing(
 }
 
 /**
- * Dephasing (phase-flip) channel on a single qubit with probability p.
+ * Dephasing (phase-flip) channel on a single qubit with probability p using 2 Kraus operators
  */
 export function applyDephasing(
   rho: DensityMatrix,
@@ -47,13 +47,12 @@ export function applyDephasing(
 ): DensityMatrix {
   const n = Math.log2(rho.rows);
   const dim = rho.rows;
-  const sqrt = Math.sqrt;
   const I = Matrix.identity(dim);
   const Z = pauliOperator(n, [qubit], ['Z']);
-  const K0 = I.scale(ComplexNum.fromReal(sqrt(1 - p)));
-  const K1 = I.add(Z).scale(ComplexNum.fromReal(Math.sqrt(p) / 2));
-  const K2 = I.add(Z.scale(ComplexNum.fromReal(-1))).scale(ComplexNum.fromReal(Math.sqrt(p) / 2));
-  return applyKraus(rho, [K0, K1, K2]);
+  // Using 2 Kraus operators: K0 = sqrt(1 - p/2)*I, K1 = sqrt(p/2)*Z
+  const K0 = I.scale(ComplexNum.fromReal(Math.sqrt(1 - p / 2)));
+  const K1 = Z.scale(ComplexNum.fromReal(Math.sqrt(p / 2)));
+  return applyKraus(rho, [K0, K1]);
 }
 
 export const _testing = { applyKraus }; 
