@@ -3,11 +3,6 @@ import { measureQubit } from './measure';
 import { DensityMatrix } from '../matrix/densityMatrix';
 import { ComplexNum } from '../types/complex';
 
-// Mock Math.random
-vi.mock('Math', () => ({
-  random: vi.fn()
-}));
-
 describe('Quantum Measurement', () => {
   test('measurement of |0⟩ state gives deterministic result', () => {
     // State |0⟩⟨0|
@@ -17,7 +12,7 @@ describe('Quantum Measurement', () => {
     ]);
     
     // Set random to return 0.3 (should give outcome 0)
-    vi.mocked(Math.random).mockReturnValue(0.3);
+    vi.spyOn(Math, 'random').mockReturnValue(0.3);
     
     const result = measureQubit(zero, 0);
     expect(result.outcome).toBe(0);
@@ -32,7 +27,7 @@ describe('Quantum Measurement', () => {
     ]);
     
     // Set random to return 0.3 (should give outcome 1)
-    vi.mocked(Math.random).mockReturnValue(0.3);
+    vi.spyOn(Math, 'random').mockReturnValue(0.3);
     
     const result = measureQubit(one, 0);
     expect(result.outcome).toBe(1);
@@ -47,13 +42,13 @@ describe('Quantum Measurement', () => {
     ]);
     
     // Test outcome 0
-    vi.mocked(Math.random).mockReturnValue(0.5);  // 0.5 < 0.7, so outcome is 0
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);  // 0.5 < 0.7, so outcome is 0
     let result = measureQubit(mixed, 0);
     expect(result.outcome).toBe(0);
     expect(result.probability).toBeCloseTo(0.7);
     
     // Test outcome 1
-    vi.mocked(Math.random).mockReturnValue(0.8);  // 0.8 > 0.7, so outcome is 1
+    vi.spyOn(Math, 'random').mockReturnValue(0.8);  // 0.8 > 0.7, so outcome is 1
     result = measureQubit(mixed, 0);
     expect(result.outcome).toBe(1);
     expect(result.probability).toBeCloseTo(0.3);
@@ -64,7 +59,7 @@ describe('Quantum Measurement', () => {
     const bell = DensityMatrix.bellPhiPlus();
     
     // Mock random
-    vi.mocked(Math.random).mockReturnValue(0.4);
+    vi.spyOn(Math, 'random').mockReturnValue(0.4);
     
     // Measure qubit 0
     const result = measureQubit(bell, 0);
@@ -84,14 +79,14 @@ describe('Quantum Measurement', () => {
     const state = DensityMatrix.fromStateVector(vec);
     
     // Measure qubit 0 (the |+⟩ qubit)
-    vi.mocked(Math.random).mockReturnValue(0.4);
+    vi.spyOn(Math, 'random').mockReturnValue(0.4);
     const result0 = measureQubit(state, 0);
     
     // Should have 50% probability for 0 or 1
     expect(result0.probability).toBeCloseTo(0.5);
     
     // Measure qubit 1 (the |0⟩ qubit)
-    vi.mocked(Math.random).mockReturnValue(0.4);
+    vi.spyOn(Math, 'random').mockReturnValue(0.4);
     const result1 = measureQubit(state, 1);
     
     // Should have 100% probability for 0

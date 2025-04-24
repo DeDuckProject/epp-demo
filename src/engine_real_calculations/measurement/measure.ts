@@ -2,7 +2,7 @@ import { DensityMatrix } from '../matrix/densityMatrix';
 
 /**
  * Measure a single qubit in computational basis, returning outcome and its probability.
- * Uses little-endian convention (qubit 0 = least significant bit).
+ * Uses big-endian convention (qubit 0 = most significant bit).
  */
 export function measureQubit(
   rho: DensityMatrix,
@@ -10,8 +10,10 @@ export function measureQubit(
 ): { outcome: 0 | 1; probability: number } {
   const dim = rho.rows;
   let p0 = 0;
+  const n = Math.log2(dim);
+  const bitIndex = n - 1 - qubit;
   for (let i = 0; i < dim; i++) {
-    if (((i >> qubit) & 1) === 0) {
+    if (((i >> bitIndex) & 1) === 0) {
       const diag = rho.get(i, i);
       p0 += diag.re;
     }
