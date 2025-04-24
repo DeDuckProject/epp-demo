@@ -59,8 +59,16 @@ describe('Partial Trace Operations', () => {
     const ghz = DensityMatrix.fromStateVector(stateVector);
     
     // Trace out qubits 0 and 1
-    const traced = partialTrace(ghz, [0, 1]);
+    let traced = partialTrace(ghz, [0, 1]);
     
+    // Result should be a 1-qubit mixed state
+    expect(traced.rows).toBe(2);
+    expect(traced.get(0, 0).re).toBeCloseTo(0.5);
+    expect(traced.get(1, 1).re).toBeCloseTo(0.5);
+
+    // verify tracing other qubits still gives the mixed state
+    traced = partialTrace(ghz, [0, 2]);
+
     // Result should be a 1-qubit mixed state
     expect(traced.rows).toBe(2);
     expect(traced.get(0, 0).re).toBeCloseTo(0.5);

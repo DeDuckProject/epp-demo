@@ -38,6 +38,14 @@ export function partialTrace(
       let rj = 0;
       // build remaining indices
       let ibit = 0;
+      let ok = true;
+      for (const q of traceOut) {
+        if (((i >> q) & 1) !== ((j >> q) & 1)) {
+          ok = false;
+          break;
+        }
+      }
+      if (!ok) continue;
       for (let q = 0; q < totalQubits; q++) {
         if (!traceOut.includes(q)) {
           const biti = (i >> q) & 1;

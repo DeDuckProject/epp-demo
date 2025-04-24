@@ -74,7 +74,7 @@ describe('DensityMatrix', () => {
     expect(psiPlus.trace().re).toBeCloseTo(1);
     expect(psiMinus.trace().re).toBeCloseTo(1);
     
-    // Check diagonal elements of |Φ+⟩
+    // Check off-diagonal elements of |Φ+⟩
     expect(phiPlus.get(0, 0).re).toBeCloseTo(0.5);
     expect(phiPlus.get(3, 3).re).toBeCloseTo(0.5);
     
