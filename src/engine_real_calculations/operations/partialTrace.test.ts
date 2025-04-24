@@ -30,24 +30,39 @@ describe('Partial Trace Operations', () => {
     expect(traced1.get(1, 1).re).toBeCloseTo(0);
   });
   
-  test('tracing out one qubit from a Bell state', () => {
-    // Create a Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2
-    const bell = DensityMatrix.bellPhiPlus();
-    
-    // Trace out either qubit
-    const traced = partialTrace(bell, [0]);
-    
-    // Result should be a completely mixed state
-    expect(traced.rows).toBe(2);
-    expect(traced.get(0, 0).re).toBeCloseTo(0.5);
-    expect(traced.get(1, 1).re).toBeCloseTo(0.5);
-    expect(traced.get(0, 1).re).toBeCloseTo(0);
-    expect(traced.get(1, 0).re).toBeCloseTo(0);
-    
-    // Tracing out the other qubit should give the same result
-    const traced2 = partialTrace(bell, [1]);
-    expect(traced2.get(0, 0).re).toBeCloseTo(0.5);
-    expect(traced2.get(1, 1).re).toBeCloseTo(0.5);
+  test('tracing out one qubit from all Bell states', () => {
+    // Helper function to check closeness with a custom error message
+    const expectClose = (value: number, expected: number, precision: number, message: string): void => {
+      if (Math.abs(value - expected) > Math.pow(10, -precision)) {
+        throw new Error(message);
+      }
+      expect(value).toBeCloseTo(expected, precision);
+    };
+
+    const bellStates = [
+      { name: 'bellPhiPlus', state: DensityMatrix.bellPhiPlus() },
+      { name: 'bellPhiMinus', state: DensityMatrix.bellPhiMinus() },
+      { name: 'bellPsiPlus', state: DensityMatrix.bellPsiPlus() },
+      { name: 'bellPsiMinus', state: DensityMatrix.bellPsiMinus() }
+    ];
+
+    for (const { name, state } of bellStates) {
+      // Test tracing out qubit 0
+      const traced0 = partialTrace(state, [0]);
+      expect(traced0.rows).toBe(2);
+      expectClose(traced0.get(0, 0).re, 0.5, 5, `${name}: tracing out qubit 0, entry (0,0)`);
+      expectClose(traced0.get(1, 1).re, 0.5, 5, `${name}: tracing out qubit 0, entry (1,1)`);
+      expectClose(traced0.get(0, 1).re, 0, 5, `${name}: tracing out qubit 0, entry (0,1)`);
+      expectClose(traced0.get(1, 0).re, 0, 5, `${name}: tracing out qubit 0, entry (1,0)`);
+
+      // Test tracing out qubit 1
+      const traced1 = partialTrace(state, [1]);
+      expect(traced1.rows).toBe(2);
+      expectClose(traced1.get(0, 0).re, 0.5, 5, `${name}: tracing out qubit 1, entry (0,0)`);
+      expectClose(traced1.get(1, 1).re, 0.5, 5, `${name}: tracing out qubit 1, entry (1,1)`);
+      expectClose(traced1.get(0, 1).re, 0, 5, `${name}: tracing out qubit 1, entry (0,1)`);
+      expectClose(traced1.get(1, 0).re, 0, 5, `${name}: tracing out qubit 1, entry (1,0)`);
+    }
   });
   
   test('tracing out two qubits from a 3-qubit system', () => {
@@ -103,5 +118,38 @@ describe('Partial Trace Operations', () => {
     // Result should be: 0.7|0⟩⟨0| + 0.3|1⟩⟨1|
     expect(traced.get(0, 0).re).toBeCloseTo(0.7);
     expect(traced.get(1, 1).re).toBeCloseTo(0.3);
+  });
+
+  test('tracing out no qubits returns the original density matrix', () => {
+    const data = [
+      [{ re: 0.7, im: 0 }, ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), { re: 0.3, im: 0 }]
+    ];
+    const mixed = new DensityMatrix(data);
+    const traced = partialTrace(mixed, []);
+    expect(traced.rows).toBe(4);
+    expect(traced.get(0, 0).re).toBeCloseTo(0.7);
+    expect(traced.get(3, 3).re).toBeCloseTo(0.3);
+  });
+
+  test('tracing out one qubit from a separable superposition retains coherence', () => {
+    // |+>⊗|0> with |+> = (|0> + |1>)/√2 on qubit0
+    const plus0State = [
+      { re: 1/Math.sqrt(2), im: 0 },
+      { re: 1/Math.sqrt(2), im: 0 },
+      ComplexNum.zero(),
+      ComplexNum.zero()
+    ];
+    const rho = DensityMatrix.fromStateVector(plus0State);
+    // Trace out qubit1
+    const traced = partialTrace(rho, [1]);
+    expect(traced.rows).toBe(2);
+    // resulting density = |+><+| = [[0.5,0.5],[0.5,0.5]]
+    expect(traced.get(0, 0).re).toBeCloseTo(0.5);
+    expect(traced.get(1, 1).re).toBeCloseTo(0.5);
+    expect(traced.get(0, 1).re).toBeCloseTo(0.5);
+    expect(traced.get(1, 0).re).toBeCloseTo(0.5);
   });
 }); 
