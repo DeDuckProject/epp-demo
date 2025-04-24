@@ -51,4 +51,6 @@ export function applyDephasing(
   const K0 = Matrix.identity(dim).scale(ComplexNum.fromReal(sqrt(1 - p)));
   const K1 = pauliOperator(n, [qubit], ['Z']).scale(ComplexNum.fromReal(sqrt(p)));
   return applyKraus(rho, [K0, K1]);
-} 
+}
+
+export const _testing = { applyKraus }; 

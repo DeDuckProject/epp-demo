@@ -35,8 +35,8 @@ describe('Quantum Noise Channels', () => {
       [ComplexNum.zero(), ComplexNum.zero()]
     ]);
     
-    // Apply depolarizing with probability 1.0
-    const depolarized = applyDepolarizing(zero, 0, 1.0);
+    // Apply depolarizing with probability 0.75 (completely depolarizing channel in our implementation)
+    const depolarized = applyDepolarizing(zero, 0, 0.75);
     
     // Should be completely mixed state with diagonal = 0.5
     expect(depolarized.get(0, 0).re).toBeCloseTo(0.5);
