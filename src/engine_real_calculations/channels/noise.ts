@@ -48,9 +48,12 @@ export function applyDephasing(
   const n = Math.log2(rho.rows);
   const dim = rho.rows;
   const sqrt = Math.sqrt;
-  const K0 = Matrix.identity(dim).scale(ComplexNum.fromReal(sqrt(1 - p)));
-  const K1 = pauliOperator(n, [qubit], ['Z']).scale(ComplexNum.fromReal(sqrt(p)));
-  return applyKraus(rho, [K0, K1]);
+  const I = Matrix.identity(dim);
+  const Z = pauliOperator(n, [qubit], ['Z']);
+  const K0 = I.scale(ComplexNum.fromReal(sqrt(1 - p)));
+  const K1 = I.add(Z).scale(ComplexNum.fromReal(Math.sqrt(p) / 2));
+  const K2 = I.add(Z.scale(ComplexNum.fromReal(-1))).scale(ComplexNum.fromReal(Math.sqrt(p) / 2));
+  return applyKraus(rho, [K0, K1, K2]);
 }
 
 export const _testing = { applyKraus }; 
