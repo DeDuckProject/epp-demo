@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+ Interface Lock – public methods must match contracts
+
+ - Public methods must match contracts exactly (name, args, return type).  
+- Breaking changes require:
+  1. Updated `contracts.md`
+  2. Commander approval

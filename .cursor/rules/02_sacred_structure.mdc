@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+ folder naming:
+
+ - Do not rename or relocate folders:
+  - `components/`, `controller/`, `engine/`, `engine_real_calculations/`, `tests/`
+- Output folders must match declared paths.

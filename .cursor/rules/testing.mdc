@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+globs:
+  - "src/**/*.ts"
+  - "tests/**/*.ts"
+
+no file is valid without tests
+- Has a test in `tests/`  
+- Emits logs via `logger`
