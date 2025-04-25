@@ -126,4 +126,46 @@ export class Matrix {
   scale(s: Complex): Matrix {
     return this.map(val => ComplexNum.mul(val, s));
   }
+
+  // Added method to compare matrices up to a global phase
+  equalsUpToGlobalPhase(other: Matrix, tolerance: number = 1e-10): boolean {
+    if (this.rows !== other.rows || this.cols !== other.cols) return false;
+
+    let factor: { re: number, im: number } | null = null;
+    // First, find a non-negligible element in 'other' to compute the global phase factor
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.cols; j++) {
+        const b = other.get(i, j);
+        if (Math.abs(b.re) > tolerance || Math.abs(b.im) > tolerance) {
+          const a = this.get(i, j);
+          const denom = b.re * b.re + b.im * b.im;
+          factor = { 
+            re: (a.re * b.re + a.im * b.im) / denom, 
+            im: (a.im * b.re - a.re * b.im) / denom 
+          };
+          break;
+        }
+      }
+      if (factor) break;
+    }
+
+    // If 'other' is the zero matrix (within tolerance), then 'this' must also be zero
+    if (!factor) return true;
+
+    // Check that for every element, this.get(i,j) ≈ factor * other.get(i,j)
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.cols; j++) {
+        const a = this.get(i, j);
+        const b = other.get(i, j);
+        const fb = { 
+          re: factor.re * b.re - factor.im * b.im, 
+          im: factor.re * b.im + factor.im * b.re 
+        };
+        if (Math.abs(a.re - fb.re) > tolerance || Math.abs(a.im - fb.im) > tolerance) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 } 
