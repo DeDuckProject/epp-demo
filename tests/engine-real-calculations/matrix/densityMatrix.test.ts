@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { DensityMatrix } from './densityMatrix';
+import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
 
 describe('DensityMatrix', () => {
   test('constructor normalizes', () => {

@@ -1,6 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { cnotMatrix } from './cnot';
-import { ComplexNum } from '../types/complex';
+import { cnotMatrix, ComplexNum } from '../../../src/engine_real_calculations';
 
 describe('CNOT Gates', () => {
   test('2-qubit CNOT matrix with control=0, target=1', () => {

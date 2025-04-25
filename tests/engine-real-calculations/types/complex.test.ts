@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { ComplexNum, Complex } from './complex';
+import { ComplexNum, Complex } from '../../../src/engine_real_calculations/types/complex';
 
 describe('ComplexNum operations', () => {
   test('add and sub', () => {

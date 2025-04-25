@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { pauliMatrix, pauliOperator } from './pauli';
-import { ComplexNum } from '../types/complex';
+import { pauliMatrix, pauliOperator } from '../../../src/engine_real_calculations/gates/pauli';
+import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 
 describe('Pauli Operators', () => {
   test('pauliMatrix generates correct single-qubit operators', () => {

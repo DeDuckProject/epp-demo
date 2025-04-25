@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'vitest';
-import { _testing } from './noise';
-import { DensityMatrix } from '../matrix/densityMatrix';
-import { Matrix } from '../matrix/matrix';
-import { ComplexNum } from '../types/complex';
+import { _testing } from '../../../src/engine_real_calculations/channels/noise';
+import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
+import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix';
+import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 
 
 describe('applyKraus function', () => {

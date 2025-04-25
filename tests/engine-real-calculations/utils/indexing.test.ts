@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { bitstringToIndex, indexToBitstring } from './indexing';
+import { bitstringToIndex, indexToBitstring } from '../../../src/engine_real_calculations/utils/indexing';
 
 describe('Indexing Utils', () => {
   test('bitstringToIndex', () => {

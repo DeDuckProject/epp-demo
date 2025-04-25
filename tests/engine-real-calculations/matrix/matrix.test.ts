@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { Matrix } from './matrix';
-import { ComplexNum } from '../types/complex';
+import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix';
+import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 
 describe('Matrix', () => {
   test('constructor and dimensions', () => {

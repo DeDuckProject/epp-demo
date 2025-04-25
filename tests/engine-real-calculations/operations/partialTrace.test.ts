@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
-import { partialTrace } from './partialTrace';
-import { DensityMatrix } from '../matrix/densityMatrix';
-import { ComplexNum } from '../types/complex';
+import { partialTrace } from '../../../src/engine_real_calculations/operations/partialTrace';
+import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
+import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 
 describe('Partial Trace Operations', () => {
   test('tracing out one qubit from a separable state', () => {

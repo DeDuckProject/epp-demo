@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { kroneckerMatrix } from './tensor';
-import { ComplexNum } from '../types/complex';
+import { kroneckerMatrix } from '../../../src/engine_real_calculations/utils/tensor';
+import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 
 describe('Tensor Product Utils', () => {
   test('kroneckerMatrix with 2x2 matrices', () => {

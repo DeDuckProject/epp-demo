@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'vitest';
-import { applyGate } from './applyGate';
-import { DensityMatrix } from '../matrix/densityMatrix';
-import { Matrix } from '../matrix/matrix';
-import { ComplexNum } from '../types/complex';
+import { applyGate } from '../../../src/engine_real_calculations/operations/applyGate';
+import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
+import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix';
+import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 
 describe('Apply Gate Operations', () => {
   test('applying Pauli-X gate to |0⟩ state', () => {

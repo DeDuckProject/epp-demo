@@ -6,7 +6,7 @@ import {
   applyCNOT, 
   partialTrace,
   applyDepolarizing
-} from './index';
+} from '../../src/engine_real_calculations';
 
 describe('Quantum Engine API', () => {
   test('tensor product of DensityMatrix', () => {

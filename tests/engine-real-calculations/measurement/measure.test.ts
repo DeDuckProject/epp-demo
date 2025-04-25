@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, afterEach } from 'vitest';
-import { measureQubit } from './measure';
-import { DensityMatrix } from '../matrix/densityMatrix';
-import { ComplexNum } from '../types/complex';
+import { measureQubit } from '../../../src/engine_real_calculations/measurement/measure';
+import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
+import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 
 describe('Quantum Measurement', () => {
   test('measurement of |0⟩ state gives deterministic result', () => {

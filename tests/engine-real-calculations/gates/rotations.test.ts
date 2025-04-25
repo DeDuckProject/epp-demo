@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
-import { rx, ry, rz } from '../src/engine_real_calculations/gates/rotations';
-import { pauliMatrix } from '../src/engine_real_calculations/gates/pauli';
-import { Matrix } from '../src/engine_real_calculations/matrix/matrix';
+import { rx, ry, rz } from '../../../src/engine_real_calculations/gates/rotations';
+import { pauliMatrix } from '../../../src/engine_real_calculations/gates/pauli';
+import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix';
 
 describe('Rotation Gates', () => {
   test('R_x(π) is equivalent to Pauli X up to global phase', () => {
