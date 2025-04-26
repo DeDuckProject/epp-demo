@@ -1,4 +1,4 @@
-import { DensityMatrix, QubitPair, SimulationParameters, SimulationState, PurificationStep } from './types';
+import { QubitPair, SimulationParameters, SimulationState } from './types';
 import { calculateBellBasisFidelity } from './mathUtils';
 import { createNoisyEPR } from './quantumStates';
 import { depolarize, bilateralCNOT, exchangePsiMinusPhiPlus } from './operations';
@@ -14,7 +14,6 @@ export class SimulationEngine {
   
   private initialize(): SimulationState {
     const pairs: QubitPair[] = [];
-    
     // Create initial noisy EPR pairs in Bell basis
     for (let i = 0; i < this.params.initialPairs; i++) {
       const densityMatrix = createNoisyEPR(this.params.noiseParameter);
@@ -74,8 +73,9 @@ export class SimulationEngine {
     const controlPairs: QubitPair[] = [];
     const targetPairs: QubitPair[] = [];
     
-    // Group pairs for purification
-    for (let i = 0; i < this.state.pairs.length; i++) {
+    // Group pairs for purification, ensuring we only group complete pairs
+    const numPairsToProcess = Math.floor(this.state.pairs.length / 2) * 2; 
+    for (let i = 0; i < numPairsToProcess; i++) { // Only loop through pairs that will be used
       if (i % 2 === 0) {
         controlPairs.push(this.state.pairs[i]);
       } else {

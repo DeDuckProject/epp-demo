@@ -82,61 +82,6 @@ export const partialTrace = (rho: DensityMatrix, subsystemSize: number, traceOut
   return result;
 };
 
-export const calculateFidelity = (rho: DensityMatrix): number => {
-  // Calculate fidelity with respect to perfect Bell state |Φ⁺⟩
-  return rho[0][0].real + rho[3][3].real + rho[0][3].real + rho[3][0].real;
-};
-
-export const trace = (matrix: DensityMatrix): ComplexNumber => {
-  let result = complex(0);
-  for (let i = 0; i < matrix.length; i++) {
-    result = add(result, matrix[i][i]);
-  }
-  return result;
-};
-
-// Bell basis transformation matrix (computational basis to Bell basis)
-export const computationalToBellBasis = (): DensityMatrix => {
-  const sqrt2 = Math.sqrt(2) / 2;
-  return [
-    [complex(sqrt2), complex(0), complex(0), complex(sqrt2)],  // |Φ⁺⟩ = (|00⟩ + |11⟩)/√2
-    [complex(sqrt2), complex(0), complex(0), complex(-sqrt2)], // |Φ⁻⟩ = (|00⟩ - |11⟩)/√2
-    [complex(0), complex(sqrt2), complex(sqrt2), complex(0)],  // |Ψ⁺⟩ = (|01⟩ + |10⟩)/√2
-    [complex(0), complex(sqrt2), complex(-sqrt2), complex(0)]  // |Ψ⁻⟩ = (|01⟩ - |10⟩)/√2
-  ];
-};
-
-// Bell basis to computational basis transformation matrix
-export const bellToComputationalBasis = (): DensityMatrix => {
-  const sqrt2 = Math.sqrt(2) / 2;
-  return [
-    [complex(sqrt2), complex(sqrt2), complex(0), complex(0)],
-    [complex(0), complex(0), complex(sqrt2), complex(sqrt2)],
-    [complex(0), complex(0), complex(sqrt2), complex(-sqrt2)],
-    [complex(sqrt2), complex(-sqrt2), complex(0), complex(0)]
-  ];
-};
-
-// Transform a density matrix from computational basis to Bell basis
-export const transformToBellBasis = (rho: DensityMatrix): DensityMatrix => {
-  const U = computationalToBellBasis();
-  const Udagger = U.map(row => row.map(element => conjugate(element)));
-  
-  // ρ_Bell = U ρ_Comp U†
-  const temp = matrixMultiply(U, rho);
-  return matrixMultiply(temp, Udagger);
-};
-
-// Transform a density matrix from Bell basis to computational basis
-export const transformToComputationalBasis = (rho: DensityMatrix): DensityMatrix => {
-  const U = bellToComputationalBasis();
-  const Udagger = U.map(row => row.map(element => conjugate(element)));
-  
-  // ρ_Comp = U ρ_Bell U†
-  const temp = matrixMultiply(U, rho);
-  return matrixMultiply(temp, Udagger);
-};
-
 // Calculate fidelity in Bell basis - it's the element corresponding to our target state
 export const calculateBellBasisFidelity = (rho: DensityMatrix): number => {
   // After exchange, our target state is |Φ⁺⟩ (index 0)

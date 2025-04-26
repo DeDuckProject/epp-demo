@@ -1,9 +1,7 @@
-import { DensityMatrix, ComplexNumber, QubitPair } from './types';
+import { DensityMatrix } from './types';
 import { 
-  complex, add, multiply, matrixMultiply, tensorProduct, 
-  partialTrace, calculateBellBasisFidelity 
+  complex, tensorProduct
 } from './mathUtils';
-import { pauliI, pauliX, pauliY, pauliZ } from './quantumStates';
 
 // Depolarize/Twirl a pair to convert to Werner form
 export const depolarize = (rho: DensityMatrix): DensityMatrix => {
@@ -23,12 +21,12 @@ export const depolarize = (rho: DensityMatrix): DensityMatrix => {
   const targetFidelity = rho[targetIdx][targetIdx].real;
   
   // Sum of non-target diagonal elements
-  let sumNonTarget = 0;
-  for (let i = 0; i < 4; i++) {
-    if (i !== targetIdx) {
-      sumNonTarget += rho[i][i].real;
-    }
-  }
+  // let sumNonTarget = 0;
+  // for (let i = 0; i < 4; i++) {
+  //   if (i !== targetIdx) {
+  //     // sumNonTarget += rho[i][i].real;
+  //   }
+  // }
   
   // Balance the non-target elements
   const balancedNonTargetValue = (1 - targetFidelity) / 3;
@@ -59,13 +57,13 @@ export const exchangePsiMinusPhiPlus = (rho: DensityMatrix): DensityMatrix => {
   // Swap off-diagonal elements related to these states
   for (let i = 0; i < 4; i++) {
     if (i !== 0 && i !== 3) {
-      const temp03 = complex(result[0][i].real, result[0][i].imag);
-      const temp30 = complex(result[3][i].real, result[3][i].imag);
+      // complex(result[0][i].real, result[0][i].imag);
+      // complex(result[3][i].real, result[3][i].imag);
       result[0][i] = complex(result[3][i].real, result[3][i].imag);
       result[3][i] = complex(result[0][i].real, result[0][i].imag);
       
-      const tempi0 = complex(result[i][0].real, result[i][0].imag);
-      const tempi3 = complex(result[i][3].real, result[i][3].imag);
+      // const tempi0 = complex(result[i][0].real, result[i][0].imag);
+      // const tempi3 = complex(result[i][3].real, result[i][3].imag);
       result[i][0] = complex(result[i][3].real, result[i][3].imag);
       result[i][3] = complex(result[i][0].real, result[i][0].imag);
     }
@@ -88,7 +86,7 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
   }
 } => {
   // Create the full 16x16 joint state using tensor product
-  let jointState = tensorProduct(control, target);
+  const jointState = tensorProduct(control, target);
   
   // Represent the bilateral CNOT in the computational basis
   // This is a simplified representation - in a real implementation, 

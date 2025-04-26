@@ -1,42 +1,10 @@
-import { DensityMatrix, ComplexNumber } from './types';
-import { complex, tensorProduct, transformToBellBasis } from './mathUtils';
-
-// Pauli matrices
-export const pauliI = [
-  [complex(1), complex(0)],
-  [complex(0), complex(1)]
-];
-
-export const pauliX = [
-  [complex(0), complex(1)],
-  [complex(1), complex(0)]
-];
-
-export const pauliY = [
-  [complex(0), complex(0, -1)],
-  [complex(0, 1), complex(0)]
-];
-
-export const pauliZ = [
-  [complex(1), complex(0)],
-  [complex(0), complex(-1)]
-];
-
-// Bell state |Ψ⁻⟩ in Bell basis - this is the third basis state
-export const bellStatePsiMinus = (): DensityMatrix => {
-  return [
-    [complex(0), complex(0), complex(0), complex(0)],
-    [complex(0), complex(0), complex(0), complex(0)],
-    [complex(0), complex(0), complex(0), complex(0)],
-    [complex(0), complex(0), complex(0), complex(1)]
-  ];
-};
+import { DensityMatrix } from './types';
+import { complex } from './mathUtils';
 
 // Create a noisy EPR pair in Bell basis
 export const createNoisyEPR = (noiseParam: number): DensityMatrix => {
   // Start with a perfect Bell state |Ψ⁻⟩ in the Bell basis
-  const bellStateMatrix = bellStatePsiMinus();
-  
+
   // Create the noisy state in Bell basis
   const noisyState: DensityMatrix = Array(4).fill(0).map(() => 
     Array(4).fill(0).map(() => complex(0))
