@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { toBellBasis, fidelityBell, fidelityFromComputationalBasis } from '../../../src/engine_real_calculations/bell/bell-basis';
+import { toBellBasis, fidelityFromBellBasisMatrix, fidelityFromComputationalBasisMatrix } from '../../../src/engine_real_calculations/bell/bell-basis';
 import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
 import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix';
@@ -14,7 +14,7 @@ describe('Bell Basis Conversion and Fidelity', () => {
     ];
     const rho = DensityMatrix.fromStateVector(phiPlusVec);
     const rhoBell = toBellBasis(rho);
-    const fidelity = fidelityBell(rhoBell);
+    const fidelity = fidelityFromBellBasisMatrix(rhoBell);
     expect(fidelity).toBeCloseTo(1, 5);
   });
 
@@ -27,7 +27,7 @@ describe('Bell Basis Conversion and Fidelity', () => {
     ];
     const rho = DensityMatrix.fromStateVector(phiMinusVec);
     const rhoBell = toBellBasis(rho);
-    const fidelity = fidelityBell(rhoBell);
+    const fidelity = fidelityFromBellBasisMatrix(rhoBell);
     expect(fidelity).toBeCloseTo(0, 5);
   });
 
@@ -40,7 +40,7 @@ describe('Bell Basis Conversion and Fidelity', () => {
     ];
     const rho = DensityMatrix.fromStateVector(ket00Vec);
     // Using the new function that combines toBellBasis and fidelityBell
-    const fidelity = fidelityFromComputationalBasis(rho);
+    const fidelity = fidelityFromComputationalBasisMatrix(rho);
     expect(fidelity).toBeCloseTo(0.5, 5);
   });
 });
@@ -51,7 +51,7 @@ describe('Additional tests: Mixtures and Werner States', () => {
     const phiMinus = DensityMatrix.bellPhiMinus();
     // Create a weighted mixture: 0.3 * phi+ + 0.7 * phi-
     const mixed = phiPlus.scale(ComplexNum.fromReal(0.3)).add(phiMinus.scale(ComplexNum.fromReal(0.7)));
-    const fidelity = fidelityFromComputationalBasis(mixed);
+    const fidelity = fidelityFromComputationalBasisMatrix(mixed);
     expect(fidelity).toBeCloseTo(0.3, 5);
   });
 
@@ -65,7 +65,7 @@ describe('Additional tests: Mixtures and Werner States', () => {
       .add(phiMinus.scale(ComplexNum.fromReal(0.25)))
       .add(psiPlus.scale(ComplexNum.fromReal(0.25)))
       .add(psiMinus.scale(ComplexNum.fromReal(0.25)));
-    const fidelity = fidelityFromComputationalBasis(mixed);
+    const fidelity = fidelityFromComputationalBasisMatrix(mixed);
     expect(fidelity).toBeCloseTo(0.25, 5);
   });
 
@@ -75,7 +75,7 @@ describe('Additional tests: Mixtures and Werner States', () => {
     const identity = Matrix.identity(4);
     // Werner state: p * |phi+><phi+| + (1-p) * I/4
     const werner = phiPlus.scale(ComplexNum.fromReal(p)).add(identity.scale(ComplexNum.fromReal((1 - p) / 4)));
-    const fidelity = fidelityFromComputationalBasis(werner);
+    const fidelity = fidelityFromComputationalBasisMatrix(werner);
     expect(fidelity).toBeCloseTo(0.25, 5);
   });
 
@@ -84,7 +84,7 @@ describe('Additional tests: Mixtures and Werner States', () => {
     const phiPlus = DensityMatrix.bellPhiPlus();
     const identity = Matrix.identity(4);
     const werner = phiPlus.scale(ComplexNum.fromReal(p)).add(identity.scale(ComplexNum.fromReal((1 - p) / 4)));
-    const fidelity = fidelityFromComputationalBasis(werner);
+    const fidelity = fidelityFromComputationalBasisMatrix(werner);
     expect(fidelity).toBeCloseTo(0.625, 5);
   });
 
@@ -93,7 +93,7 @@ describe('Additional tests: Mixtures and Werner States', () => {
     const phiPlus = DensityMatrix.bellPhiPlus();
     const identity = Matrix.identity(4);
     const werner = phiPlus.scale(ComplexNum.fromReal(p)).add(identity.scale(ComplexNum.fromReal((1 - p) / 4)));
-    const fidelity = fidelityFromComputationalBasis(werner);
+    const fidelity = fidelityFromComputationalBasisMatrix(werner);
     expect(fidelity).toBeCloseTo(1, 5);
   });
 }); 
