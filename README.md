@@ -17,6 +17,14 @@ This project uses GitHub Actions for continuous integration. The CI pipeline:
 
 To view the CI results, check the Actions tab in the GitHub repository.
 
+### Troubleshooting CI
+
+If you encounter issues with platform-specific dependencies in CI:
+
+1. The workflow is configured to clean `node_modules` and `package-lock.json` before installation
+2. We use `npm install` instead of `npm ci` to handle optional dependencies better
+3. We've added `@rollup/rollup-linux-x64-gnu` as an optional dependency to fix common issues on Linux CI runners
+
 ## Running Tests Locally
 
 To run tests locally:
