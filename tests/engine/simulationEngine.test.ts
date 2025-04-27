@@ -1,12 +1,14 @@
 // import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { SimulationEngine } from '../../src/engine/simulationEngine';
-import { SimulationParameters, DensityMatrix, ComplexNumber } from '../../src/engine/types';
+import { SimulationParameters, DensityMatrix } from '../../src/engine/types';
+import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
 import { createNoisyEPR } from '../../src/engine/quantumStates';
 
 // Helper function for comparing complex numbers with tolerance
-const expectComplexClose = (a: ComplexNumber, b: ComplexNumber, tolerance = 1e-9) => {
-    expect(a.real).toBeCloseTo(b.real, tolerance);
-    expect(a.imag).toBeCloseTo(b.imag, tolerance);
+const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
+    expect(a.re).toBeCloseTo(b.re, tolerance);
+    expect(a.im).toBeCloseTo(b.im, tolerance);
 };
 
 // Helper function for comparing matrices with tolerance
@@ -22,7 +24,7 @@ const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9)
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
 const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  const term00 = rho[0]?.[0]?.real ?? 0;
+  const term00 = rho[0]?.[0]?.re ?? 0;
   return term00; // In Bell basis, fidelity with |Φ⁺⟩ is directly the (0,0) element
 };
 
@@ -159,8 +161,9 @@ describe('SimulationEngine', () => {
             }
             expect(state.complete).toBe(true);
             expect(state.pairs.length).toBeGreaterThanOrEqual(1);
-            // After completion we should be closer to state phi minus
-            expect(state.pairs[0].densityMatrix[3][3].real).toBeGreaterThanOrEqual(highFidelityParams.targetFidelity);
+            // After completion the final state is depolarized wrt |Ψ⁻⟩
+            // Check fidelity wrt |Ψ⁻⟩ which is the [3][3] element
+            expect(state.pairs[0].densityMatrix[3][3].re).toBeGreaterThanOrEqual(highFidelityParams.targetFidelity); // Use .re (fixed)
         });
 
         it('reaches completion when fewer than 2 pairs remain', () => {

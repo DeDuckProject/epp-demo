@@ -1,12 +1,12 @@
 import { depolarize, exchangePsiMinusPhiPlus, bilateralCNOT } from '../../src/engine/operations';
-import {complex, add, multiply} from '../../src/engine/mathUtils';
 import { createNoisyEPR } from '../../src/engine/quantumStates';
-import { ComplexNumber, DensityMatrix } from '../../src/engine/types';
+import { DensityMatrix } from '../../src/engine/types';
+import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
 
 // Re-use helper functions or define them here
-const expectComplexClose = (a: ComplexNumber, b: ComplexNumber, tolerance = 1e-9) => {
-  expect(a.real).toBeCloseTo(b.real, tolerance);
-  expect(a.imag).toBeCloseTo(b.imag, tolerance);
+const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
+  expect(a.re).toBeCloseTo(b.re, tolerance);
+  expect(a.im).toBeCloseTo(b.im, tolerance);
 };
 
 const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9) => {
@@ -21,24 +21,24 @@ const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9)
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
 const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  const term00 = rho[0]?.[0]?.real ?? 0;
+  const term00 = rho[0]?.[0]?.re ?? 0;
   return term00; // In Bell basis, fidelity with |Φ⁺⟩ is directly the (0,0) element
 };
 
 // Helper: Create a pure Bell state |Φ⁺⟩⟨Φ⁺| in Bell basis
 const phiPlusState = (): DensityMatrix => [
-  [complex(1), complex(0), complex(0), complex(0)],
-  [complex(0), complex(0), complex(0), complex(0)],
-  [complex(0), complex(0), complex(0), complex(0)],
-  [complex(0), complex(0), complex(0), complex(0)]
+  [ComplexNum.one(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()]
 ];
 
 // Helper: Create a pure Bell state |Ψ⁻⟩⟨Ψ⁻| in Bell basis
 const psiMinusState = (): DensityMatrix => [
-  [complex(0), complex(0), complex(0), complex(0)],
-  [complex(0), complex(0), complex(0), complex(0)],
-  [complex(0), complex(0), complex(0), complex(0)],
-  [complex(0), complex(0), complex(0), complex(1)]
+  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one()]
 ];
 
 describe('operations', () => {
@@ -59,19 +59,19 @@ describe('operations', () => {
 
       const expectedFidelity = (3 * p + 1) / 4;
       const identity4x4: DensityMatrix = [
-        [complex(1), complex(0), complex(0), complex(0)],
-        [complex(0), complex(1), complex(0), complex(0)],
-        [complex(0), complex(0), complex(1), complex(0)],
-        [complex(0), complex(0), complex(0), complex(1)]
+        [ComplexNum.one(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+        [ComplexNum.zero(), ComplexNum.one(), ComplexNum.zero(), ComplexNum.zero()],
+        [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one(), ComplexNum.zero()],
+        [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one()]
       ];
       const psiMinus = psiMinusState();
       const identityMinusPsiMinus = identity4x4.map((row, i) => 
-          row.map((el, j) => complex(el.real - psiMinus[i][j].real, el.imag - psiMinus[i][j].imag))
+          row.map((el, j) => ComplexNum.sub(el, psiMinus[i][j]))
       );
 
-      const term1 = psiMinus.map(row => row.map(el => multiply(el, complex(expectedFidelity))));
-      const term2 = identityMinusPsiMinus.map(row => row.map(el => multiply(el, complex((1 - expectedFidelity) / 3))));
-      const expectedDepolarized = term1.map((row, i) => row.map((el, j) => add(el, term2[i][j])));
+      const term1 = psiMinus.map(row => row.map(el => ComplexNum.mul(el, new ComplexNum(expectedFidelity, 0))));
+      const term2 = identityMinusPsiMinus.map(row => row.map(el => ComplexNum.mul(el, new ComplexNum((1 - expectedFidelity) / 3, 0))));
+      const expectedDepolarized = term1.map((row, i) => row.map((el, j) => ComplexNum.add(el, term2[i][j])));
 
       const depolarizedMatrix = depolarize(noisyPsiMinus);
       expectMatrixClose(depolarizedMatrix, expectedDepolarized);
@@ -90,32 +90,32 @@ describe('operations', () => {
       const testMatrix = createNoisyEPR(0.2); // Just use some other matrix
       const result = depolarize(testMatrix);
       // Basic check: trace should be preserved (or close to 1)
-      expect(result[0][0].real).toBeCloseTo(0.2/3, 2)
-      expect(result[1][1].real).toBeCloseTo(0.2/3, 2)
-      expect(result[2][2].real).toBeCloseTo(0.2/3, 2)
-      expect(result[3][3].real).toBeCloseTo(1-0.2, 2)
-      // Note: The trace preservation seems broken in the implementation.
+      expect(result[0][0].re).toBeCloseTo(0.2/3, 2);
+      expect(result[1][1].re).toBeCloseTo(0.2/3, 2);
+      expect(result[2][2].re).toBeCloseTo(0.2/3, 2);
+      expect(result[3][3].re).toBeCloseTo(0.8, 2);
+      // Note: The implementation seems to correctly produce a Werner state with fidelity F w.r.t |Ψ⁻⟩. Trace = 0.7 + 3*0.1 = 1.0
     });
   });
 
   describe('exchange components', () => {
     it('swaps |Ψ⁻⟩ and |Φ⁺⟩ components in a Bell-diagonal state', () => {
-      // Create a state like: a|Φ⁺⟩⟨Φ⁺| + b|Ψ⁻⟩⟨Ψ⁻| + ... (in computational basis)
+      // Create a state like: a|Φ⁺⟩⟨Φ⁺| + b|Ψ⁻⟩⟨Ψ⁻| + ... (in Bell basis)
       const a = 0.6, b = 0.2;
-      const state = phiPlusState().map(row => row.map(c => complex(c.real * a))); // a|Φ⁺⟩⟨Φ⁺|
-      const psiMinusPart = psiMinusState().map(row => row.map(c => complex(c.real * b))); // b|Ψ⁻⟩⟨Ψ⁻|
-      const testState = state.map((row, i) => row.map((el, j) => add(el, psiMinusPart[i][j])));
+      const state = phiPlusState().map(row => row.map(c => ComplexNum.mul(c, new ComplexNum(a, 0)))); // Use ComplexNum.mul and new ComplexNum (fixed)
+      const psiMinusPart = psiMinusState().map(row => row.map(c => ComplexNum.mul(c, new ComplexNum(b, 0)))); // Use ComplexNum.mul and new ComplexNum (fixed)
+      const testState = state.map((row, i) => row.map((el, j) => ComplexNum.add(el, psiMinusPart[i][j]))); // Use ComplexNum.add (fixed)
       // Add some other diagonal parts to make trace = 1 (e.g. |Φ⁻⟩, |Ψ⁺⟩)
-      testState[1][1] = add(testState[1][1], complex(0.1)); // Add 0.1 to |Φ⁻⟩ component
-      testState[2][2] = add(testState[2][2], complex(0.1)); // Add 0.1 to |Ψ⁺⟩ component 
-      // Trace = 0.6 + 0.2 + 0.1 + 0.1 = 1
+      testState[1][1] = ComplexNum.add(testState[1][1], new ComplexNum(0.1, 0)); // Use ComplexNum.add and new ComplexNum (fixed)
+      testState[2][2] = ComplexNum.add(testState[2][2], new ComplexNum(0.1, 0)); // Use ComplexNum.add and new ComplexNum (fixed)
+      // Trace = 0.6 + 0.1 + 0.1 + 0.2 = 1
 
       // Expected state after swap: b|Φ⁺⟩⟨Φ⁺| + a|Ψ⁻⟩⟨Ψ⁻| + ...
-      const expectedState = phiPlusState().map(row => row.map(c => complex(c.real * b))); // b|Φ⁺⟩⟨Φ⁺|
-      const psiMinusPartSwapped = psiMinusState().map(row => row.map(c => complex(c.real * a))); // a|Ψ⁻⟩⟨Ψ⁻|
-      const expectedSwapped = expectedState.map((row, i) => row.map((el, j) => add(el, psiMinusPartSwapped[i][j])));
-      expectedSwapped[1][1] = add(expectedSwapped[1][1], complex(0.1)); // Keep other components
-      expectedSwapped[2][2] = add(expectedSwapped[2][2], complex(0.1)); 
+      const expectedState = phiPlusState().map(row => row.map(c => ComplexNum.mul(c, new ComplexNum(b, 0)))); // Use ComplexNum.mul and new ComplexNum (fixed)
+      const psiMinusPartSwapped = psiMinusState().map(row => row.map(c => ComplexNum.mul(c, new ComplexNum(a, 0)))); // Use ComplexNum.mul and new ComplexNum (fixed)
+      const expectedSwapped = expectedState.map((row, i) => row.map((el, j) => ComplexNum.add(el, psiMinusPartSwapped[i][j]))); // Use ComplexNum.add (fixed)
+      expectedSwapped[1][1] = ComplexNum.add(expectedSwapped[1][1], new ComplexNum(0.1, 0)); // Keep other components (fixed)
+      expectedSwapped[2][2] = ComplexNum.add(expectedSwapped[2][2], new ComplexNum(0.1, 0)); // Keep other components (fixed)
 
       const exchangedState = exchangePsiMinusPhiPlus(testState);
       

@@ -7,21 +7,15 @@ import {
   conj as mathjsConj,
   abs,
   isComplex,
-  Complex
 } from 'mathjs';
-
-// Keep the original simple interface
-// export interface Complex {
-//   re: number;
-//   im: number;
-// }
 
 function normalize(n: number): number {
   return Object.is(n, -0) ? 0 : n;
 }
 
-// ComplexNum implements our interface, using mathjs internally for calculations
-export class ComplexNum implements Complex {
+// ComplexNum uses mathjs internally for calculations
+// Removed 'implements Complex' as it's not fully implemented
+export class ComplexNum {
   public re: number;
   public im: number;
 
@@ -32,30 +26,31 @@ export class ComplexNum implements Complex {
   }
 
   // Static methods return new instances of *our* ComplexNum
-  static add(a: Complex, b: Complex): ComplexNum {
+  // Changed parameter types from Complex to ComplexNum
+  static add(a: ComplexNum, b: ComplexNum): ComplexNum {
     const result = add(mathjsComplex(a.re, a.im), mathjsComplex(b.re, b.im));
     return new ComplexNum(result.re, result.im);
   }
-  static sub(a: Complex, b: Complex): ComplexNum {
+  static sub(a: ComplexNum, b: ComplexNum): ComplexNum {
     const result = subtract(mathjsComplex(a.re, a.im), mathjsComplex(b.re, b.im));
     return new ComplexNum(result.re, result.im);
   }
-  static mul(a: Complex, b: Complex): ComplexNum {
+  static mul(a: ComplexNum, b: ComplexNum): ComplexNum {
     const result = multiply(mathjsComplex(a.re, a.im), mathjsComplex(b.re, b.im));
     if (!isComplex(result)) throw new Error('Expected complex result from multiply');
     return new ComplexNum(result.re, result.im);
   }
-  static div(a: Complex, b: Complex): ComplexNum {
+  static div(a: ComplexNum, b: ComplexNum): ComplexNum {
     const result = divide(mathjsComplex(a.re, a.im), mathjsComplex(b.re, b.im));
     if (!isComplex(result)) throw new Error('Expected complex result from divide');
     return new ComplexNum(result.re, result.im);
   }
-  static conj(a: Complex): ComplexNum {
+  static conj(a: ComplexNum): ComplexNum {
     const result = mathjsConj(mathjsComplex(a.re, a.im));
     return new ComplexNum(result.re, result.im);
   }
   // abs2 returns a number, so we calculate it directly or use mathjs abs
-  static abs2(a: Complex): number {
+  static abs2(a: ComplexNum): number {
      // return a.re * a.re + a.im * a.im; // Original direct calculation
      const complexA = mathjsComplex(a.re, a.im);
      const absVal = abs(complexA);
@@ -71,5 +66,9 @@ export class ComplexNum implements Complex {
   }
   static fromReal(r: number): ComplexNum {
     return new ComplexNum(r, 0);
+  }
+
+  toString(): string {
+    return `${this.re} + ${this.im}i`;
   }
 } 

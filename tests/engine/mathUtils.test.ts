@@ -1,10 +1,11 @@
-import { complex, add, multiply, conjugate, matrixMultiply, tensorProduct, partialTrace, calculateBellBasisFidelity } from '../../src/engine/mathUtils';
-import { ComplexNumber, DensityMatrix } from '../../src/engine/types';
+import { matrixMultiply, tensorProduct, partialTrace, calculateBellBasisFidelity } from '../../src/engine/mathUtils';
+import { DensityMatrix } from '../../src/engine/types';
+import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
 
 // Helper function for comparing complex numbers with tolerance
-const expectComplexClose = (a: ComplexNumber, b: ComplexNumber, tolerance = 1e-9) => {
-  expect(a.real).toBeCloseTo(b.real, tolerance);
-  expect(a.imag).toBeCloseTo(b.imag, tolerance);
+const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
+  expect(a.re).toBeCloseTo(b.re, tolerance);
+  expect(a.im).toBeCloseTo(b.im, tolerance);
 };
 
 // Helper function for comparing matrices with tolerance
@@ -20,47 +21,22 @@ const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9)
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from computational basis rho
 const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  const term00 = rho[0]?.[0]?.real ?? 0;
-  const term03 = rho[0]?.[3]?.real ?? 0;
-  const term30 = rho[3]?.[0]?.real ?? 0;
-  const term33 = rho[3]?.[3]?.real ?? 0;
+  const term00 = rho[0]?.[0]?.re ?? 0;
+  const term03 = rho[0]?.[3]?.re ?? 0;
+  const term30 = rho[3]?.[0]?.re ?? 0;
+  const term33 = rho[3]?.[3]?.re ?? 0;
   return 0.5 * (term00 + term03 + term30 + term33);
 };
 
 describe('mathUtils', () => {
-  describe('complex arithmetic', () => {
-    it('constructs a ComplexNumber with real/imag defaults', () => {
-      expect(complex(5)).toEqual({ real: 5, imag: 0 });
-      expect(complex(2, 3)).toEqual({ real: 2, imag: 3 });
-    });
-
-    it('adds two simple ComplexNumbers', () => {
-      const a = complex(1, 2);
-      const b = complex(3, 4);
-      expect(add(a, b)).toEqual(complex(4, 6));
-    });
-
-    it('multiplies two simple ComplexNumbers', () => {
-      const a = complex(1, 2);
-      const b = complex(3, 4);
-      // (1 + 2i)(3 + 4i) = 3 + 4i + 6i + 8i^2 = 3 + 10i - 8 = -5 + 10i
-      expect(multiply(a, b)).toEqual(complex(-5, 10));
-    });
-
-    it('conjugates a ComplexNumber', () => {
-      const c = complex(3, -4);
-      expect(conjugate(c)).toEqual(complex(3, 4));
-    });
-  });
-
   describe('matrix operations', () => {
     const matrixA: DensityMatrix = [
-      [complex(1, 1), complex(2, 0)],
-      [complex(0, 3), complex(4, -1)]
+      [new ComplexNum(1, 1), new ComplexNum(2, 0)],
+      [new ComplexNum(0, 3), new ComplexNum(4, -1)]
     ];
     const matrixB: DensityMatrix = [
-      [complex(5, 0), complex(1, -2)],
-      [complex(-1, 1), complex(0, 6)]
+      [new ComplexNum(5, 0), new ComplexNum(1, -2)],
+      [new ComplexNum(-1, 1), new ComplexNum(0, 6)]
     ];
     // A * B
     // Row 1: (1+i)*5 + 2*(-1+i) = 5+5i -2+2i = 3+7i
@@ -68,35 +44,37 @@ describe('mathUtils', () => {
     // Row 2: (3i)*5 + (4-i)*(-1+i) = 15i + (-4+4i+i-i^2) = 15i + (-4+5i+1) = 15i -3+5i = -3+20i
     //        (3i)*(1-2i) + (4-i)*(6i) = (3i-6i^2) + (24i-6i^2) = (3i+6) + (24i+6) = 12+27i
     const expectedProduct: DensityMatrix = [
-      [complex(3, 7), complex(3, 11)],
-      [complex(-3, 20), complex(12, 27)]
+      [new ComplexNum(3, 7), new ComplexNum(3, 11)],
+      [new ComplexNum(-3, 20), new ComplexNum(12, 27)]
     ];
 
-    const matrixC: DensityMatrix = [[complex(1), complex(2)], [complex(3), complex(4)]];
-    const matrixD: DensityMatrix = [[complex(0), complex(5)], [complex(6), complex(7)]];
+    const matrixC: DensityMatrix = [[new ComplexNum(1, 0), new ComplexNum(2, 0)], [new ComplexNum(3, 0), new ComplexNum(4, 0)]];
+    const matrixD: DensityMatrix = [[new ComplexNum(0, 0), new ComplexNum(5, 0)], [new ComplexNum(6, 0), new ComplexNum(7, 0)]];
     // C ⊗ D
     const expectedTensor: DensityMatrix = [
-      [complex(0), complex(5), complex(0), complex(10)], // 1*D, 2*D
-      [complex(6), complex(7), complex(12), complex(14)],
-      [complex(0), complex(15), complex(0), complex(20)], // 3*D, 4*D
-      [complex(18), complex(21), complex(24), complex(28)]
+      [new ComplexNum(0, 0), new ComplexNum(5, 0), new ComplexNum(0, 0), new ComplexNum(10, 0)],
+      [new ComplexNum(6, 0), new ComplexNum(7, 0), new ComplexNum(12, 0), new ComplexNum(14, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(15, 0), new ComplexNum(0, 0), new ComplexNum(20, 0)],
+      [new ComplexNum(18, 0), new ComplexNum(21, 0), new ComplexNum(24, 0), new ComplexNum(28, 0)]
     ];
     
     const matrixRho4x4: DensityMatrix = [
-      [complex(0.5), complex(0), complex(0), complex(0.5)],
-      [complex(0), complex(0), complex(0), complex(0)],
-      [complex(0), complex(0), complex(0), complex(0)],
-      [complex(0.5), complex(0), complex(0), complex(0.5)]
+      [new ComplexNum(0.5, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0.5, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0.5, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0.5, 0)]
     ]; // Represents |Φ⁺⟩⟨Φ⁺|
-    const expectedTraceOutFirst: DensityMatrix = [[complex(0.5), complex(0)], [complex(0), complex(0.5)]]; // Should be I/2
-    const expectedTraceOutSecond: DensityMatrix = [[complex(0.5), complex(0)], [complex(0), complex(0.5)]]; // Should be I/2
+    const expectedTraceOutFirst: DensityMatrix = [[new ComplexNum(0.5, 0), new ComplexNum(0, 0)], [new ComplexNum(0, 0), new ComplexNum(0.5, 0)]]; // Should be I/2
+    const expectedTraceOutSecond: DensityMatrix = [[new ComplexNum(0.5, 0), new ComplexNum(0, 0)], [new ComplexNum(0, 0), new ComplexNum(0.5, 0)]]; // Should be I/2
 
     it('multiplies two 2x2 matrices', () => {
-      expectMatrixClose(matrixMultiply(matrixA, matrixB), expectedProduct);
+      const result = matrixMultiply(matrixA, matrixB);
+      expectMatrixClose(result, expectedProduct);
     });
 
     it('calculates the tensor product of two 2x2 matrices', () => {
-      expectMatrixClose(tensorProduct(matrixC, matrixD), expectedTensor);
+      const result = tensorProduct(matrixC, matrixD);
+      expectMatrixClose(result, expectedTensor);
     });
 
     it('calculates partial trace correctly (tracing out first subsystem)', () => {
@@ -111,10 +89,10 @@ describe('mathUtils', () => {
   describe('basis transforms', () => {
     it('calculates Bell basis fidelity correctly for |Φ⁺⟩ state', () => {
       const phiPlusState: DensityMatrix = [
-        [complex(0.5), complex(0), complex(0), complex(0.5)],
-        [complex(0), complex(0), complex(0), complex(0)],
-        [complex(0), complex(0), complex(0), complex(0)],
-        [complex(0.5), complex(0), complex(0), complex(0.5)]
+        [new ComplexNum(0.5, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0.5, 0)],
+        [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+        [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+        [new ComplexNum(0.5, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0.5, 0)]
       ];
       // Calculate fidelity wrt |Φ⁺⟩ directly
       // Original test used calculateBellBasisFidelity(transformToBellBasis(phiPlusState))
@@ -123,20 +101,20 @@ describe('mathUtils', () => {
       // Also test the original calculateBellBasisFidelity if it's meant to work on Bell Basis matrices
       // Need a known Bell Basis matrix. U|Φ⁺⟩ = [1,0,0,0]. rho_bell = [[1,0,0,0],[0,0,0,0]...]
       const phiPlusBellBasisManual: DensityMatrix = [
-          [complex(1), complex(0), complex(0), complex(0)],
-          [complex(0), complex(0), complex(0), complex(0)],
-          [complex(0), complex(0), complex(0), complex(0)],
-          [complex(0), complex(0), complex(0), complex(0)]
+          [new ComplexNum(1, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)]
       ];
       expect(calculateBellBasisFidelity(phiPlusBellBasisManual)).toBeCloseTo(1.0);
     });
 
     it('calculates Bell basis fidelity correctly for |Ψ⁻⟩ state', () => {
         const psiMinusState: DensityMatrix = [
-          [complex(0), complex(0), complex(0), complex(0)],
-          [complex(0), complex(0.5), complex(-0.5), complex(0)],
-          [complex(0), complex(-0.5), complex(0.5), complex(0)],
-          [complex(0), complex(0), complex(0), complex(0)]
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(0.5, 0), new ComplexNum(-0.5, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(-0.5, 0), new ComplexNum(0.5, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)]
         ];
         // Calculate fidelity wrt |Φ⁺⟩ directly
         // Original test used calculateBellBasisFidelity(transformToBellBasis(psiMinusState))
@@ -145,10 +123,10 @@ describe('mathUtils', () => {
         // Also test the original calculateBellBasisFidelity if it's meant to work on Bell Basis matrices
         // Need a known Bell Basis matrix. U|Ψ⁻⟩ = [0,0,0,1]. rho_bell = [[0,0,0,0],...,[0,0,0,1]]
         const psiMinusBellBasisManual: DensityMatrix = [
-          [complex(0), complex(0), complex(0), complex(0)],
-          [complex(0), complex(0), complex(0), complex(0)],
-          [complex(0), complex(0), complex(0), complex(0)],
-          [complex(0), complex(0), complex(0), complex(1)]
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+          [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(1, 0)]
       ];
        expect(calculateBellBasisFidelity(psiMinusBellBasisManual)).toBeCloseTo(0.0);
     });

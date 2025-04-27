@@ -1,11 +1,11 @@
 import {createNoisyEPR} from '../../src/engine/quantumStates';
-import {complex} from '../../src/engine/mathUtils';
-import {ComplexNumber, DensityMatrix} from '../../src/engine/types';
+import { DensityMatrix } from '../../src/engine/types';
+import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
 
 // Re-use helper functions from mathUtils.test.ts or define them here
-const expectComplexClose = (a: ComplexNumber, b: ComplexNumber, tolerance = 1e-9) => {
-  expect(a.real).toBeCloseTo(b.real, tolerance);
-  expect(a.imag).toBeCloseTo(b.imag, tolerance);
+const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
+  expect(a.re).toBeCloseTo(b.re, tolerance);
+  expect(a.im).toBeCloseTo(b.im, tolerance);
 };
 
 const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9) => {
@@ -18,58 +18,60 @@ const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9)
   });
 };
 
-// Helper function to calculate fidelity wrt |Φ⁺⟩
+// Helper function to calculate fidelity wrt |Φ⁺⟩ (index 0 in Bell Basis)
 const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  return rho[0]?.[0]?.real ?? 0;
+  return rho[0]?.[0]?.re ?? 0;
 };
 
 describe('quantumStates', () => {
   describe('Bell state & noisy EPR', () => {
     // Define expected matrices before using them in tests
     const expectedPsiMinus: DensityMatrix = [
-        [complex(0), complex(0), complex(0), complex(0)],
-        [complex(0), complex(0), complex(0), complex(0)],
-        [complex(0), complex(0), complex(0), complex(0)],
-        [complex(0), complex(0), complex(0), complex(1)]
+        [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+        [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+        [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+        [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one()]
       ];
       
     const identity4x4: DensityMatrix = [
-      [complex(1), complex(0), complex(0), complex(0)],
-      [complex(0), complex(1), complex(0), complex(0)],
-      [complex(0), complex(0), complex(1), complex(0)],
-      [complex(0), complex(0), complex(0), complex(1)]
+      [ComplexNum.one(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.one(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one()]
     ];
-    const fullyMixedState = identity4x4.map(row => row.map(c => complex(c.real * 0.25, c.imag * 0.25)));
+    const fullyMixedState = identity4x4.map(row => 
+      row.map(c => ComplexNum.mul(c, new ComplexNum(0.25, 0)))
+    );
     
-    it('createNoisyEPR(0) is equivalent to bellStatePsiMinus()', () => {
+    it('createNoisyEPR(0) should be pure |Ψ⁻⟩ state in Bell basis', () => {
       expectMatrixClose(createNoisyEPR(0), expectedPsiMinus);
     });
 
-    it('createNoisyEPR(0.5) gives the fully mixed state (I/4)', () => {
-       expectMatrixClose(createNoisyEPR(0.5), fullyMixedState);
-       // TODO: Clarify the intended range and effect of noiseParameter. It seems noiseParam=0.5 means fully mixed.
+    it('createNoisyEPR should produce a Werner-like state for noiseParam > 0', () => {
+       const noise = 0.75;
+       const state = createNoisyEPR(noise);
+       expect(state[0][0].re).toBeCloseTo(noise / 3, 9);
+       expect(state[1][1].re).toBeCloseTo(noise / 3, 9);
+       expect(state[2][2].re).toBeCloseTo(noise / 3, 9);
+       expect(state[3][3].re).toBeCloseTo(1 - noise, 9);
     });
 
-    it('fidelity of createNoisyEPR increases with noiseParam (w.r.t |Φ⁺⟩)', () => {
-      // Original test used calculateBellBasisFidelity(transformToBellBasis(rho))
-      // New approach: Use helper function calculateFidelityWrtPhiPlus
+    it('fidelity of createNoisyEPR (w.r.t |Φ⁺⟩) increases with noiseParam', () => {
       const fidelityWrtPhiPlus = (noise: number) => calculateFidelityWrtPhiPlus(createNoisyEPR(noise));
       
       const f0 = fidelityWrtPhiPlus(0);
       const f01 = fidelityWrtPhiPlus(0.1);
       const f02 = fidelityWrtPhiPlus(0.2);
-      const f05 = fidelityWrtPhiPlus(0.5);
+      const f075 = fidelityWrtPhiPlus(0.75);
       
-      // From previous derivation: F = noise / 2
-      expect(f0).toBeCloseTo(0); // noise=0 => 0
+      expect(f0).toBeCloseTo(0);
       expect(f01).toBeCloseTo(0.1 / 3);
       expect(f02).toBeCloseTo(0.2 / 3);
-      expect(f05).toBeCloseTo(0.5 / 3); // noise=0.5 => 0.25
+      expect(f075).toBeCloseTo(0.25);
 
-      // Check if fidelity increases with noise
       expect(f01).toBeGreaterThan(f0);
       expect(f02).toBeGreaterThan(f01);
-      expect(f05).toBeGreaterThan(f02);
+      expect(f075).toBeGreaterThan(f02);
     });
   });
 }); 
