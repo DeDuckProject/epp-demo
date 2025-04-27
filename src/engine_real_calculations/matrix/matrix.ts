@@ -1,13 +1,13 @@
-// Generic Complex matrix class
-import { Complex, ComplexNum } from '../types/complex';
+// Generic ComplexNum matrix class
+import { ComplexNum } from '../types/complex';
 import { kroneckerMatrix } from '../utils/tensor';
 
 export class Matrix {
   readonly rows: number;
   readonly cols: number;
-  readonly data: Complex[][];
+  readonly data: ComplexNum[][];
 
-  constructor(data: Complex[][]) {
+  constructor(data: ComplexNum[][]) {
     if (data.length === 0 || data[0].length === 0) {
       throw new Error('Matrix cannot have zero dimensions');
     }
@@ -24,7 +24,7 @@ export class Matrix {
 
   static zeros(rows: number, cols: number): Matrix {
     const z = ComplexNum.zero();
-    const data: Complex[][] = [];
+    const data: ComplexNum[][] = [];
     for (let i = 0; i < rows; i++) {
       data[i] = Array(cols).fill(z);
     }
@@ -32,7 +32,7 @@ export class Matrix {
   }
 
   static identity(size: number): Matrix {
-    const data: Complex[][] = [];
+    const data: ComplexNum[][] = [];
     for (let i = 0; i < size; i++) {
       data[i] = [];
       for (let j = 0; j < size; j++) {
@@ -42,11 +42,11 @@ export class Matrix {
     return new Matrix(data);
   }
 
-  get(i: number, j: number): Complex {
+  get(i: number, j: number): ComplexNum {
     return this.data[i][j];
   }
 
-  set(i: number, j: number, v: Complex): void {
+  set(i: number, j: number, v: ComplexNum): void {
     this.data[i][j] = { re: v.re, im: v.im };
   }
 
@@ -54,8 +54,8 @@ export class Matrix {
     return this.zip(other, (a, b) => ComplexNum.add(a, b));
   }
 
-  map(fn: (val: Complex, i: number, j: number) => Complex): Matrix {
-    const data: Complex[][] = [];
+  map(fn: (val: ComplexNum, i: number, j: number) => ComplexNum): Matrix {
+    const data: ComplexNum[][] = [];
     for (let i = 0; i < this.rows; i++) {
       data[i] = [];
       for (let j = 0; j < this.cols; j++) {
@@ -65,11 +65,11 @@ export class Matrix {
     return new Matrix(data);
   }
 
-  zip(other: Matrix, fn: (a: Complex, b: Complex, i: number, j: number) => Complex): Matrix {
+  zip(other: Matrix, fn: (a: ComplexNum, b: ComplexNum, i: number, j: number) => ComplexNum): Matrix {
     if (this.rows !== other.rows || this.cols !== other.cols) {
       throw new Error('Matrix dimensions must match for zip');
     }
-    const data: Complex[][] = [];
+    const data: ComplexNum[][] = [];
     for (let i = 0; i < this.rows; i++) {
       data[i] = [];
       for (let j = 0; j < this.cols; j++) {
@@ -112,7 +112,7 @@ export class Matrix {
     return new Matrix(data);
   }
 
-  trace(): Complex {
+  trace(): ComplexNum {
     if (this.rows !== this.cols) {
       throw new Error('Matrix must be square to compute trace');
     }
@@ -123,7 +123,7 @@ export class Matrix {
     return sum;
   }
 
-  scale(s: Complex): Matrix {
+  scale(s: ComplexNum): Matrix {
     return this.map(val => ComplexNum.mul(val, s));
   }
 
