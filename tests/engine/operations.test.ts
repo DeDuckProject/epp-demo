@@ -60,16 +60,15 @@ describe('operations', () => {
 
       const expectedFidelity = (3 * p + 1) / 4; // This is fidelity wrt |Ψ⁻⟩
 
-      // Construct the expected Werner state using the DensityMatrix class
-      const expectedData: ComplexNum[][] = Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero()));
+      // Construct the expected Werner state directly as a DensityMatrix
+      const expectedDepolarized = new DensityMatrix(Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero())));
       const nonTargetVal = (1 - expectedFidelity) / 3;
-      expectedData[0][0] = new ComplexNum(nonTargetVal, 0);
-      expectedData[1][1] = new ComplexNum(nonTargetVal, 0);
-      expectedData[2][2] = new ComplexNum(nonTargetVal, 0);
-      expectedData[3][3] = new ComplexNum(expectedFidelity, 0); // Target is |Ψ⁻⟩ at index 3
-      const expectedDepolarized = new DensityMatrix(expectedData);
+      expectedDepolarized.set(0, 0, new ComplexNum(nonTargetVal, 0));
+      expectedDepolarized.set(1, 1, new ComplexNum(nonTargetVal, 0));
+      expectedDepolarized.set(2, 2, new ComplexNum(nonTargetVal, 0));
+      expectedDepolarized.set(3, 3, new ComplexNum(expectedFidelity, 0)); // Target is |Ψ⁻⟩ at index 3
 
-      const depolarizedMatrix = depolarize(noisyPsiMinus); // Function now returns DensityMatrix
+      const depolarizedMatrix = depolarize(noisyPsiMinus);
       expectMatrixClose(depolarizedMatrix, expectedDepolarized);
       
       // Verify the fidelity calculation used within depolarize matches expected F
@@ -95,23 +94,21 @@ describe('operations', () => {
   describe('exchange components', () => {
     it('swaps |Ψ⁻⟩ and |Φ⁺⟩ components in a Bell-diagonal state', () => {
       const a = 0.6, b = 0.2;
-      // Create test state data
-      const testStateData: ComplexNum[][] = Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero()));
-      testStateData[0][0] = new ComplexNum(a, 0); // |Φ⁺⟩
-      testStateData[1][1] = new ComplexNum(0.1, 0); // |Φ⁻⟩
-      testStateData[2][2] = new ComplexNum(0.1, 0); // |Ψ⁺⟩
-      testStateData[3][3] = new ComplexNum(b, 0); // |Ψ⁻⟩
-      const testState = new DensityMatrix(testStateData);
+      // Create test state directly as DensityMatrix
+      const testState = new DensityMatrix(Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero())));
+      testState.set(0, 0, new ComplexNum(a, 0)); // |Φ⁺⟩
+      testState.set(1, 1, new ComplexNum(0.1, 0)); // |Φ⁻⟩
+      testState.set(2, 2, new ComplexNum(0.1, 0)); // |Ψ⁺⟩
+      testState.set(3, 3, new ComplexNum(b, 0)); // |Ψ⁻⟩
 
-      // Create expected state data after swap
-      const expectedSwappedData: ComplexNum[][] = Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero()));
-      expectedSwappedData[0][0] = new ComplexNum(b, 0); // Now has b
-      expectedSwappedData[1][1] = new ComplexNum(0.1, 0); // Stays the same
-      expectedSwappedData[2][2] = new ComplexNum(0.1, 0); // Stays the same
-      expectedSwappedData[3][3] = new ComplexNum(a, 0); // Now has a
-      const expectedSwapped = new DensityMatrix(expectedSwappedData);
+      // Create expected state after swap directly as DensityMatrix
+      const expectedSwapped = new DensityMatrix(Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero())));
+      expectedSwapped.set(0, 0, new ComplexNum(b, 0)); // Now has b
+      expectedSwapped.set(1, 1, new ComplexNum(0.1, 0)); // Stays the same
+      expectedSwapped.set(2, 2, new ComplexNum(0.1, 0)); // Stays the same
+      expectedSwapped.set(3, 3, new ComplexNum(a, 0)); // Now has a
 
-      const exchangedState = exchangePsiMinusPhiPlus(testState); // Function takes/returns DensityMatrix
+      const exchangedState = exchangePsiMinusPhiPlus(testState);
       
       // Verify using the direct fidelity calculation (already uses get())
       expect(calculateFidelityWrtPhiPlus(testState)).toBeCloseTo(a); // Fidelity wrt |Φ⁺⟩ should be a
