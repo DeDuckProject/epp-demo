@@ -1,23 +1,23 @@
-import { DensityMatrix } from './types';
-import { tensorProduct } from './mathUtils';
 import { ComplexNum } from '../engine_real_calculations/types/complex';
+import { DensityMatrix } from '../engine_real_calculations/matrix/densityMatrix';
+import { tensorProduct } from './mathUtils';
 
 // Depolarize/Twirl a pair to convert to Werner form
 export const depolarize = (rho: DensityMatrix): DensityMatrix => {
   // In Bell basis, depolarizing means keeping the diagonal elements
   // and setting all off-diagonal elements to zero
-  const result: DensityMatrix = Array(4).fill(0).map(() => 
+  const resultData: ComplexNum[][] = Array(4).fill(0).map(() => 
     Array(4).fill(0).map(() => ComplexNum.zero())
   );
   
   // Copy only the diagonal elements
   for (let i = 0; i < 4; i++) {
-    result[i][i] = rho[i][i];
+    resultData[i][i] = rho.get(i, i);
   }
   
   // Normalize the non-target components to balance them
   const targetIdx = 3; // |Ψ⁻⟩ is our target state
-  const targetFidelity = rho[targetIdx][targetIdx].re;
+  const targetFidelity = rho.get(targetIdx, targetIdx).re;
   
   // Sum of non-target diagonal elements
   // let sumNonTarget = 0;
@@ -31,50 +31,48 @@ export const depolarize = (rho: DensityMatrix): DensityMatrix => {
   const balancedNonTargetValue = (1 - targetFidelity) / 3;
   for (let i = 0; i < 4; i++) {
     if (i !== targetIdx) {
-      result[i][i] = new ComplexNum(balancedNonTargetValue, 0);
+      resultData[i][i] = new ComplexNum(balancedNonTargetValue, 0);
     }
   }
   
-  return result;
+  return new DensityMatrix(resultData);
 };
 
 // Exchange |Ψ⁻⟩ and |Φ⁺⟩ components (Step 2 of BBPSSW)
 export const exchangePsiMinusPhiPlus = (rho: DensityMatrix): DensityMatrix => {
-  // Create a copy of the input density matrix
-  const result: DensityMatrix = rho.map(row => 
-    row.map(el => new ComplexNum(el.re, el.im))
-  );
+  // Create a copy of the input density matrix data
+  // NOTE: DensityMatrix constructor likely performs a deep copy if Matrix does
+  const result = new DensityMatrix(rho.data);
   
   // Exchange the |Ψ⁻⟩ and |Φ⁺⟩ components
   // In Bell basis, |Ψ⁻⟩ is at index 3 and |Φ⁺⟩ is at index 0
   
-  // Swap diagonal elements
-  const temp = new ComplexNum(result[3][3].re, result[3][3].im);
-  result[3][3] = new ComplexNum(result[0][0].re, result[0][0].im);
-  result[0][0] = temp;
+  // Swap diagonal elements using get() and set()
+  const temp = result.get(3, 3);
+  result.set(3, 3, result.get(0, 0));
+  result.set(0, 0, temp);
   
-  // Swap off-diagonal elements related to these states
+  // Swap off-diagonal elements related to these states using get() and set()
   for (let i = 0; i < 4; i++) {
     if (i !== 0 && i !== 3) {
-      // Create temporary copies using new ComplexNum
-      const temp0i = new ComplexNum(result[0][i].re, result[0][i].im);
-      const temp3i = new ComplexNum(result[3][i].re, result[3][i].im);
-      const tempi0 = new ComplexNum(result[i][0].re, result[i][0].im);
-      const tempi3 = new ComplexNum(result[i][3].re, result[i][3].im);
+      const temp0i = result.get(0, i);
+      const temp3i = result.get(3, i);
+      const tempi0 = result.get(i, 0);
+      const tempi3 = result.get(i, 3);
 
-      result[0][i] = temp3i;
-      result[3][i] = temp0i;
+      result.set(0, i, temp3i);
+      result.set(3, i, temp0i);
       
-      result[i][0] = tempi3;
-      result[i][3] = tempi0;
+      result.set(i, 0, tempi3);
+      result.set(i, 3, tempi0);
     }
   }
   
-  // Swap the 0,3 and 3,0 elements
-  const temp03 = new ComplexNum(result[0][3].re, result[0][3].im);
-  const temp30 = new ComplexNum(result[3][0].re, result[3][0].im);
-  result[0][3] = temp30;
-  result[3][0] = temp03;
+  // Swap the 0,3 and 3,0 elements using get() and set()
+  const temp03 = result.get(0, 3);
+  const temp30 = result.get(3, 0);
+  result.set(0, 3, temp30);
+  result.set(3, 0, temp03);
   
   return result;
 };
@@ -99,7 +97,7 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
   
   // In the BBPSSW protocol with |Φ⁺⟩ as the target state after exchange,
   // the success probability depends on the fidelity F
-  const f = control[0][0].re;
+  const f = control.get(0, 0).re;
   
   // Success probability is p_success = f^2 + (1-f)^2/9
   const successProbability = f * f + (1 - f) * (1 - f) / 9;
@@ -117,13 +115,14 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
     // Handle potential division by zero or NaN
     const fPrime = denominator === 0 ? 0 : numerator / denominator;
     
-    // Create new density matrix with improved fidelity (Werner state form)
-    controlPair = Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero()));
-    controlPair[0][0] = new ComplexNum(fPrime, 0);
+    // Create new density matrix data with improved fidelity (Werner state form)
+    const controlPairData: ComplexNum[][] = Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero()));
+    controlPairData[0][0] = new ComplexNum(fPrime, 0);
     const nonTargetVal = (1 - fPrime) / 3;
-    controlPair[1][1] = new ComplexNum(nonTargetVal, 0);
-    controlPair[2][2] = new ComplexNum(nonTargetVal, 0);
-    controlPair[3][3] = new ComplexNum(nonTargetVal, 0);
+    controlPairData[1][1] = new ComplexNum(nonTargetVal, 0);
+    controlPairData[2][2] = new ComplexNum(nonTargetVal, 0);
+    controlPairData[3][3] = new ComplexNum(nonTargetVal, 0);
+    controlPair = new DensityMatrix(controlPairData);
 
   } else {
     // Return the original control pair if measurement fails

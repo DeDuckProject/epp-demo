@@ -1,5 +1,5 @@
 import React from 'react';
-import { DensityMatrix } from '../engine/types';
+import { DensityMatrix } from '../engine_real_calculations/matrix/densityMatrix';
 
 interface DensityMatrixViewProps {
   matrix: DensityMatrix;
@@ -31,12 +31,20 @@ const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ matrix }) => {
   // Bell basis state labels
   const bellLabels = ['|Φ⁺⟩', '|Φ⁻⟩', '|Ψ⁺⟩', '|Ψ⁻⟩'];
   
-  // Determine if off-diagonal elements are present (non-Werner state)
-  const hasOffDiagonals = matrix.some((row, i) => 
-    row.some((cell, j) => 
-      i !== j && (Math.abs(cell.re) > 0.001 || Math.abs(cell.im) > 0.001)
-    )
-  );
+  // Determine if off-diagonal elements are present using class methods
+  let hasOffDiagonals = false;
+  for (let i = 0; i < matrix.rows; i++) {
+    for (let j = 0; j < matrix.cols; j++) {
+      if (i !== j) {
+        const cell = matrix.get(i, j);
+        if (Math.abs(cell.re) > 0.001 || Math.abs(cell.im) > 0.001) {
+          hasOffDiagonals = true;
+          break;
+        }
+      }
+    }
+    if (hasOffDiagonals) break;
+  }
   
   return (
     <div className="density-matrix">
@@ -52,17 +60,20 @@ const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ matrix }) => {
           </tr>
         </thead>
         <tbody>
-          {matrix.map((row, rowIdx) => (
+          {Array.from({ length: matrix.rows }).map((_, rowIdx) => (
             <tr key={rowIdx}>
               <th>{bellLabels[rowIdx]}</th>
-              {row.map((cell, cellIdx) => (
-                <td 
-                  key={cellIdx}
-                  className={rowIdx !== cellIdx ? 'off-diagonal' : 'diagonal'}
-                >
-                  {formatComplex(cell)}
-                </td>
-              ))}
+              {Array.from({ length: matrix.cols }).map((_, cellIdx) => {
+                const cell = matrix.get(rowIdx, cellIdx);
+                return (
+                  <td 
+                    key={cellIdx}
+                    className={rowIdx !== cellIdx ? 'off-diagonal' : 'diagonal'}
+                  >
+                    {formatComplex(cell)}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
