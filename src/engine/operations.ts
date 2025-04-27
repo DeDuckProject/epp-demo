@@ -6,13 +6,13 @@ import { tensorProduct } from './mathUtils';
 export const depolarize = (rho: DensityMatrix): DensityMatrix => {
   // In Bell basis, depolarizing means keeping the diagonal elements
   // and setting all off-diagonal elements to zero
-  const resultData: ComplexNum[][] = Array(4).fill(0).map(() => 
+  const result = new DensityMatrix(Array(4).fill(0).map(() => 
     Array(4).fill(0).map(() => ComplexNum.zero())
-  );
+  ));
   
-  // Copy only the diagonal elements
+  // Copy only the diagonal elements using set()
   for (let i = 0; i < 4; i++) {
-    resultData[i][i] = rho.get(i, i);
+    result.set(i, i, rho.get(i, i));
   }
   
   // Normalize the non-target components to balance them
@@ -27,15 +27,15 @@ export const depolarize = (rho: DensityMatrix): DensityMatrix => {
   //   }
   // }
   
-  // Balance the non-target elements
+  // Balance the non-target elements using set()
   const balancedNonTargetValue = (1 - targetFidelity) / 3;
   for (let i = 0; i < 4; i++) {
     if (i !== targetIdx) {
-      resultData[i][i] = new ComplexNum(balancedNonTargetValue, 0);
+      result.set(i, i, new ComplexNum(balancedNonTargetValue, 0));
     }
   }
   
-  return new DensityMatrix(resultData);
+  return result;
 };
 
 // Exchange |Ψ⁻⟩ and |Φ⁺⟩ components (Step 2 of BBPSSW)
@@ -115,14 +115,14 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
     // Handle potential division by zero or NaN
     const fPrime = denominator === 0 ? 0 : numerator / denominator;
     
-    // Create new density matrix data with improved fidelity (Werner state form)
-    const controlPairData: ComplexNum[][] = Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero()));
-    controlPairData[0][0] = new ComplexNum(fPrime, 0);
+    // Create new density matrix directly and set elements
+    const controlPairResult = new DensityMatrix(Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero())));
+    controlPairResult.set(0, 0, new ComplexNum(fPrime, 0));
     const nonTargetVal = (1 - fPrime) / 3;
-    controlPairData[1][1] = new ComplexNum(nonTargetVal, 0);
-    controlPairData[2][2] = new ComplexNum(nonTargetVal, 0);
-    controlPairData[3][3] = new ComplexNum(nonTargetVal, 0);
-    controlPair = new DensityMatrix(controlPairData);
+    controlPairResult.set(1, 1, new ComplexNum(nonTargetVal, 0));
+    controlPairResult.set(2, 2, new ComplexNum(nonTargetVal, 0));
+    controlPairResult.set(3, 3, new ComplexNum(nonTargetVal, 0));
+    controlPair = controlPairResult;
 
   } else {
     // Return the original control pair if measurement fails
