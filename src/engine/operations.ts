@@ -1,6 +1,5 @@
 import { ComplexNum } from '../engine_real_calculations/types/complex';
 import { DensityMatrix } from '../engine_real_calculations/matrix/densityMatrix';
-import { tensorProduct } from './mathUtils';
 
 // Depolarize/Twirl a pair to convert to Werner form
 export const depolarize = (rho: DensityMatrix): DensityMatrix => {
@@ -86,7 +85,8 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
   }
 } => {
   // Create the full 16x16 joint state using tensor product
-  const jointState = tensorProduct(control, target);
+  // const jointState = tensorProduct(control, target);
+  const jointState = DensityMatrix.tensor(control, target); // Use static method
   
   // Represent the bilateral CNOT in the computational basis
   // This is a simplified representation - in a real implementation, 
