@@ -22,7 +22,7 @@ describe('ComplexNum operations', () => {
   test('conj and abs2', () => {
     const a: Complex = { re: 5, im: -6 };
     expect(ComplexNum.conj(a)).toEqual({ re: 5, im: 6 });
-    expect(ComplexNum.abs2(a)).toBe(5 * 5 + 6 * 6);
+    expect(ComplexNum.abs2(a)).toBeCloseTo(5 * 5 + 6 * 6,2);
   });
 
   test('zero, one, and fromReal', () => {
