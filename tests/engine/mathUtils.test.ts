@@ -1,4 +1,4 @@
-import { matrixMultiply, tensorProduct, partialTrace, calculateBellBasisFidelity } from '../../src/engine/mathUtils';
+import { partialTrace, calculateBellBasisFidelity } from '../../src/engine/mathUtils';
 import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
 import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
 
@@ -67,13 +67,8 @@ describe('mathUtils', () => {
     const expectedTraceOutFirst = new DensityMatrix([[new ComplexNum(0.5, 0), new ComplexNum(0, 0)], [new ComplexNum(0, 0), new ComplexNum(0.5, 0)]]); // Should be I/2
     const expectedTraceOutSecond = new DensityMatrix([[new ComplexNum(0.5, 0), new ComplexNum(0, 0)], [new ComplexNum(0, 0), new ComplexNum(0.5, 0)]]); // Should be I/2
 
-    it('multiplies two 2x2 matrices', () => {
-      const result = matrixMultiply(matrixA, matrixB);
-      expectMatrixClose(result, expectedProduct);
-    });
-
     it('calculates the tensor product of two 2x2 matrices', () => {
-      const result = tensorProduct(matrixC, matrixD);
+      const result = DensityMatrix.tensor(matrixC, matrixD);
       expectMatrixClose(result, expectedTensor);
     });
 
