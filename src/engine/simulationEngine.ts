@@ -1,7 +1,7 @@
-import { QubitPair, SimulationParameters, SimulationState } from './types';
-import { calculateBellBasisFidelity } from './mathUtils';
-import { createNoisyEPR } from './quantumStates';
-import { depolarize, bilateralCNOT, exchangePsiMinusPhiPlus } from './operations';
+import {QubitPair, SimulationParameters, SimulationState} from './types';
+import {createNoisyEPR} from './quantumStates';
+import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus} from './operations';
+import {fidelityFromBellBasisMatrix} from "../engine_real_calculations/bell/bell-basis.ts";
 
 export class SimulationEngine {
   private params: SimulationParameters;
@@ -17,7 +17,7 @@ export class SimulationEngine {
     // Create initial noisy EPR pairs in Bell basis
     for (let i = 0; i < this.params.initialPairs; i++) {
       const densityMatrix = createNoisyEPR(this.params.noiseParameter);
-      const fidelity = calculateBellBasisFidelity(densityMatrix);
+      const fidelity = fidelityFromBellBasisMatrix(densityMatrix);
       
       pairs.push({
         id: i,
@@ -41,7 +41,7 @@ export class SimulationEngine {
       return {
         ...pair,
         densityMatrix: wernerMatrix,
-        fidelity: calculateBellBasisFidelity(wernerMatrix)
+        fidelity: fidelityFromBellBasisMatrix(wernerMatrix)
       };
     });
     
@@ -55,7 +55,7 @@ export class SimulationEngine {
       return {
         ...pair,
         densityMatrix: exchangedMatrix,
-        fidelity: calculateBellBasisFidelity(exchangedMatrix)
+        fidelity: fidelityFromBellBasisMatrix(exchangedMatrix)
       };
     });
     
@@ -113,7 +113,7 @@ export class SimulationEngine {
         control: {
           id: controlPair.id,
           densityMatrix: result.afterMeasurement.controlPair,
-          fidelity: calculateBellBasisFidelity(result.afterMeasurement.controlPair)
+          fidelity: fidelityFromBellBasisMatrix(result.afterMeasurement.controlPair)
         },
         successful: result.afterMeasurement.successful
       });
@@ -143,7 +143,7 @@ export class SimulationEngine {
         newPairs.push({
           id: result.control.id,
           densityMatrix: wernerState,
-          fidelity: calculateBellBasisFidelity(wernerState)
+          fidelity: fidelityFromBellBasisMatrix(wernerState)
         });
       }
     }
