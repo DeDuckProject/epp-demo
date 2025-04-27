@@ -7,22 +7,22 @@ interface DensityMatrixViewProps {
 
 const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ matrix }) => {
   // Helper to format complex numbers
-  const formatComplex = (c: { real: number, imag: number }) => {
-    if (Math.abs(c.real) < 0.001 && Math.abs(c.imag) < 0.001) {
+  const formatComplex = (c: { re: number, im: number }) => {
+    if (Math.abs(c.re) < 0.001 && Math.abs(c.im) < 0.001) {
       return '0';
     }
     
     let result = '';
     
-    if (Math.abs(c.real) >= 0.001) {
-      result += c.real.toFixed(3);
+    if (Math.abs(c.re) >= 0.001) {
+      result += c.re.toFixed(3);
     }
     
-    if (Math.abs(c.imag) >= 0.001) {
-      if (c.imag > 0 && result.length > 0) {
+    if (Math.abs(c.im) >= 0.001) {
+      if (c.im > 0 && result.length > 0) {
         result += '+';
       }
-      result += `${c.imag.toFixed(3)}i`;
+      result += `${c.im.toFixed(3)}i`;
     }
     
     return result || '0';
@@ -34,7 +34,7 @@ const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ matrix }) => {
   // Determine if off-diagonal elements are present (non-Werner state)
   const hasOffDiagonals = matrix.some((row, i) => 
     row.some((cell, j) => 
-      i !== j && (Math.abs(cell.real) > 0.001 || Math.abs(cell.imag) > 0.001)
+      i !== j && (Math.abs(cell.re) > 0.001 || Math.abs(cell.im) > 0.001)
     )
   );
   

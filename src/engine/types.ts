@@ -1,9 +1,6 @@
-export type ComplexNumber = {
-  real: number;
-  imag: number;
-};
+import { ComplexNum } from "../engine_real_calculations";
 
-export type DensityMatrix = ComplexNumber[][];
+export type DensityMatrix = ComplexNum[][];
 
 export type QubitPair = {
   id: number;
