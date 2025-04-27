@@ -1,29 +1,29 @@
-import { DensityMatrix } from './types';
 import { ComplexNum } from '../engine_real_calculations/types/complex';
+import { DensityMatrix } from '../engine_real_calculations/matrix/densityMatrix';
 
 export const matrixMultiply = (a: DensityMatrix, b: DensityMatrix): DensityMatrix => {
-  const size = a.length;
-  const result: DensityMatrix = Array(size).fill(0).map(() => 
+  const size = a.rows;
+  const resultData: ComplexNum[][] = Array(size).fill(0).map(() => 
     Array(size).fill(0).map(() => ComplexNum.zero())
   );
 
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
       for (let k = 0; k < size; k++) {
-        result[i][j] = ComplexNum.add(result[i][j], ComplexNum.mul(a[i][k], b[k][j]));
+        resultData[i][j] = ComplexNum.add(resultData[i][j], ComplexNum.mul(a.get(i, k), b.get(k, j)));
       }
     }
   }
   
-  return result;
+  return new DensityMatrix(resultData);
 };
 
 export const tensorProduct = (a: DensityMatrix, b: DensityMatrix): DensityMatrix => {
-  const sizeA = a.length;
-  const sizeB = b.length;
+  const sizeA = a.rows;
+  const sizeB = b.rows;
   const size = sizeA * sizeB;
   
-  const result: DensityMatrix = Array(size).fill(0).map(() => 
+  const resultData: ComplexNum[][] = Array(size).fill(0).map(() => 
     Array(size).fill(0).map(() => ComplexNum.zero())
   );
   
@@ -33,20 +33,20 @@ export const tensorProduct = (a: DensityMatrix, b: DensityMatrix): DensityMatrix
         for (let j2 = 0; j2 < sizeB; j2++) {
           const i = i1 * sizeB + i2;
           const j = j1 * sizeB + j2;
-          result[i][j] = ComplexNum.mul(a[i1][j1], b[i2][j2]);
+          resultData[i][j] = ComplexNum.mul(a.get(i1, j1), b.get(i2, j2));
         }
       }
     }
   }
   
-  return result;
+  return new DensityMatrix(resultData);
 };
 
 export const partialTrace = (rho: DensityMatrix, subsystemSize: number, traceOutFirst: boolean): DensityMatrix => {
-  const totalSize = rho.length;
+  const totalSize = rho.rows;
   const resultSize = totalSize / subsystemSize;
   
-  const result: DensityMatrix = Array(resultSize).fill(0).map(() => 
+  const resultData: ComplexNum[][] = Array(resultSize).fill(0).map(() => 
     Array(resultSize).fill(0).map(() => ComplexNum.zero())
   );
   
@@ -55,17 +55,17 @@ export const partialTrace = (rho: DensityMatrix, subsystemSize: number, traceOut
       for (let k = 0; k < subsystemSize; k++) {
         const idx1 = traceOutFirst ? k * resultSize + i : i * subsystemSize + k;
         const idx2 = traceOutFirst ? k * resultSize + j : j * subsystemSize + k;
-        result[i][j] = ComplexNum.add(result[i][j], rho[idx1][idx2]);
+        resultData[i][j] = ComplexNum.add(resultData[i][j], rho.get(idx1, idx2));
       }
     }
   }
   
-  return result;
+  return new DensityMatrix(resultData);
 };
 
 // Calculate fidelity in Bell basis - it's the element corresponding to our target state
 export const calculateBellBasisFidelity = (rho: DensityMatrix): number => {
   // After exchange, our target state is |Φ⁺⟩ (index 0)
   // Before exchange, our target state is |Ψ⁻⟩ (index 3)
-  return rho[0][0].re;
+  return rho.get(0, 0).re;
 }; 

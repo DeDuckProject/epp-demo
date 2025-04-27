@@ -1,10 +1,8 @@
-import { ComplexNum } from "../engine_real_calculations";
-
-export type DensityMatrix = ComplexNum[][];
+import { DensityMatrix } from "../engine_real_calculations/matrix/densityMatrix";
 
 export type QubitPair = {
   id: number;
-  densityMatrix: DensityMatrix;
+  densityMatrix: DensityMatrix; // Placeholder - will be updated later if needed by other files
   fidelity: number;
 };
 

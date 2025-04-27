@@ -1,8 +1,9 @@
 // import { jest } from '@jest/globals';
 import { vi } from 'vitest';
 import { SimulationEngine } from '../../src/engine/simulationEngine';
-import { SimulationParameters, DensityMatrix } from '../../src/engine/types';
+import { SimulationParameters } from '../../src/engine/types';
 import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
+import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
 import { createNoisyEPR } from '../../src/engine/quantumStates';
 
 // Helper function for comparing complex numbers with tolerance
@@ -11,20 +12,20 @@ const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
     expect(a.im).toBeCloseTo(b.im, tolerance);
 };
 
-// Helper function for comparing matrices with tolerance
+// Updated helper function for comparing DensityMatrix objects
 const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9) => {
-    expect(a.length).toBe(b.length);
-    a.forEach((row, i) => {
-        expect(row.length).toBe(b[i].length);
-        row.forEach((val, j) => {
-            expectComplexClose(val, b[i][j], tolerance);
-        });
-    });
+    expect(a.rows).toBe(b.rows);
+    expect(a.cols).toBe(b.cols);
+    for (let i = 0; i < a.rows; i++) {
+        for (let j = 0; j < a.cols; j++) {
+            expectComplexClose(a.get(i, j), b.get(i, j), tolerance);
+        }
+    }
 };
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
 const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  const term00 = rho[0]?.[0]?.re ?? 0;
+  const term00 = rho.get(0, 0)?.re ?? 0; // Use get()
   return term00; // In Bell basis, fidelity with |Φ⁺⟩ is directly the (0,0) element
 };
 
@@ -52,11 +53,11 @@ describe('SimulationEngine', () => {
 
         it('initializes pairs with expected noise level', () => {
             const state = engine.getCurrentState();
-            const expectedInitialMatrix = createNoisyEPR(initialParams.noiseParameter);
-            const expectedInitialFidelity = calculateFidelityWrtPhiPlus(expectedInitialMatrix);
+            const expectedInitialMatrix = createNoisyEPR(initialParams.noiseParameter); // Returns DensityMatrix
+            const expectedInitialFidelity = calculateFidelityWrtPhiPlus(expectedInitialMatrix); // Helper uses get()
             
             state.pairs.forEach(pair => {
-                expectMatrixClose(pair.densityMatrix, expectedInitialMatrix);
+                expectMatrixClose(pair.densityMatrix, expectedInitialMatrix); // Helper uses get()
                 expect(pair.fidelity).toBeCloseTo(expectedInitialFidelity);
             });
         });
@@ -163,7 +164,7 @@ describe('SimulationEngine', () => {
             expect(state.pairs.length).toBeGreaterThanOrEqual(1);
             // After completion the final state is depolarized wrt |Ψ⁻⟩
             // Check fidelity wrt |Ψ⁻⟩ which is the [3][3] element
-            expect(state.pairs[0].densityMatrix[3][3].re).toBeGreaterThanOrEqual(highFidelityParams.targetFidelity); // Use .re (fixed)
+            expect(state.pairs[0].densityMatrix.get(3, 3).re).toBeGreaterThanOrEqual(highFidelityParams.targetFidelity); // Use get()
         });
 
         it('reaches completion when fewer than 2 pairs remain', () => {
@@ -201,7 +202,8 @@ describe('SimulationEngine', () => {
         it('reset() returns the engine to the initial state', () => {
             engine.nextStep(); // Move state forward
             engine.nextStep();
-            const initialState = new SimulationEngine(initialParams).getCurrentState();
+            const initialEngine = new SimulationEngine(initialParams); // Create clean engine for comparison
+            const initialState = initialEngine.getCurrentState();
             const resetState = engine.reset();
             
             // Compare density matrices carefully
@@ -210,9 +212,12 @@ describe('SimulationEngine', () => {
             expect(resetState.purificationStep).toBe(initialState.purificationStep);
             expect(resetState.pairs.length).toBe(initialState.pairs.length);
             resetState.pairs.forEach((pair, i) => {
-                expect(pair.id).toBe(initialState.pairs[i].id);
-                expectMatrixClose(pair.densityMatrix, initialState.pairs[i].densityMatrix);
-                expect(pair.fidelity).toBeCloseTo(initialState.pairs[i].fidelity);
+                const initialPair = initialState.pairs.find(p => p.id === pair.id);
+                expect(initialPair).toBeDefined();
+                if(initialPair) {
+                    expectMatrixClose(pair.densityMatrix, initialPair.densityMatrix); // Helper uses get()
+                    expect(pair.fidelity).toBeCloseTo(initialPair.fidelity);
+                }
             });
         });
 
@@ -227,8 +232,8 @@ describe('SimulationEngine', () => {
 
             expect(resetState.pairs.length).toBe(newParams.initialPairs);
             // Check fidelity reflects new noise parameter
-            const expectedMatrix = createNoisyEPR(newParams.noiseParameter);
-            const expectedFidelity = calculateFidelityWrtPhiPlus(expectedMatrix);
+            const expectedMatrix = createNoisyEPR(newParams.noiseParameter); // Returns DensityMatrix
+            const expectedFidelity = calculateFidelityWrtPhiPlus(expectedMatrix); // Helper uses get()
             resetState.pairs.forEach(pair => {
                 expect(pair.fidelity).toBeCloseTo(expectedFidelity);
             });

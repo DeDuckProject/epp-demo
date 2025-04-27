@@ -1,11 +1,11 @@
 import { Matrix } from './matrix';
-import { Complex, ComplexNum } from '../types/complex';
+import { ComplexNum } from '../types/complex';
 
 /**
  * DensityMatrix extends Matrix for quantum density operators (2^n x 2^n)
  */
 export class DensityMatrix extends Matrix {
-  constructor(data: Complex[][]) {
+  constructor(data: ComplexNum[][]) {
     super(data);
     if (this.rows !== this.cols) {
       throw new Error('DensityMatrix must be square');
@@ -50,14 +50,14 @@ export class DensityMatrix extends Matrix {
     return true;
   }
 
-  /** Create a density matrix from a state vector |psi><psi| */
-  static fromStateVector(vec: Complex[]): DensityMatrix {
+  /** Create a density matrix from a state vector | psi>< psi| */
+  static fromStateVector(vec: ComplexNum[]): DensityMatrix {
     const N = vec.length;
     const n = Math.log2(N);
     if (!Number.isInteger(n)) {
       throw new Error('State vector length must be a power of 2');
     }
-    const data: Complex[][] = [];
+    const data: ComplexNum[][] = [];
     for (let i = 0; i < N; i++) {
       data[i] = [];
       for (let j = 0; j < N; j++) {
