@@ -1,7 +1,8 @@
-import { depolarize, exchangePsiMinusPhiPlus, bilateralCNOT } from '../../src/engine/operations';
-import { createNoisyEPR } from '../../src/engine/quantumStates';
-import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
-import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
+import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus} from '../../src/engine/operations';
+import {createNoisyEPR} from '../../src/engine/quantumStates';
+import {ComplexNum} from '../../src/engine_real_calculations/types/complex';
+import {DensityMatrix} from '../../src/engine_real_calculations/matrix/densityMatrix';
+import {fidelityFromBellBasisMatrix} from "../../src/engine_real_calculations/bell/bell-basis";
 
 // Helper function for comparing complex numbers with tolerance
 const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
@@ -21,27 +22,6 @@ const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9)
 };
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
-const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  const term00 = rho.get(0, 0)?.re ?? 0; // Use get()
-  return term00; // In Bell basis, fidelity with |Φ⁺⟩ is directly the (0,0) element
-};
-
-// Helper: Create a pure Bell state |Φ⁺⟩⟨Φ⁺| in Bell basis using DensityMatrix class
-const phiPlusState = (): DensityMatrix => new DensityMatrix([
-  [ComplexNum.one(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
-  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
-  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
-  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()]
-]);
-
-// Helper: Create a pure Bell state |Ψ⁻⟩⟨Ψ⁻| in Bell basis using DensityMatrix class
-const psiMinusState = (): DensityMatrix => new DensityMatrix([
-  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
-  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
-  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
-  [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one()]
-]);
-
 describe('operations', () => {
   describe('depolarize / twirl', () => {
     it('converts a noisy EPR pair (Werner state form) to its depolarized form', () => {
@@ -111,8 +91,8 @@ describe('operations', () => {
       const exchangedState = exchangePsiMinusPhiPlus(testState);
       
       // Verify using the direct fidelity calculation (already uses get())
-      expect(calculateFidelityWrtPhiPlus(testState)).toBeCloseTo(a); // Fidelity wrt |Φ⁺⟩ should be a
-      expect(calculateFidelityWrtPhiPlus(exchangedState)).toBeCloseTo(b); // After exchange, fidelity wrt |Φ⁺⟩ should be b
+      expect(fidelityFromBellBasisMatrix(testState)).toBeCloseTo(a); // Fidelity wrt |Φ⁺⟩ should be a
+      expect(fidelityFromBellBasisMatrix(exchangedState)).toBeCloseTo(b); // After exchange, fidelity wrt |Φ⁺⟩ should be b
 
       // Check the full matrix (helper already uses get())
       expectMatrixClose(exchangedState, expectedSwapped);
@@ -148,8 +128,8 @@ describe('operations', () => {
 
       // Original test used calculateBellBasisFidelity(transformToBellBasis(rho))
       // New approach: Use helper function calculateFidelityWrtPhiPlus
-      const initialFidelity = calculateFidelityWrtPhiPlus(controlPair); // Helper uses get()
-      const finalFidelity = calculateFidelityWrtPhiPlus(result.afterMeasurement.controlPair); // Helper uses get()
+      const initialFidelity = fidelityFromBellBasisMatrix(controlPair); // Helper uses get()
+      const finalFidelity = fidelityFromBellBasisMatrix(result.afterMeasurement.controlPair); // Helper uses get()
       
       expect(finalFidelity).toBeDefined();
       console.log(`Bilateral CNOT: Initial Fidelity=${initialFidelity}, Final Fidelity=${finalFidelity}, Success=${result.afterMeasurement.successful}`);
