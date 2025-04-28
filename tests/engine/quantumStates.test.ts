@@ -1,29 +1,10 @@
-import { createNoisyEPR } from '../../src/engine/quantumStates';
-import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
-import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
-
-// Helper function for comparing complex numbers with tolerance
-const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
-  expect(a.re).toBeCloseTo(b.re, tolerance);
-  expect(a.im).toBeCloseTo(b.im, tolerance);
-};
-
-// Updated helper function for comparing DensityMatrix objects
-const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9) => {
-  expect(a.rows).toBe(b.rows);
-  expect(a.cols).toBe(b.cols);
-  for (let i = 0; i < a.rows; i++) {
-    for (let j = 0; j < a.cols; j++) {
-      expectComplexClose(a.get(i, j), b.get(i, j), tolerance);
-    }
-  }
-};
+import {createNoisyEPR} from '../../src/engine/quantumStates';
+import {ComplexNum} from '../../src/engine_real_calculations/types/complex';
+import {DensityMatrix} from '../../src/engine_real_calculations/matrix/densityMatrix';
+import {expectMatrixClose} from "../_test_utils.ts";
+import {fidelityFromBellBasisMatrix} from "../../src/engine_real_calculations/bell/bell-basis.ts";
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ (index 0 in Bell Basis)
-const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  return rho.get(0, 0)?.re ?? 0; // Use get()
-};
-
 describe('quantumStates', () => {
   describe('Bell state & noisy EPR', () => {
     // Wrap data in new DensityMatrix()
@@ -32,15 +13,6 @@ describe('quantumStates', () => {
         [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
         [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
         [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one()]
-    ]);
-    
-    // This will require the Matrix/ComplexNum classes for operations if we keep it
-    // Or define the fully mixed state manually
-    const fullyMixedState = new DensityMatrix([
-        [new ComplexNum(0.25, 0), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
-        [ComplexNum.zero(), new ComplexNum(0.25, 0), ComplexNum.zero(), ComplexNum.zero()],
-        [ComplexNum.zero(), ComplexNum.zero(), new ComplexNum(0.25, 0), ComplexNum.zero()],
-        [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), new ComplexNum(0.25, 0)]
     ]);
     
     it('createNoisyEPR(0) should be pure |Ψ⁻⟩ state in Bell basis', () => {
@@ -59,7 +31,7 @@ describe('quantumStates', () => {
 
     it('fidelity of createNoisyEPR (w.r.t |Φ⁺⟩) increases with noiseParam', () => {
       // fidelity function already uses get()
-      const fidelityWrtPhiPlus = (noise: number) => calculateFidelityWrtPhiPlus(createNoisyEPR(noise));
+      const fidelityWrtPhiPlus = (noise: number) => fidelityFromBellBasisMatrix(createNoisyEPR(noise));
       
       const f0 = fidelityWrtPhiPlus(0);
       const f01 = fidelityWrtPhiPlus(0.1);

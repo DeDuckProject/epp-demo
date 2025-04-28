@@ -1,34 +1,12 @@
 // import { jest } from '@jest/globals';
-import { vi } from 'vitest';
-import { SimulationEngine } from '../../src/engine/simulationEngine';
-import { SimulationParameters } from '../../src/engine/types';
-import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
-import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
-import { createNoisyEPR } from '../../src/engine/quantumStates';
-
-// Helper function for comparing complex numbers with tolerance
-const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
-    expect(a.re).toBeCloseTo(b.re, tolerance);
-    expect(a.im).toBeCloseTo(b.im, tolerance);
-};
-
-// Updated helper function for comparing DensityMatrix objects
-const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9) => {
-    expect(a.rows).toBe(b.rows);
-    expect(a.cols).toBe(b.cols);
-    for (let i = 0; i < a.rows; i++) {
-        for (let j = 0; j < a.cols; j++) {
-            expectComplexClose(a.get(i, j), b.get(i, j), tolerance);
-        }
-    }
-};
+import {vi} from 'vitest';
+import {SimulationEngine} from '../../src/engine/simulationEngine';
+import {SimulationParameters} from '../../src/engine/types';
+import {createNoisyEPR} from '../../src/engine/quantumStates';
+import {fidelityFromBellBasisMatrix} from "../../src/engine_real_calculations/bell/bell-basis.ts";
+import {expectMatrixClose} from "../_test_utils.ts";
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
-const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  const term00 = rho.get(0, 0)?.re ?? 0; // Use get()
-  return term00; // In Bell basis, fidelity with |Φ⁺⟩ is directly the (0,0) element
-};
-
 describe('SimulationEngine', () => {
     let engine: SimulationEngine;
     const noiseParameter = 0.1;
@@ -54,7 +32,7 @@ describe('SimulationEngine', () => {
         it('initializes pairs with expected noise level', () => {
             const state = engine.getCurrentState();
             const expectedInitialMatrix = createNoisyEPR(initialParams.noiseParameter); // Returns DensityMatrix
-            const expectedInitialFidelity = calculateFidelityWrtPhiPlus(expectedInitialMatrix); // Helper uses get()
+            const expectedInitialFidelity = fidelityFromBellBasisMatrix(expectedInitialMatrix); // Helper uses get()
             
             state.pairs.forEach(pair => {
                 expectMatrixClose(pair.densityMatrix, expectedInitialMatrix); // Helper uses get()
@@ -211,7 +189,7 @@ describe('SimulationEngine', () => {
             expect(resetState.complete).toBe(initialState.complete);
             expect(resetState.purificationStep).toBe(initialState.purificationStep);
             expect(resetState.pairs.length).toBe(initialState.pairs.length);
-            resetState.pairs.forEach((pair, i) => {
+            resetState.pairs.forEach((pair) => {
                 const initialPair = initialState.pairs.find(p => p.id === pair.id);
                 expect(initialPair).toBeDefined();
                 if(initialPair) {
@@ -233,7 +211,7 @@ describe('SimulationEngine', () => {
             expect(resetState.pairs.length).toBe(newParams.initialPairs);
             // Check fidelity reflects new noise parameter
             const expectedMatrix = createNoisyEPR(newParams.noiseParameter); // Returns DensityMatrix
-            const expectedFidelity = calculateFidelityWrtPhiPlus(expectedMatrix); // Helper uses get()
+            const expectedFidelity = fidelityFromBellBasisMatrix(expectedMatrix); // Helper uses get()
             resetState.pairs.forEach(pair => {
                 expect(pair.fidelity).toBeCloseTo(expectedFidelity);
             });
