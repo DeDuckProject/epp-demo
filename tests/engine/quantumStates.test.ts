@@ -15,11 +15,11 @@ describe('quantumStates', () => {
         [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.one()]
     ]);
     
-    it('createNoisyEPR(0) should be pure |Ψ⁻⟩ state in Bell basis', () => {
+    test('createNoisyEPR(0) should be pure |Ψ⁻⟩ state in Bell basis', () => {
       expectMatrixClose(createNoisyEPR(0), expectedPsiMinus);
     });
 
-    it('createNoisyEPR should produce a Werner-like state for noiseParam > 0', () => {
+    test('createNoisyEPR should produce a Werner-like state for noiseParam > 0', () => {
        const noise = 0.75;
        const state = createNoisyEPR(noise);
        // Use get() for assertions
@@ -29,7 +29,7 @@ describe('quantumStates', () => {
        expect(state.get(3, 3).re).toBeCloseTo(1 - noise, 9);
     });
 
-    it('fidelity of createNoisyEPR (w.r.t |Φ⁺⟩) increases with noiseParam', () => {
+    test('fidelity of createNoisyEPR (w.r.t |Φ⁺⟩) increases with noiseParam', () => {
       // fidelity function already uses get()
       const fidelityWrtPhiPlus = (noise: number) => fidelityFromBellBasisMatrix(createNoisyEPR(noise));
       

@@ -8,7 +8,7 @@ import {expectMatrixClose} from "../_test_utils.ts";
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
 describe('operations', () => {
   describe('depolarize / twirl', () => {
-    it('converts a noisy EPR pair (Werner state form) to its depolarized form', () => {
+    test('converts a noisy EPR pair (Werner state form) to its depolarized form', () => {
       const noise = 0.1;
       const noisyPsiMinus = createNoisyEPR(noise); // Returns DensityMatrix
       const p = 1 - 2 * noise; // p = 0.8
@@ -56,7 +56,7 @@ describe('operations', () => {
   });
 
   describe('exchange components', () => {
-    it('swaps |Ψ⁻⟩ and |Φ⁺⟩ components in a Bell-diagonal state', () => {
+    test('swaps |Ψ⁻⟩ and |Φ⁺⟩ components in a Bell-diagonal state', () => {
       const a = 0.6, b = 0.2;
       // Create test state directly as DensityMatrix
       const testState = new DensityMatrix(Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero())));
@@ -89,7 +89,7 @@ describe('operations', () => {
     // It returns the control pair state *after* measurement and a success flag.
     // Full simulation is complex to verify by hand. 
     // We will test some basic properties.
-    it('returns an object with controlPair density matrix and success flag', () => {
+    test('returns an object with controlPair density matrix and success flag', () => {
       const controlPair = createNoisyEPR(0.1); // Returns DensityMatrix
       const targetPair = createNoisyEPR(0.2); // Returns DensityMatrix
       const result = bilateralCNOT(controlPair, targetPair);
@@ -101,7 +101,7 @@ describe('operations', () => {
       expect(typeof result.afterMeasurement.successful).toBe('boolean');
     });
 
-    it('should ideally increase fidelity of control pair on success (qualitative check)', () => {
+    test('should ideally increase fidelity of control pair on success (qualitative check)', () => {
       // Purification aims to increase fidelity. We expect the output fidelity to be higher
       // than the input fidelity *on average* after many runs, but a single run might decrease it.
       // This test is difficult to make robust without statistical simulation.

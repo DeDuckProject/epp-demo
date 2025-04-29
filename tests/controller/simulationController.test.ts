@@ -57,7 +57,7 @@ describe('SimulationController', () => {
   });
 
   describe('Initialization', () => {
-    it('should create engine with initial params and notify with initial state', () => {
+    test('should create engine with initial params and notify with initial state', () => {
       // The engine constructor should be called with our params
       expect(SimulationEngine).toHaveBeenCalledWith(mockInitialParams);
       
@@ -69,7 +69,7 @@ describe('SimulationController', () => {
   });
 
   describe('State progression methods', () => {
-    it('should advance a single step with nextStep()', () => {
+    test('should advance a single step with nextStep()', () => {
       const nextState: SimulationState = {
         ...mockInitialState,
         purificationStep: 'twirled'
@@ -84,7 +84,7 @@ describe('SimulationController', () => {
       expect(onStateChange).toHaveBeenLastCalledWith(nextState);
     });
     
-    it('should complete a full round when completeRound() is called', () => {
+    test('should complete a full round when completeRound() is called', () => {
       // Setup a sequence of states to simulate progression through a round
       const initialState: SimulationState = {
         ...mockInitialState,
@@ -126,7 +126,7 @@ describe('SimulationController', () => {
       expect(onStateChange).toHaveBeenLastCalledWith(completedState);
     });
     
-    it('should not call nextStep if already at completed step during completeRound', () => {
+    test('should not call nextStep if already at completed step during completeRound', () => {
       // Setup the initial state to be already completed
       const completedState: SimulationState = {
         ...mockInitialState,
@@ -145,7 +145,7 @@ describe('SimulationController', () => {
       expect(onStateChange).toHaveBeenLastCalledWith(completedState);
     });
     
-    it('should not call nextStep if simulation is already complete during completeRound', () => {
+    test('should not call nextStep if simulation is already complete during completeRound', () => {
       // Setup the initial state to be already complete
       const completeState: SimulationState = {
         ...mockInitialState,
@@ -165,7 +165,7 @@ describe('SimulationController', () => {
       expect(onStateChange).toHaveBeenLastCalledWith(completeState);
     });
     
-    it('should execute a single full round step when step() is called', () => {
+    test('should execute a single full round step when step() is called', () => {
       const stepState: SimulationState = {
         ...mockInitialState,
         round: 1,
@@ -181,7 +181,7 @@ describe('SimulationController', () => {
       expect(onStateChange).toHaveBeenLastCalledWith(stepState);
     });
     
-    it('should reset the simulation state when reset() is called', () => {
+    test('should reset the simulation state when reset() is called', () => {
       const resetState: SimulationState = {
         ...mockInitialState,
         pairs: [],
@@ -197,7 +197,7 @@ describe('SimulationController', () => {
       expect(onStateChange).toHaveBeenLastCalledWith(resetState);
     });
     
-    it('should update parameters and reset when updateParameters() is called', () => {
+    test('should update parameters and reset when updateParameters() is called', () => {
       const newParams: SimulationParameters = {
         initialPairs: 8,
         noiseParameter: 0.2,
@@ -222,7 +222,7 @@ describe('SimulationController', () => {
   });
   
   describe('runUntilComplete()', () => {
-    it('should run until complete when state becomes complete', () => {
+    test('should run until complete when state becomes complete', () => {
       // Setup sequence of states with the last one being complete
       const initialState: SimulationState = {
         ...mockInitialState,
@@ -265,7 +265,7 @@ describe('SimulationController', () => {
       expect(onStateChange).toHaveBeenLastCalledWith(completeState);
     });
     
-    it('should stop after maxRounds (100) even if not complete', () => {
+    test('should stop after maxRounds (100) even if not complete', () => {
       // Setup to never complete
       const notCompleteState: SimulationState = {
         ...mockInitialState,
@@ -283,7 +283,7 @@ describe('SimulationController', () => {
       expect(onStateChange).toHaveBeenLastCalledWith(notCompleteState);
     });
     
-    it('should not run any steps if already complete', () => {
+    test('should not run any steps if already complete', () => {
       // Setup the initial state to be already complete
       const completeState: SimulationState = {
         ...mockInitialState,
