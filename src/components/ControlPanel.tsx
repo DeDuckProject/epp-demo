@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SimulationParameters, PurificationStep } from '../engine/types';
+import './ControlPanel.css';
 
 interface ControlPanelProps {
   onNextStep: () => void;

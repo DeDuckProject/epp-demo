@@ -3,6 +3,7 @@ import { SimulationController } from '../controller/simulationController';
 import { SimulationState, SimulationParameters } from '../engine/types';
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
+import './App.css';
 
 const App: React.FC = () => {
   const [state, setState] = useState<SimulationState | null>(null);
@@ -36,12 +37,6 @@ const App: React.FC = () => {
       
       <main>
         <div className="simulation-area">
-          <EnsembleDisplay 
-            pairs={state.pairs} 
-            pendingPairs={state.pendingPairs} 
-            purificationStep={state.purificationStep} 
-          />
-          
           <ControlPanel
             onNextStep={() => controller.nextStep()}
             onCompleteRound={() => controller.completeRound()}
@@ -52,6 +47,12 @@ const App: React.FC = () => {
             currentRound={state.round}
             currentStep={state.purificationStep}
             pairsRemaining={state.pairs.length}
+          />
+          
+          <EnsembleDisplay 
+            pairs={state.pairs} 
+            pendingPairs={state.pendingPairs} 
+            purificationStep={state.purificationStep} 
           />
         </div>
       </main>

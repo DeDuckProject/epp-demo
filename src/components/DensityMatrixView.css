@@ -1,0 +1,65 @@
+.density-matrix {
+  display: flex;
+  flex-direction: column;
+}
+
+.matrix-title {
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #2c3e50;
+  font-size: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3498db;
+}
+
+.density-matrix table {
+  border-collapse: collapse;
+  width: 100%;
+  background-color: white;
+  margin-top: 10px;
+}
+
+.density-matrix th {
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 13px;
+  background-color: #e8f4f8;
+  color: #2c3e50;
+  border: 1px solid #ddd;
+  font-weight: bold;
+}
+
+.density-matrix td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: #2c3e50;
+  transition: background-color 0.2s;
+}
+
+.density-matrix td.diagonal {
+  background-color: #f0f7fa;
+  font-weight: bold;
+  color: #2980b9;
+}
+
+.density-matrix td.off-diagonal {
+  background-color: #fff5f5;
+  color: #e74c3c;
+}
+
+.density-matrix tr:hover td {
+  background-color: #f8fbff;
+}
+
+.non-werner-indicator {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-left: 8px;
+  background: #fff5f5;
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid #fad7d7;
+} 

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { QubitPair as QubitPairType } from '../engine/types';
 import QubitPair from './QubitPair';
+import './EnsembleDisplay.css';
 
 interface EnsembleDisplayProps {
   pairs: QubitPairType[];

@@ -1,6 +1,7 @@
 import React from 'react';
 import { DensityMatrix } from '../engine_real_calculations/matrix/densityMatrix';
 import { formatComplex, hasOffDiagonalElements } from '../utils/matrixFormatting';
+import './DensityMatrixView.css';
 
 interface DensityMatrixViewProps {
   matrix: DensityMatrix;

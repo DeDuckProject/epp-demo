@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { QubitPair as QubitPairType } from '../engine/types';
 import DensityMatrixView from './DensityMatrixView';
+import './QubitPair.css';
 
 interface QubitPairProps {
   pair: QubitPairType;
