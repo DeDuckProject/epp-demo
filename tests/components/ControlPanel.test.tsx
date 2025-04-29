@@ -1,7 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import '@testing-library/jest-dom';
 import ControlPanel from '../../src/components/ControlPanel';
 import { PurificationStep } from '../../src/engine/types';
 
