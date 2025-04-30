@@ -1,37 +1,64 @@
 import React from 'react';
 import { DensityMatrix } from '../engine_real_calculations/matrix/densityMatrix';
-import { formatComplex, hasOffDiagonalElements } from '../utils/matrixFormatting';
+import { formatComplex } from '../utils/matrixFormatting';
 import './DensityMatrixView.css';
 
 interface DensityMatrixViewProps {
+  /** The raw density matrix to render */
   matrix: DensityMatrix;
+  /** Which basis to label: 'bell' (default) or 'computational' */
+  basis?: 'bell' | 'computational';
+  /** True if this is a Werner state (i.e. no significant off-diagonals) */
+  isWerner: boolean;
 }
 
-const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ matrix }) => {
+const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ 
+  matrix, 
+  basis = 'bell',
+  isWerner 
+}) => {
   // Bell basis state labels
   const bellLabels = ['|Φ⁺⟩', '|Φ⁻⟩', '|Ψ⁺⟩', '|Ψ⁻⟩'];
   
-  // Determine if off-diagonal elements are present
-  const hasOffDiagonals = hasOffDiagonalElements(matrix);
+  // Computational basis state labels
+  const computationalLabels = (() => {
+    const n = Math.log2(matrix.rows);
+    if (!Number.isInteger(n)) {
+      console.error('Matrix dimension is not a power of 2');
+      return Array(matrix.rows).fill('|?⟩');
+    }
+    
+    return Array.from({ length: matrix.rows }, (_, idx) => {
+      // Convert index to binary string and pad with leading zeros
+      const binaryStr = idx.toString(2).padStart(n, '0');
+      return `|${binaryStr}⟩`;
+    });
+  })();
+  
+  // Select the labels based on the basis prop
+  const labels = basis === 'computational' ? computationalLabels : bellLabels;
+  
+  // Title based on the basis
+  const title = `Density Matrix (${basis === 'computational' ? 'Computational' : 'Bell'} Basis)`;
   
   return (
     <div className="density-matrix">
       <div className="matrix-title">
-        Density Matrix (Bell Basis)
-        {hasOffDiagonals && <span className="non-werner-indicator"> (Non-Werner)</span>}
-        {!hasOffDiagonals && <span className="werner-indicator"> (Werner)</span>}
+        {title}
+        {isWerner && <span className="werner-indicator"> (Werner)</span>}
+        {!isWerner && <span className="non-werner-indicator"> (Non-Werner)</span>}
       </div>
       <table>
         <thead>
           <tr>
             <th></th>
-            {bellLabels.map(label => <th key={label}>{label}</th>)}
+            {labels.map(label => <th key={label}>{label}</th>)}
           </tr>
         </thead>
         <tbody>
           {Array.from({ length: matrix.rows }).map((_, rowIdx) => (
             <tr key={rowIdx}>
-              <th>{bellLabels[rowIdx]}</th>
+              <th>{labels[rowIdx]}</th>
               {Array.from({ length: matrix.cols }).map((_, cellIdx) => {
                 const cell = matrix.get(rowIdx, cellIdx);
                 return (

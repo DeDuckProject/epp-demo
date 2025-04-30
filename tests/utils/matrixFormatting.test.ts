@@ -1,83 +1,112 @@
-import { describe, test, expect } from 'vitest';
-import { formatComplex, hasOffDiagonalElements } from '../../src/utils/matrixFormatting';
+import { describe, test, expect, vi } from 'vitest';
+import { formatComplex, hasOffDiagonalElements, isWerner } from '../../src/utils/matrixFormatting';
+import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
 import { Matrix } from '../../src/engine_real_calculations/matrix/matrix';
+import * as bellBasis from '../../src/engine_real_calculations/bell/bell-basis';
+import {toBellBasis, toComputationalBasis} from "../../src/engine_real_calculations/bell/bell-basis";
 
 describe('Matrix Formatting Utilities', () => {
   describe('formatComplex', () => {
-    test('formats purely real numbers correctly', () => {
-      expect(formatComplex({ re: 1.23456, im: 0 })).toBe('1.235');
+    test('formats zero values correctly', () => {
+      expect(formatComplex({ re: 0, im: 0 })).toBe('0');
+      expect(formatComplex({ re: 0.0005, im: 0.0005 })).toBe('0');
     });
 
-    test('formats purely imaginary numbers correctly', () => {
+    test('formats purely real values correctly', () => {
+      expect(formatComplex({ re: 1, im: 0 })).toBe('1.000');
+      expect(formatComplex({ re: -0.5, im: 0 })).toBe('-0.500');
+    });
+
+    test('formats purely imaginary values correctly', () => {
+      expect(formatComplex({ re: 0, im: 1 })).toBe('1.000i');
       expect(formatComplex({ re: 0, im: -0.5 })).toBe('-0.500i');
     });
 
-    test('formats complex numbers correctly', () => {
-      expect(formatComplex({ re: 0.1, im: 0.2 })).toBe('0.100+0.200i');
+    test('formats complex values correctly', () => {
+      expect(formatComplex({ re: 1, im: 1 })).toBe('1.000+1.000i');
+      expect(formatComplex({ re: 1, im: -1 })).toBe('1.000-1.000i');
+      expect(formatComplex({ re: -1, im: 1 })).toBe('-1.000+1.000i');
+      expect(formatComplex({ re: -1, im: -1 })).toBe('-1.000-1.000i');
     });
 
-    test('formats small numbers below threshold as 0', () => {
-      expect(formatComplex({ re: 0.0001, im: 0.0002 })).toBe('0');
-    });
-
-    test('uses provided threshold', () => {
-      // Should be formatted as 0 with default threshold
-      const smallNum = { re: 0.0005, im: 0.0005 };
-      expect(formatComplex(smallNum)).toBe('0');
-      
-      // Should show value with smaller threshold
-      expect(formatComplex(smallNum, 0.0001)).toBe('0.001+0.001i');
+    test('respects threshold parameter', () => {
+      expect(formatComplex({ re: 0.01, im: 0.02 }, 0.05)).toBe('0');
+      expect(formatComplex({ re: 0.1, im: 0.02 }, 0.05)).toBe('0.100');
+      expect(formatComplex({ re: 0.01, im: 0.1 }, 0.05)).toBe('0.100i');
     });
   });
 
   describe('hasOffDiagonalElements', () => {
-    test('correctly identifies diagonal-only matrices', () => {
-      const diagMatrix = new Matrix([
-        [{ re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.25, im: 0 }]
+    test('returns false for diagonal matrices', () => {
+      const diag = new Matrix([
+        [{ re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.5, im: 0 }]
       ]);
-      
-      expect(hasOffDiagonalElements(diagMatrix)).toBe(false);
+      expect(hasOffDiagonalElements(diag)).toBe(false);
     });
 
-    test('correctly identifies matrices with off-diagonal elements', () => {
-      const offDiagMatrix = new Matrix([
-        [{ re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.02, im: 0 }, { re: 0.25, im: 0 }]
+    test('returns true for matrices with off-diagonal elements', () => {
+      const nonDiag = new Matrix([
+        [{ re: 0.25, im: 0 }, { re: 0.01, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0.01, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.5, im: 0 }]
       ]);
-      
-      expect(hasOffDiagonalElements(offDiagMatrix)).toBe(true);
+      expect(hasOffDiagonalElements(nonDiag)).toBe(true);
     });
 
-    test('correctly identifies matrices with imaginary off-diagonal elements', () => {
-      const imagOffDiagMatrix = new Matrix([
-        [{ re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0.002 }, { re: 0.25, im: 0 }]
+    test('respects threshold parameter', () => {
+      const almostDiag = new Matrix([
+        [{ re: 0.25, im: 0 }, { re: 0.001, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0.001, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.5, im: 0 }]
       ]);
-      
-      expect(hasOffDiagonalElements(imagOffDiagMatrix)).toBe(true);
+      expect(hasOffDiagonalElements(almostDiag, 0.0005)).toBe(true);
+      expect(hasOffDiagonalElements(almostDiag, 0.002)).toBe(false);
     });
+  });
 
-    test('uses provided threshold', () => {
-      // Matrix with "small" off-diagonal elements
-      const smallOffDiagMatrix = new Matrix([
-        [{ re: 0.25, im: 0 }, { re: 0.0005, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0.0005, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }],
-        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.25, im: 0 }]
+  describe('isWerner', () => {
+    test('identifies Werner states correctly in Bell basis', () => {
+      // Werner state in Bell basis (diagonal)
+      const wernerBell = new Matrix([
+        [{ re: 0.7, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0.1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.1, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.1, im: 0 }]
       ]);
       
-      // With default threshold (0.001), should return false
-      expect(hasOffDiagonalElements(smallOffDiagMatrix)).toBe(false);
+      expect(isWerner(wernerBell, 'bell')).toBe(true);
+    });
+    
+    test('identifies non-Werner states correctly in Bell basis', () => {
+      // Non-Werner state in Bell basis (has off-diagonals)
+      const nonWernerBell = new Matrix([
+        [{ re: 0.7, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.05, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0.1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.1, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0.05, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.1, im: 0 }]
+      ]);
       
-      // With smaller threshold, should return true
-      expect(hasOffDiagonalElements(smallOffDiagMatrix, 0.0001)).toBe(true);
+      expect(isWerner(nonWernerBell, 'bell')).toBe(false);
+    });
+    
+    test('correctly transforms computational basis matrices before checking', () => {
+      // Create a Werner state in Bell basis (diagonal)
+      const wernerBell = new Matrix([
+        [{ re: 0.7, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0.1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.1, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.1, im: 0 }]
+      ]);
+      
+      // input should be computational basis
+      const computationalMatrix = toComputationalBasis(wernerBell);
+      
+      // Call isWerner with the computational basis flag
+      const result = isWerner(computationalMatrix, 'computational');
+
+      expect(result).toBe(true);
     });
   });
 }); 

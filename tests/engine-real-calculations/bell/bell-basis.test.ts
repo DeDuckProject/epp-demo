@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { toBellBasis, fidelityFromBellBasisMatrix, fidelityFromComputationalBasisMatrix } from '../../../src/engine_real_calculations/bell/bell-basis';
+import { toBellBasis, fidelityFromBellBasisMatrix, fidelityFromComputationalBasisMatrix, toComputationalBasis } from '../../../src/engine_real_calculations/bell/bell-basis';
 import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
 import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix';
@@ -95,5 +95,66 @@ describe('Additional tests: Mixtures and Werner States', () => {
     const werner = phiPlus.scale(ComplexNum.fromReal(p)).add(identity.scale(ComplexNum.fromReal((1 - p) / 4)));
     const fidelity = fidelityFromComputationalBasisMatrix(werner);
     expect(fidelity).toBeCloseTo(1, 5);
+  });
+});
+
+describe('Bell Basis to Computational Basis Conversion', () => {
+  test('Converting phi+ from computational to Bell and back should yield the original matrix', () => {
+    // Create phi+ state in computational basis
+    const phiPlusVec = [
+      ComplexNum.fromReal(1/Math.sqrt(2)),
+      ComplexNum.zero(),
+      ComplexNum.zero(),
+      ComplexNum.fromReal(1/Math.sqrt(2))
+    ];
+    const rhoOriginal = DensityMatrix.fromStateVector(phiPlusVec);
+    
+    // Convert to Bell basis
+    const rhoBell = toBellBasis(rhoOriginal);
+    
+    // Convert back to computational basis
+    const rhoComputed = toComputationalBasis(rhoBell);
+    
+    // Check if the original and computed matrices are equal
+    expect(rhoOriginal.equals(rhoComputed, 1e-10)).toBe(true);
+  });
+
+  test('Conversion should preserve matrix properties: trace and hermiticity', () => {
+    // Create a mixed state
+    const phiPlus = DensityMatrix.bellPhiPlus();
+    const phiMinus = DensityMatrix.bellPhiMinus();
+    const mixedState = phiPlus.scale(ComplexNum.fromReal(0.7)).add(phiMinus.scale(ComplexNum.fromReal(0.3)));
+    
+    // Convert to Bell basis
+    const bellState = toBellBasis(mixedState);
+    
+    // Convert back to computational basis
+    const computationalState = toComputationalBasis(bellState);
+    
+    // Check if trace is preserved (should be 1 for density matrices)
+    expect(computationalState.trace().re).toBeCloseTo(1, 10);
+    
+    // Check if hermiticity is preserved (matrix = matrix.dagger())
+    expect(computationalState.equals(computationalState.dagger(), 1e-10)).toBe(true);
+  });
+
+  test('The two transformations should be inverses of each other', () => {
+    // Test with a Werner state
+    const p = 0.8;
+    const phiPlus = DensityMatrix.bellPhiPlus();
+    const identity = Matrix.identity(4);
+    const wernerState = phiPlus.scale(ComplexNum.fromReal(p)).add(identity.scale(ComplexNum.fromReal((1 - p) / 4)));
+    
+    // First approach: computational -> Bell -> computational
+    const bellBasis = toBellBasis(wernerState);
+    const backToComputational = toComputationalBasis(bellBasis);
+    
+    // Second approach: Bell -> computational -> Bell
+    const computationalBasis = toComputationalBasis(bellBasis);
+    const backToBell = toBellBasis(computationalBasis);
+    
+    // Both approaches should return to the original matrix
+    expect(wernerState.equals(backToComputational, 1e-10)).toBe(true);
+    expect(bellBasis.equals(backToBell, 1e-10)).toBe(true);
   });
 }); 

@@ -22,13 +22,13 @@ class MockDensityMatrix {
 }
 
 describe('DensityMatrixView', () => {
-  test('renders the title and Bell basis labels', () => {
+  test('renders the title and Bell basis labels when basis="bell"', () => {
     // Create a 4x4 density matrix with zeros
     const zeroMatrix = new MockDensityMatrix(
       Array(4).fill(0).map(() => Array(4).fill({ re: 0, im: 0 }))
     ) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={zeroMatrix} />);
+    render(<DensityMatrixView matrix={zeroMatrix} basis="bell" isWerner={true} />);
     
     // Check for title
     expect(screen.getByText('Density Matrix (Bell Basis)')).toBeDefined();
@@ -42,8 +42,42 @@ describe('DensityMatrixView', () => {
     });
   });
 
-  test('does not show Non-Werner indicator when all off-diagonals are zero, but shows Werner indicator', () => {
-    // Create matrix with only diagonal entries
+  test('renders the title and Computational basis labels when basis="computational"', () => {
+    // Create a 4x4 density matrix with zeros
+    const zeroMatrix = new MockDensityMatrix(
+      Array(4).fill(0).map(() => Array(4).fill({ re: 0, im: 0 }))
+    ) as unknown as DensityMatrix;
+
+    render(<DensityMatrixView matrix={zeroMatrix} basis="computational" isWerner={true} />);
+    
+    // Check for title
+    expect(screen.getByText('Density Matrix (Computational Basis)')).toBeDefined();
+    
+    // Check for Computational basis labels in both columns and rows
+    const compLabels = ['|00⟩', '|01⟩', '|10⟩', '|11⟩'];
+    compLabels.forEach(label => {
+      // Labels should appear multiple times (once in header, once in rows)
+      const elements = screen.getAllByText(label);
+      expect(elements.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  test('defaults to Bell basis when no basis prop is provided', () => {
+    // Create a 4x4 density matrix with zeros
+    const zeroMatrix = new MockDensityMatrix(
+      Array(4).fill(0).map(() => Array(4).fill({ re: 0, im: 0 }))
+    ) as unknown as DensityMatrix;
+
+    render(<DensityMatrixView matrix={zeroMatrix} isWerner={true} />);
+    
+    // Check for Bell basis title
+    expect(screen.getByText('Density Matrix (Bell Basis)')).toBeDefined();
+    
+    // Check for Bell basis labels
+    expect(screen.getAllByText('|Φ⁺⟩').length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('shows Werner indicator when isWerner=true', () => {
     const diagMatrix = new MockDensityMatrix([
       [{ re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
       [{ re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
@@ -51,17 +85,17 @@ describe('DensityMatrixView', () => {
       [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.25, im: 0 }]
     ]) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={diagMatrix} />);
+    render(<DensityMatrixView matrix={diagMatrix} isWerner={true} />);
+    
+    // The Werner indicator should be present
+    expect(screen.getByText(/Werner/)).toBeDefined();
     
     // The Non-Werner indicator should not be present
     const nonWernerText = screen.queryByText(/Non-Werner/);
     expect(nonWernerText).toBeNull();
-    const wernerText = screen.queryByText(/Werner/);
-    expect(wernerText).not.toBeNull();
   });
 
-  test('shows Non-Werner indicator when off-diagonal elements exceed threshold, but does not show Werner indicator', () => {
-    // Create matrix with significant off-diagonal elements
+  test('shows Non-Werner indicator when isWerner=false', () => {
     const offDiagMatrix = new MockDensityMatrix([
       [{ re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
       [{ re: 0, im: 0 }, { re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
@@ -69,13 +103,14 @@ describe('DensityMatrixView', () => {
       [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.02, im: 0 }, { re: 0.25, im: 0 }]
     ]) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={offDiagMatrix} />);
+    render(<DensityMatrixView matrix={offDiagMatrix} isWerner={false} />);
     
     // The Non-Werner indicator should be present
     expect(screen.getByText(/Non-Werner/)).toBeDefined();
     
-    const wernerIndicators = document.querySelectorAll('.werner-indicator');
-    expect(wernerIndicators.length).toBe(0);
+    // The Werner indicator should not be present
+    const wernerText = screen.queryByText(/ Werner/); // Note the space to avoid matching "Non-Werner"
+    expect(wernerText).toBeNull();
   });
 
   test('formats purely real numbers to three decimal places', () => {
@@ -86,7 +121,7 @@ describe('DensityMatrixView', () => {
       [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
     ]) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={matrix} />);
+    render(<DensityMatrixView matrix={matrix} isWerner={true} />);
     
     // Check for the formatted real number
     expect(screen.getByText('1.235')).toBeDefined();
@@ -100,7 +135,7 @@ describe('DensityMatrixView', () => {
       [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
     ]) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={matrix} />);
+    render(<DensityMatrixView matrix={matrix} isWerner={true} />);
     
     // Check for the formatted imaginary number
     expect(screen.getByText('-0.500i')).toBeDefined();
@@ -114,7 +149,7 @@ describe('DensityMatrixView', () => {
       [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
     ]) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={matrix} />);
+    render(<DensityMatrixView matrix={matrix} isWerner={true} />);
     
     // Check for the formatted complex number
     expect(screen.getByText('0.100+0.200i')).toBeDefined();
@@ -128,7 +163,7 @@ describe('DensityMatrixView', () => {
       [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
     ]) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={matrix} />);
+    render(<DensityMatrixView matrix={matrix} isWerner={true} />);
     
     // The threshold in the component is 0.001, so this should display as 0
     // Use getAllByText since there are multiple elements with "0"
@@ -148,7 +183,7 @@ describe('DensityMatrixView', () => {
       [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.25, im: 0 }]
     ]) as unknown as DensityMatrix;
 
-    const { container } = render(<DensityMatrixView matrix={matrix} />);
+    const { container } = render(<DensityMatrixView matrix={matrix} isWerner={false} />);
     
     // Check the diagonal cells have the 'diagonal' class
     const diagonalCells = container.querySelectorAll('.diagonal');

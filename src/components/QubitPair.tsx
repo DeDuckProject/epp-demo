@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { QubitPair as QubitPairType } from '../engine/types';
 import DensityMatrixView from './DensityMatrixView';
+import { isWerner } from '../utils/matrixFormatting';
 import './QubitPair.css';
 
 interface QubitPairProps {
@@ -49,6 +50,10 @@ const QubitPair: React.FC<QubitPairProps> = ({
     return pairRole === 'control' ? 'control-pair' : 'target-pair';
   };
   
+  // Determine if the matrix is in Werner form (diagonal in Bell basis)
+  // For this simulation, the matrices are already in Bell basis, so we pass 'bell'
+  const werner = isWerner(pair.densityMatrix, 'bell');
+  
   return (
     <div 
       className={`qubit-pair ${location} ${willBeDiscarded ? 'will-be-discarded' : ''} ${showConnection ? getRoleClass() : ''}`}
@@ -71,7 +76,7 @@ const QubitPair: React.FC<QubitPairProps> = ({
       
       {showMatrix && (
         <div className="matrix-popup">
-          <DensityMatrixView matrix={pair.densityMatrix} />
+          <DensityMatrixView matrix={pair.densityMatrix} isWerner={werner} />
         </div>
       )}
     </div>
