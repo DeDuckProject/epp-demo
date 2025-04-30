@@ -19,6 +19,7 @@ const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ matrix }) => {
       <div className="matrix-title">
         Density Matrix (Bell Basis)
         {hasOffDiagonals && <span className="non-werner-indicator"> (Non-Werner)</span>}
+        {!hasOffDiagonals && <span className="werner-indicator"> (Werner)</span>}
       </div>
       <table>
         <thead>

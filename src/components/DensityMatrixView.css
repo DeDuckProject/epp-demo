@@ -63,3 +63,13 @@
   border-radius: 12px;
   border: 1px solid #fad7d7;
 } 
+
+.werner-indicator {
+  color: #27ae60;
+  font-size: 12px;
+  margin-left: 8px;
+  background: #e8f8f5;
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid #d1f2eb;
+} 

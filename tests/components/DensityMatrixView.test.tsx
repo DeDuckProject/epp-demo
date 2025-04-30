@@ -42,7 +42,7 @@ describe('DensityMatrixView', () => {
     });
   });
 
-  test('does not show Non-Werner indicator when all off-diagonals are zero', () => {
+  test('does not show Non-Werner indicator when all off-diagonals are zero, but shows Werner indicator', () => {
     // Create matrix with only diagonal entries
     const diagMatrix = new MockDensityMatrix([
       [{ re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
@@ -56,9 +56,11 @@ describe('DensityMatrixView', () => {
     // The Non-Werner indicator should not be present
     const nonWernerText = screen.queryByText(/Non-Werner/);
     expect(nonWernerText).toBeNull();
+    const wernerText = screen.queryByText(/Werner/);
+    expect(wernerText).not.toBeNull();
   });
 
-  test('shows Non-Werner indicator when off-diagonal elements exceed threshold', () => {
+  test('shows Non-Werner indicator when off-diagonal elements exceed threshold, but does not show Werner indicator', () => {
     // Create matrix with significant off-diagonal elements
     const offDiagMatrix = new MockDensityMatrix([
       [{ re: 0.25, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
@@ -71,6 +73,9 @@ describe('DensityMatrixView', () => {
     
     // The Non-Werner indicator should be present
     expect(screen.getByText(/Non-Werner/)).toBeDefined();
+    
+    const wernerIndicators = document.querySelectorAll('.werner-indicator');
+    expect(wernerIndicators.length).toBe(0);
   });
 
   test('formats purely real numbers to three decimal places', () => {
