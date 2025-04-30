@@ -1,8 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { toBellBasis, fidelityFromBellBasisMatrix, fidelityFromComputationalBasisMatrix, toComputationalBasis } from '../../../src/engine_real_calculations/bell/bell-basis';
-import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
-import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
-import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix';
+import { DensityMatrix, ComplexNum, Matrix } from '../../../src/engine_real_calculations';
 
 describe('Bell Basis Conversion and Fidelity', () => {
   test('phi+ state fidelity should be 1', () => {

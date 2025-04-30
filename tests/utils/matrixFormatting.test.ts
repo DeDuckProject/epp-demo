@@ -1,9 +1,7 @@
-import { describe, test, expect, vi } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { formatComplex, hasOffDiagonalElements, isWerner } from '../../src/utils/matrixFormatting';
-import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
 import { Matrix } from '../../src/engine_real_calculations/matrix/matrix';
-import * as bellBasis from '../../src/engine_real_calculations/bell/bell-basis';
-import {toBellBasis, toComputationalBasis} from "../../src/engine_real_calculations/bell/bell-basis";
+import {toComputationalBasis} from "../../src/engine_real_calculations/bell/bell-basis";
 
 describe('Matrix Formatting Utilities', () => {
   describe('formatComplex', () => {

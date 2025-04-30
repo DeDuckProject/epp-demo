@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import DensityMatrixView from '../../src/components/DensityMatrixView';
-import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
+import { DensityMatrix } from '../../src/engine_real_calculations';
 
 // Mock implementation of DensityMatrix for testing
 class MockDensityMatrix {
