@@ -9,5 +9,6 @@ alwaysApply: true
 1. All logic must trace to:
    - `epp_components.md`
    - `epp_contracts.md`
+   - `epp_engine.md`
    - `epp_engine_real_calculations.md`
    - If it’s not in a doc, it doesn’t exist. 

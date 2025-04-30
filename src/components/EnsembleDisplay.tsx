@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { QubitPair as QubitPairType } from '../engine/types';
 import QubitPair from './QubitPair';
+import './EnsembleDisplay.css';
 
 interface EnsembleDisplayProps {
   pairs: QubitPairType[];
@@ -20,13 +21,18 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
 
   // Determine which pairs will be discarded in the measured step
   const willBeDiscarded = (pair: QubitPairType): boolean => {
-    if (purificationStep !== 'measured' || !pendingPairs || !pendingPairs.results) {
+    if (purificationStep !== 'measured' || !pendingPairs) {
       return false;
     }
     
-    // Target pairs are always discarded
+    // Target pairs are always discarded regardless of results
     if (pendingPairs.targetPairs.some(p => p.id === pair.id)) {
       return true;
+    }
+    
+    // For control pairs, we need measurement results
+    if (!pendingPairs.results) {
+      return false;
     }
     
     // Failed control pairs are discarded

@@ -1,0 +1,66 @@
+/* Control Panel */
+.control-panel {
+  flex: 0 0 320px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 20px;
+}
+
+.control-panel h2 {
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3498db;
+}
+
+.parameter-section,
+.simulation-controls,
+.status-section {
+  margin-bottom: 25px;
+}
+
+.parameter-section h3,
+.simulation-controls h3,
+.status-section h3 {
+  color: #3498db;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.parameter-input {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.parameter-input label {
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+.parameter-input input[type="number"] {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+.parameter-input input[type="range"] {
+  margin-right: 10px;
+  flex: 1;
+}
+
+.parameter-input span {
+  font-weight: bold;
+  color: #3498db;
+}
+
+.parameter-input-row {
+  display: flex;
+  align-items: center;
+} 

@@ -1,0 +1,127 @@
+/* Ensemble Display - Updated for better visibility and scrolling */
+.ensemble-display {
+  position: relative;
+  margin-bottom: 30px;
+  padding: 20px 20px 20px 80px; /* Increased left padding to make room for labels */
+  background-color: #f5f9ff;
+  border-radius: 8px;
+  overflow: visible; /* Allow labels to be visible outside the container */
+}
+
+.pairs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #ddd #f5f9ff;
+  /* Set a minimum width to ensure container is scrollable */
+  min-width: 100%;
+}
+
+.participant-section {
+  margin-bottom: 0;
+  position: relative;
+  /* Ensure sections have enough space */
+  padding-left: 10px;
+}
+
+.participant-label {
+  position: absolute;
+  left: -70px; /* Move further left */
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: bold;
+  font-size: 18px;
+  color: #3498db;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 10; /* Ensure labels are above other elements */
+}
+
+.alice-label {
+  background-color: #f8d7da;
+  color: #0c5460;
+}
+
+.bob-label {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.pair-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 60px;
+  position: relative;
+  overflow-x: visible; /* Remove independent scrolling */
+  padding-bottom: 0;
+}
+
+/* Connecting lines between pairs */
+.pair-connections {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.qubit-pair-connections{
+  height: 20px;
+}
+
+/* Entanglement lines */
+.entanglement-line {
+  position: absolute;
+  width: 2px;
+  background: rgba(52, 152, 219, 0.5);
+}
+
+.entanglement-line.will-be-discarded {
+  background: rgba(180, 180, 180, 0.3);
+  opacity: 0.5;
+}
+
+/* Update responsive styling */
+@media (max-width: 1000px) {
+  .ensemble-display {
+    padding: 20px; /* Reset padding on mobile */
+  }
+  
+  .participant-label {
+    position: static;
+    display: block;
+    margin-bottom: 10px;
+    transform: none;
+    width: fit-content;
+  }
+  
+  .participant-section {
+    padding-left: 0;
+  }
+}
+
+/* Update scrollbar styling to target the container */
+.pairs-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.pairs-container::-webkit-scrollbar-track {
+  background: #f5f9ff;
+  border-radius: 3px;
+}
+
+.pairs-container::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 3px;
+}
+
+.pairs-container::-webkit-scrollbar-thumb:hover {
+  background-color: #bbb;
+} 

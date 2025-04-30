@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SimulationParameters, PurificationStep } from '../engine/types';
+import './ControlPanel.css';
 
 interface ControlPanelProps {
   onNextStep: () => void;
@@ -61,8 +62,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       <div className="parameter-section">
         <h3>Parameters</h3>
         <div className="parameter-input">
-          <label>Initial Pairs:</label>
+          <label htmlFor="initialPairs">Initial Pairs:</label>
           <input
+            id="initialPairs"
             type="number"
             min="2"
             max="50"
@@ -72,8 +74,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
         
         <div className="parameter-input">
-          <label>Noise Parameter:</label>
+          <label htmlFor="noiseParameter">Noise Parameter:</label>
           <input
+            id="noiseParameter"
             type="range"
             min="0"
             max="1"
@@ -85,8 +88,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
         
         <div className="parameter-input">
-          <label>Target Fidelity:</label>
+          <label htmlFor="targetFidelity">Target Fidelity:</label>
           <input
+            id="targetFidelity"
             type="range"
             min="0.5"
             max="1"

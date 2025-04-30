@@ -6,7 +6,7 @@ alwaysApply: true
 
 # Your rule content
 
-globs:
+Each file in src should have a corresponding test file in tests, as such:
   - "src/**/*.ts"
   - "tests/**/*.ts"
 

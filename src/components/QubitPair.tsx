@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { QubitPair as QubitPairType } from '../engine/types';
 import DensityMatrixView from './DensityMatrixView';
+import './QubitPair.css';
 
 interface QubitPairProps {
   pair: QubitPairType;
@@ -22,6 +23,7 @@ const QubitPair: React.FC<QubitPairProps> = ({
   const [showMatrix, setShowMatrix] = useState(false);
   
   // Map fidelity to a more vibrant color gradient
+  // TODO consider making use of css styles here instead
   const getFidelityColor = () => {
     if (willBeDiscarded) {
       return 'rgba(180, 180, 180, 0.5)'; // Grey color for pairs to be discarded

@@ -1,34 +1,12 @@
 // import { jest } from '@jest/globals';
-import { vi } from 'vitest';
-import { SimulationEngine } from '../../src/engine/simulationEngine';
-import { SimulationParameters } from '../../src/engine/types';
-import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
-import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
-import { createNoisyEPR } from '../../src/engine/quantumStates';
-
-// Helper function for comparing complex numbers with tolerance
-const expectComplexClose = (a: ComplexNum, b: ComplexNum, tolerance = 1e-9) => {
-    expect(a.re).toBeCloseTo(b.re, tolerance);
-    expect(a.im).toBeCloseTo(b.im, tolerance);
-};
-
-// Updated helper function for comparing DensityMatrix objects
-const expectMatrixClose = (a: DensityMatrix, b: DensityMatrix, tolerance = 1e-9) => {
-    expect(a.rows).toBe(b.rows);
-    expect(a.cols).toBe(b.cols);
-    for (let i = 0; i < a.rows; i++) {
-        for (let j = 0; j < a.cols; j++) {
-            expectComplexClose(a.get(i, j), b.get(i, j), tolerance);
-        }
-    }
-};
+import {vi} from 'vitest';
+import {SimulationEngine} from '../../src/engine/simulationEngine';
+import {SimulationParameters} from '../../src/engine/types';
+import {createNoisyEPR} from '../../src/engine/quantumStates';
+import {fidelityFromBellBasisMatrix} from "../../src/engine_real_calculations/bell/bell-basis.ts";
+import {expectMatrixClose} from "../_test_utils.ts";
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
-const calculateFidelityWrtPhiPlus = (rho: DensityMatrix): number => {
-  const term00 = rho.get(0, 0)?.re ?? 0; // Use get()
-  return term00; // In Bell basis, fidelity with |Φ⁺⟩ is directly the (0,0) element
-};
-
 describe('SimulationEngine', () => {
     let engine: SimulationEngine;
     const noiseParameter = 0.1;
@@ -43,7 +21,7 @@ describe('SimulationEngine', () => {
     });
 
     describe('Initialization', () => {
-        it('initializes with the correct number of pairs', () => {
+        test('initializes with the correct number of pairs', () => {
             const state = engine.getCurrentState();
             expect(state.pairs.length).toBe(initialParams.initialPairs);
             expect(state.round).toBe(0);
@@ -51,10 +29,10 @@ describe('SimulationEngine', () => {
             expect(state.purificationStep).toBe('initial');
         });
 
-        it('initializes pairs with expected noise level', () => {
+        test('initializes pairs with expected noise level', () => {
             const state = engine.getCurrentState();
             const expectedInitialMatrix = createNoisyEPR(initialParams.noiseParameter); // Returns DensityMatrix
-            const expectedInitialFidelity = calculateFidelityWrtPhiPlus(expectedInitialMatrix); // Helper uses get()
+            const expectedInitialFidelity = fidelityFromBellBasisMatrix(expectedInitialMatrix); // Helper uses get()
             
             state.pairs.forEach(pair => {
                 expectMatrixClose(pair.densityMatrix, expectedInitialMatrix); // Helper uses get()
@@ -62,7 +40,7 @@ describe('SimulationEngine', () => {
             });
         });
 
-        it('getCurrentState returns the current state', () => {
+        test('getCurrentState returns the current state', () => {
             const state1 = engine.getCurrentState();
             const state2 = engine.getCurrentState();
             expect(state1).toEqual(state2); // Should be the same object or deeply equal
@@ -70,7 +48,7 @@ describe('SimulationEngine', () => {
     });
 
     describe('Step Progression via nextStep()', () => {
-        it('progresses through purification steps: initial -> twirled', () => {
+        test('progresses through purification steps: initial -> twirled', () => {
             let state = engine.getCurrentState();
             expect(state.purificationStep).toBe('initial');
             
@@ -85,7 +63,7 @@ describe('SimulationEngine', () => {
             });
         });
 
-        it('progresses through purification steps: twirled -> exchanged', () => {
+        test('progresses through purification steps: twirled -> exchanged', () => {
             engine.nextStep(); // initial -> twirled
             const state = engine.nextStep(); // twirled -> exchanged
             expect(state.purificationStep).toBe('exchanged');
@@ -94,7 +72,7 @@ describe('SimulationEngine', () => {
              expect(state.pairs[0].fidelity).toBeCloseTo(expectedFidelity);
         });
 
-        it('progresses through purification steps: exchanged -> cnot', () => {
+        test('progresses through purification steps: exchanged -> cnot', () => {
             engine.nextStep(); // initial -> twirled
             engine.nextStep(); // twirled -> exchanged
             const state = engine.nextStep(); // exchanged -> cnot
@@ -104,7 +82,7 @@ describe('SimulationEngine', () => {
             expect(state.pendingPairs?.targetPairs.length).toBe(initialParams.initialPairs / 2);
         });
         
-        it('handles odd number of pairs correctly during CNOT setup', () => {
+        test('handles odd number of pairs correctly during CNOT setup', () => {
             const oddParams = { ...initialParams, initialPairs: 3 };
             const oddEngine = new SimulationEngine(oddParams);
             oddEngine.nextStep(); // -> twirled
@@ -115,7 +93,7 @@ describe('SimulationEngine', () => {
             // The 3rd pair is held back, will be added later if kept
         });
 
-        it('progresses through purification steps: cnot -> measured', () => {
+        test('progresses through purification steps: cnot -> measured', () => {
             engine.nextStep(); // -> twirled
             engine.nextStep(); // -> exchanged
             engine.nextStep(); // -> cnot
@@ -125,7 +103,7 @@ describe('SimulationEngine', () => {
             expect(state.pendingPairs?.results?.length).toBe(initialParams.initialPairs / 2);
         });
 
-        it('progresses through purification steps: measured -> completed (next round or finished)', () => {
+        test('progresses through purification steps: measured -> completed (next round or finished)', () => {
             // Mock Math.random for deterministic measurement outcomes in this test
             const originalMathRandom = Math.random;
             const mockRandom = vi.fn(() => 0.1); // Assume 0.1 leads to success
@@ -151,7 +129,7 @@ describe('SimulationEngine', () => {
             }
         });
 
-        it('reaches completion when target fidelity is met', () => {
+        test('reaches completion when target fidelity is met', () => {
             const highFidelityParams: SimulationParameters = { initialPairs: 16, noiseParameter: 0.01, targetFidelity: 0.99 };
             const fastEngine = new SimulationEngine(highFidelityParams);
             let state = fastEngine.getCurrentState();
@@ -167,7 +145,7 @@ describe('SimulationEngine', () => {
             expect(state.pairs[0].densityMatrix.get(3, 3).re).toBeGreaterThanOrEqual(highFidelityParams.targetFidelity); // Use get()
         });
 
-        it('reaches completion when fewer than 2 pairs remain', () => {
+        test('reaches completion when fewer than 2 pairs remain', () => {
             const lowPairParams: SimulationParameters = { initialPairs: 2, noiseParameter: 0.4, targetFidelity: 0.99 }; // High noise likely leads to failures
             const lowPairEngine = new SimulationEngine(lowPairParams);
             let state = lowPairEngine.getCurrentState();
@@ -181,7 +159,7 @@ describe('SimulationEngine', () => {
     });
     
     describe('step() method', () => {
-        it('executes a full purification round with step()', () => {
+        test('executes a full purification round with step()', () => {
              let state = engine.getCurrentState();
              expect(state.round).toBe(0);
              state = engine.step(); // Executes one full round (depolarize -> exchange -> cnot -> measure -> discard)
@@ -199,7 +177,7 @@ describe('SimulationEngine', () => {
     });
 
     describe('Reset & Update Params', () => {
-        it('reset() returns the engine to the initial state', () => {
+        test('reset() returns the engine to the initial state', () => {
             engine.nextStep(); // Move state forward
             engine.nextStep();
             const initialEngine = new SimulationEngine(initialParams); // Create clean engine for comparison
@@ -211,7 +189,7 @@ describe('SimulationEngine', () => {
             expect(resetState.complete).toBe(initialState.complete);
             expect(resetState.purificationStep).toBe(initialState.purificationStep);
             expect(resetState.pairs.length).toBe(initialState.pairs.length);
-            resetState.pairs.forEach((pair, i) => {
+            resetState.pairs.forEach((pair) => {
                 const initialPair = initialState.pairs.find(p => p.id === pair.id);
                 expect(initialPair).toBeDefined();
                 if(initialPair) {
@@ -221,7 +199,7 @@ describe('SimulationEngine', () => {
             });
         });
 
-        it('updateParams() changes parameters for subsequent reset', () => {
+        test('updateParams() changes parameters for subsequent reset', () => {
             const newParams: SimulationParameters = {
                 initialPairs: 6,
                 noiseParameter: 0.05,
@@ -233,7 +211,7 @@ describe('SimulationEngine', () => {
             expect(resetState.pairs.length).toBe(newParams.initialPairs);
             // Check fidelity reflects new noise parameter
             const expectedMatrix = createNoisyEPR(newParams.noiseParameter); // Returns DensityMatrix
-            const expectedFidelity = calculateFidelityWrtPhiPlus(expectedMatrix); // Helper uses get()
+            const expectedFidelity = fidelityFromBellBasisMatrix(expectedMatrix); // Helper uses get()
             resetState.pairs.forEach(pair => {
                 expect(pair.fidelity).toBeCloseTo(expectedFidelity);
             });
