@@ -1,14 +1,14 @@
 // import { jest } from '@jest/globals';
 import {vi} from 'vitest';
-import {SimulationEngine} from '../../src/engine/simulationEngine';
+import {AverageSimulationEngine} from '../../src/engine/averageSimulationEngine';
 import {SimulationParameters} from '../../src/engine/types';
 import {createNoisyEPR} from '../../src/engine/quantumStates';
 import {fidelityFromBellBasisMatrix} from "../../src/engine_real_calculations/bell/bell-basis.ts";
 import {expectMatrixClose} from "../_test_utils.ts";
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
-describe('SimulationEngine', () => {
-    let engine: SimulationEngine;
+describe('AverageSimulationEngine', () => {
+    let engine: AverageSimulationEngine;
     const noiseParameter = 0.1;
     const initialParams: SimulationParameters = {
         initialPairs: 4,
@@ -17,7 +17,7 @@ describe('SimulationEngine', () => {
     };
 
     beforeEach(() => {
-        engine = new SimulationEngine(initialParams);
+        engine = new AverageSimulationEngine(initialParams);
     });
 
     describe('Initialization', () => {
@@ -33,7 +33,7 @@ describe('SimulationEngine', () => {
             const state = engine.getCurrentState();
             const expectedInitialMatrix = createNoisyEPR(initialParams.noiseParameter); // Returns DensityMatrix
             const expectedInitialFidelity = fidelityFromBellBasisMatrix(expectedInitialMatrix); // Helper uses get()
-            
+
             state.pairs.forEach(pair => {
                 expectMatrixClose(pair.densityMatrix, expectedInitialMatrix); // Helper uses get()
                 expect(pair.fidelity).toBeCloseTo(expectedInitialFidelity);
@@ -51,7 +51,7 @@ describe('SimulationEngine', () => {
         test('progresses through purification steps: initial -> twirled', () => {
             let state = engine.getCurrentState();
             expect(state.purificationStep).toBe('initial');
-            
+
             state = engine.nextStep();
             expect(state.purificationStep).toBe('twirled');
             // Check that pairs were actually depolarized (fidelities might change)
@@ -67,9 +67,9 @@ describe('SimulationEngine', () => {
             engine.nextStep(); // initial -> twirled
             const state = engine.nextStep(); // twirled -> exchanged
             expect(state.purificationStep).toBe('exchanged');
-             // Check fidelity again after exchange, should be 1- noiseParameter
-             const expectedFidelity = 1-noiseParameter;
-             expect(state.pairs[0].fidelity).toBeCloseTo(expectedFidelity);
+            // Check fidelity again after exchange, should be 1- noiseParameter
+            const expectedFidelity = 1-noiseParameter;
+            expect(state.pairs[0].fidelity).toBeCloseTo(expectedFidelity);
         });
 
         test('progresses through purification steps: exchanged -> cnot', () => {
@@ -81,10 +81,10 @@ describe('SimulationEngine', () => {
             expect(state.pendingPairs?.controlPairs.length).toBe(initialParams.initialPairs / 2);
             expect(state.pendingPairs?.targetPairs.length).toBe(initialParams.initialPairs / 2);
         });
-        
+
         test('handles odd number of pairs correctly during CNOT setup', () => {
             const oddParams = { ...initialParams, initialPairs: 3 };
-            const oddEngine = new SimulationEngine(oddParams);
+            const oddEngine = new AverageSimulationEngine(oddParams);
             oddEngine.nextStep(); // -> twirled
             oddEngine.nextStep(); // -> exchanged
             const state = oddEngine.nextStep(); // -> cnot
@@ -108,14 +108,14 @@ describe('SimulationEngine', () => {
             const originalMathRandom = Math.random;
             const mockRandom = vi.fn(() => 0.1); // Assume 0.1 leads to success
             Math.random = mockRandom;
-            
+
             try {
                 engine.nextStep(); // initial -> twirled
                 engine.nextStep(); // twirled -> exchanged
                 engine.nextStep(); // exchanged -> cnot
                 engine.nextStep(); // cnot -> measured (uses mocked Math.random)
                 const state = engine.nextStep(); // measured -> completed
-                
+
                 // Assertions based on mocked success (expecting 2 pairs remaining)
                 expect(state.round).toBe(1);
                 expect(state.pendingPairs).toBeUndefined();
@@ -131,11 +131,11 @@ describe('SimulationEngine', () => {
 
         test('reaches completion when target fidelity is met', () => {
             const highFidelityParams: SimulationParameters = { initialPairs: 16, noiseParameter: 0.01, targetFidelity: 0.99 };
-            const fastEngine = new SimulationEngine(highFidelityParams);
+            const fastEngine = new AverageSimulationEngine(highFidelityParams);
             let state = fastEngine.getCurrentState();
             while (!state.complete) {
                 state = fastEngine.nextStep();
-                 // Add a safeguard against infinite loops in test
+                // Add a safeguard against infinite loops in test
                 if (state.round > 10) throw new Error('Test exceeded max rounds');
             }
             expect(state.complete).toBe(true);
@@ -147,32 +147,32 @@ describe('SimulationEngine', () => {
 
         test('reaches completion when fewer than 2 pairs remain', () => {
             const lowPairParams: SimulationParameters = { initialPairs: 2, noiseParameter: 0.4, targetFidelity: 0.99 }; // High noise likely leads to failures
-            const lowPairEngine = new SimulationEngine(lowPairParams);
+            const lowPairEngine = new AverageSimulationEngine(lowPairParams);
             let state = lowPairEngine.getCurrentState();
-             while (!state.complete) {
+            while (!state.complete) {
                 state = lowPairEngine.nextStep();
-                 if (state.round > 10) break; // Exit if it takes too long
+                if (state.round > 10) break; // Exit if it takes too long
             }
             expect(state.complete).toBe(true);
             expect(state.pairs.length).toBeLessThan(2);
         });
     });
-    
+
     describe('step() method', () => {
         test('executes a full purification round with step()', () => {
-             let state = engine.getCurrentState();
-             expect(state.round).toBe(0);
-             state = engine.step(); // Executes one full round (depolarize -> exchange -> cnot -> measure -> discard)
-             expect(state.round).toBe(1);
-             // Check step is back to initial or complete
-              const successfulPairs = state.pairs.length;
-              const highestFidelity = successfulPairs > 0 ? state.pairs.reduce((max, p) => Math.max(max, p.fidelity), 0) : 0;
-              if (successfulPairs < 2 || highestFidelity >= initialParams.targetFidelity) {
-                  expect(state.complete).toBe(true);
-              } else {
-                   expect(state.complete).toBe(false);
-                   expect(state.purificationStep).toBe('initial');
-              }
+            let state = engine.getCurrentState();
+            expect(state.round).toBe(0);
+            state = engine.step(); // Executes one full round (depolarize -> exchange -> cnot -> measure -> discard)
+            expect(state.round).toBe(1);
+            // Check step is back to initial or complete
+            const successfulPairs = state.pairs.length;
+            const highestFidelity = successfulPairs > 0 ? state.pairs.reduce((max, p) => Math.max(max, p.fidelity), 0) : 0;
+            if (successfulPairs < 2 || highestFidelity >= initialParams.targetFidelity) {
+                expect(state.complete).toBe(true);
+            } else {
+                expect(state.complete).toBe(false);
+                expect(state.purificationStep).toBe('initial');
+            }
         });
     });
 
@@ -180,10 +180,10 @@ describe('SimulationEngine', () => {
         test('reset() returns the engine to the initial state', () => {
             engine.nextStep(); // Move state forward
             engine.nextStep();
-            const initialEngine = new SimulationEngine(initialParams); // Create clean engine for comparison
+            const initialEngine = new AverageSimulationEngine(initialParams); // Create clean engine for comparison
             const initialState = initialEngine.getCurrentState();
             const resetState = engine.reset();
-            
+
             // Compare density matrices carefully
             expect(resetState.round).toBe(initialState.round);
             expect(resetState.complete).toBe(initialState.complete);

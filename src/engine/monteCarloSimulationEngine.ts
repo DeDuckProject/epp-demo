@@ -1,9 +1,12 @@
-import {QubitPair, SimulationParameters, SimulationState} from './types';
-import {createNoisyEPR} from './quantumStates';
-import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus} from './operations';
-import {fidelityFromBellBasisMatrix} from "../engine_real_calculations/bell/bell-basis.ts";
+import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine} from './types';
+import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
+import {ComplexNum} from "../engine_real_calculations/types/complex";
 
-export class SimulationEngine {
+/**
+ * Monte Carlo Simulation Engine that uses the computational basis for calculations
+ * and randomizes operations rather than computing averages.
+ */
+export class MonteCarloSimulationEngine implements ISimulationEngine {
   private params: SimulationParameters;
   private state: SimulationState;
   
@@ -14,10 +17,21 @@ export class SimulationEngine {
   
   private initialize(): SimulationState {
     const pairs: QubitPair[] = [];
-    // Create initial noisy EPR pairs in Bell basis
+    
+    // Create initial noisy EPR pairs in computational basis
+    // TODO: Implement with computational basis methods from engine_real_calculations
     for (let i = 0; i < this.params.initialPairs; i++) {
-      const densityMatrix = createNoisyEPR(this.params.noiseParameter);
-      const fidelity = fidelityFromBellBasisMatrix(densityMatrix);
+      // Placeholder - will be replaced with actual computational basis implementation
+      // This uses the identity matrix as placeholder, which is not physically correct
+      // but works as a placeholder until we implement the real quantum states
+      const complexData = Array(4).fill(0).map(() => 
+        Array(4).fill(0).map(() => ComplexNum.zero())
+      );
+      // Set the (0,0) element to 1 to make it the |00⟩⟨00| state
+      complexData[0][0] = ComplexNum.fromReal(1);
+      const densityMatrix = new DensityMatrix(complexData);
+      
+      const fidelity = 1.0; // Will be calculated properly later
       
       pairs.push({
         id: i,
@@ -34,35 +48,23 @@ export class SimulationEngine {
     };
   }
   
-  // Step 1: Depolarize/Twirl all pairs to convert to Werner form
-  private depolarizeAllPairs(): void {
-    this.state.pairs = this.state.pairs.map(pair => {
-      const wernerMatrix = depolarize(pair.densityMatrix);
-      return {
-        ...pair,
-        densityMatrix: wernerMatrix,
-        fidelity: fidelityFromBellBasisMatrix(wernerMatrix)
-      };
-    });
+  // Step 1: Apply random twirling operations instead of depolarizing
+  private applyRandomTwirling(): void {
+    // TODO: Implement Monte Carlo twirling in computational basis
     
+    // Placeholder implementation
     this.state.purificationStep = 'twirled';
   }
   
-  // Step 2: Exchange |Ψ⁻⟩ and |Φ⁺⟩ components
-  private exchangePsiPhiComponents(): void {
-    this.state.pairs = this.state.pairs.map(pair => {
-      const exchangedMatrix = exchangePsiMinusPhiPlus(pair.densityMatrix);
-      return {
-        ...pair,
-        densityMatrix: exchangedMatrix,
-        fidelity: fidelityFromBellBasisMatrix(exchangedMatrix)
-      };
-    });
+  // Step 2: Prepare for the bilateral CNOT in computational basis
+  private prepareForBilateralCNOT(): void {
+    // TODO: Implement preparation step in computational basis
     
+    // Placeholder implementation
     this.state.purificationStep = 'exchanged';
   }
   
-  // Step 3: Apply Bilateral CNOT
+  // Step 3: Apply Bilateral CNOT in computational basis
   private applyBilateralCNOT(): void {
     if (this.state.pairs.length < 2) {
       this.state.complete = true;
@@ -75,7 +77,7 @@ export class SimulationEngine {
     
     // Group pairs for purification, ensuring we only group complete pairs
     const numPairsToProcess = Math.floor(this.state.pairs.length / 2) * 2; 
-    for (let i = 0; i < numPairsToProcess; i++) { // Only loop through pairs that will be used
+    for (let i = 0; i < numPairsToProcess; i++) {
       if (i % 2 === 0) {
         controlPairs.push(this.state.pairs[i]);
       } else {
@@ -91,33 +93,25 @@ export class SimulationEngine {
     this.state.purificationStep = 'cnot';
   }
   
-  // Step 4: Perform measurement
+  // Step 4: Perform measurement with Monte Carlo randomization
   private performMeasurement(): void {
     if (!this.state.pendingPairs) {
       console.error("No pending pairs to measure");
       return;
     }
     
-    const { controlPairs, targetPairs } = this.state.pendingPairs;
-    const results = [];
+    // TODO: Implement Monte Carlo measurement in computational basis
     
-    // Process pairs
-    for (let i = 0; i < Math.min(controlPairs.length, targetPairs.length); i++) {
-      const controlPair = controlPairs[i];
-      const targetPair = targetPairs[i];
-      
-      // Apply bilateral CNOT
-      const result = bilateralCNOT(controlPair.densityMatrix, targetPair.densityMatrix);
-      
-      results.push({
-        control: {
-          id: controlPair.id,
-          densityMatrix: result.afterMeasurement.controlPair,
-          fidelity: fidelityFromBellBasisMatrix(result.afterMeasurement.controlPair)
-        },
-        successful: result.afterMeasurement.successful
-      });
-    }
+    // Placeholder implementation
+    const { controlPairs } = this.state.pendingPairs;
+    const results = controlPairs.map(controlPair => ({
+      control: {
+        id: controlPair.id,
+        densityMatrix: controlPair.densityMatrix,
+        fidelity: controlPair.fidelity
+      },
+      successful: Math.random() > 0.5 // Will be based on actual measurement calculation
+    }));
     
     this.state.pendingPairs.results = results;
     this.state.purificationStep = 'measured';
@@ -135,15 +129,12 @@ export class SimulationEngine {
     // Keep only successful pairs
     for (const result of this.state.pendingPairs.results) {
       if (result.successful) {
-        // First swap back |Φ⁺⟩ and |Ψ⁻⟩
-        const swappedBack = exchangePsiMinusPhiPlus(result.control.densityMatrix);
-        // Then twirl to create Werner state with |Ψ⁻⟩ as target
-        const wernerState = depolarize(swappedBack);
+        // TODO: Implement post-measurement processing in computational basis
         
         newPairs.push({
           id: result.control.id,
-          densityMatrix: wernerState,
-          fidelity: fidelityFromBellBasisMatrix(wernerState)
+          densityMatrix: result.control.densityMatrix,
+          fidelity: result.control.fidelity
         });
       }
     }
@@ -168,7 +159,7 @@ export class SimulationEngine {
     }
   }
   
-  // Public methods
+  // Public methods - same API as AverageSimulationEngine
   
   public nextStep(): SimulationState {
     if (this.state.complete) {
@@ -177,10 +168,10 @@ export class SimulationEngine {
     
     switch (this.state.purificationStep) {
       case 'initial':
-        this.depolarizeAllPairs();
+        this.applyRandomTwirling();
         break;
       case 'twirled':
-        this.exchangePsiPhiComponents();
+        this.prepareForBilateralCNOT();
         break;
       case 'exchanged':
         this.applyBilateralCNOT();
@@ -204,10 +195,10 @@ export class SimulationEngine {
     // Complete a full round of purification
     if (!this.state.complete) {
       if (this.state.purificationStep === 'initial') {
-        this.depolarizeAllPairs();
+        this.applyRandomTwirling();
       }
       if (this.state.purificationStep === 'twirled') {
-        this.exchangePsiPhiComponents();
+        this.prepareForBilateralCNOT();
       }
       if (this.state.purificationStep === 'exchanged') {
         this.applyBilateralCNOT();

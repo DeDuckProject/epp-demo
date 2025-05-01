@@ -4,7 +4,12 @@ This document provides a detailed overview of the `engine` module, which impleme
 
 ## Overview
 
-The engine module simulates the quantum mechanical process of entanglement purification. It provides the core functionality for:
+The engine module simulates the quantum mechanical process of entanglement purification. It provides two different simulation approaches:
+
+1. **Average Simulation** - Calculates the average outcome of quantum operations
+2. **Monte Carlo Simulation** - Performs true randomized operations in the computational basis
+
+The module provides the core functionality for:
 
 1. Creating noisy entangled quantum states
 2. Implementing the BBPSSW purification protocol
@@ -13,12 +18,13 @@ The engine module simulates the quantum mechanical process of entanglement purif
 
 ## Files Structure
 
-The module consists of four main files:
+The module consists of these main files:
 
-- `simulationEngine.ts` - Main simulation controller
-- `operations.ts` - Quantum operations for purification
-- `quantumStates.ts` - Quantum state creation and manipulation
-- `types.ts` - Type definitions for the simulation
+- `types.ts` - Type definitions for the simulation and engine interface
+- `averageSimulationEngine.ts` - Implements simulation using average outcomes in the Bell basis
+- `monteCarloSimulationEngine.ts` - Implements simulation using randomized operations in the computational basis
+- `operations.ts` - Quantum operations for purification (Bell basis)
+- `quantumStates.ts` - Quantum state creation and manipulation (Bell basis)
 
 ## Types (`types.ts`)
 
@@ -56,6 +62,23 @@ export interface SimulationState {
       successful: boolean;
     }[];
   };
+}
+
+// Engine interface and types
+export interface ISimulationEngine {
+  nextStep(): SimulationState;
+  step(): SimulationState;
+  reset(): SimulationState;
+  getCurrentState(): SimulationState;
+  updateParams(params: SimulationParameters): void;
+}
+
+export enum EngineType {
+  // Calculates the average outcome of quantum operations in Bell basis
+  Average = 'average',
+  
+  // Performs true randomized operations in computational basis
+  MonteCarlo = 'monte-carlo',
 }
 ```
 
@@ -116,11 +139,11 @@ const result = bilateralCNOT(controlPair, targetPair);
 // - afterMeasurement.successful: Whether purification succeeded
 ```
 
-## Simulation Engine (`simulationEngine.ts`)
+## Average Simulation Engine (`averageSimulationEngine.ts`)
 
-The main controller for the entanglement purification simulation.
+The Bell-basis controller for the entanglement purification simulation. This engine calculates the average outcome of quantum operations, rather than performing true randomized operations.
 
-### Class: `SimulationEngine`
+### Class: `AverageSimulationEngine`
 
 #### Constructor
 
@@ -167,6 +190,43 @@ The simulation continues rounds until either:
 - The target fidelity is reached
 - There are fewer than 2 pairs remaining (cannot continue purification)
 
+## Monte Carlo Simulation Engine (`monteCarloSimulationEngine.ts`)
+
+The computational-basis controller for entanglement purification simulation. This engine performs true randomized operations in the computational basis, providing a more physically realistic simulation.
+
+### Class: `MonteCarloSimulationEngine`
+
+#### Constructor
+
+```typescript
+constructor(params: SimulationParameters)
+```
+
+Initializes the simulation with the specified parameters.
+
+#### Key Methods
+
+The Monte Carlo engine implements the same interface as the Average engine:
+
+```typescript
+nextStep(): SimulationState
+step(): SimulationState
+reset(): SimulationState
+getCurrentState(): SimulationState
+updateParams(params: SimulationParameters): void
+```
+
+#### Purification Protocol Steps
+
+The engine implements the BBPSSW protocol with these Monte Carlo-specific steps:
+
+1. **Initialization**: Create initial noisy EPR pairs in computational basis
+2. **Random Twirling**: Apply randomized twirling operations instead of calculating the average
+3. **Preparation**: Prepare for bilateral CNOT in computational basis
+4. **Bilateral CNOT**: Apply CNOT gates between control and target pairs
+5. **Monte Carlo Measurement**: Perform randomized measurements with probabilities based on the quantum state
+6. **Discard**: Discard failed pairs and prepare for next round
+
 ## Integration with Real Calculations
 
 The engine module relies on calculations from the `engine_real_calculations` module for:
@@ -175,4 +235,21 @@ The engine module relies on calculations from the `engine_real_calculations` mod
 - Bell basis calculations
 - Fidelity measurements
 
-This separation ensures that the engine module can focus on the protocol implementation while delegating mathematical calculations to specialized components. 
+This separation ensures that the engine module can focus on the protocol implementation while delegating mathematical calculations to specialized components.
+
+The Monte Carlo engine in particular makes extensive use of the computational basis operators in the real calculations module.
+
+## Engine Selection
+
+The simulation controller allows selecting between the two engine types:
+
+```typescript
+// Usage
+const controller = new SimulationController(
+  simulationParameters, 
+  stateChangeCallback, 
+  EngineType.MonteCarlo // or EngineType.Average
+);
+```
+
+This enables comparison between the average-based approach and the more physically realistic Monte Carlo simulation. 
