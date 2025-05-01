@@ -1,7 +1,7 @@
-import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine} from './types';
+import {ISimulationEngine, QubitPair, SimulationParameters, SimulationState} from './types';
 import {createNoisyEPR} from './quantumStates';
 import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus} from './operations';
-import {fidelityFromBellBasisMatrix} from "../engine_real_calculations/bell/bell-basis.ts";
+import {BellState, fidelityFromBellBasisMatrix} from "../engine_real_calculations/bell/bell-basis.ts";
 
 export class AverageSimulationEngine implements ISimulationEngine {
   private params: SimulationParameters;
@@ -17,7 +17,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
     // Create initial noisy EPR pairs in Bell basis
     for (let i = 0; i < this.params.initialPairs; i++) {
       const densityMatrix = createNoisyEPR(this.params.noiseParameter);
-      const fidelity = fidelityFromBellBasisMatrix(densityMatrix);
+      const fidelity = fidelityFromBellBasisMatrix(densityMatrix, BellState.PSI_MINUS);
 
       pairs.push({
         id: i,
@@ -41,7 +41,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
       return {
         ...pair,
         densityMatrix: wernerMatrix,
-        fidelity: fidelityFromBellBasisMatrix(wernerMatrix)
+        fidelity: fidelityFromBellBasisMatrix(wernerMatrix, BellState.PSI_MINUS)
       };
     });
 
@@ -55,7 +55,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
       return {
         ...pair,
         densityMatrix: exchangedMatrix,
-        fidelity: fidelityFromBellBasisMatrix(exchangedMatrix)
+        fidelity: fidelityFromBellBasisMatrix(exchangedMatrix, BellState.PHI_PLUS)
       };
     });
 
@@ -113,7 +113,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
         control: {
           id: controlPair.id,
           densityMatrix: result.afterMeasurement.controlPair,
-          fidelity: fidelityFromBellBasisMatrix(result.afterMeasurement.controlPair)
+          fidelity: fidelityFromBellBasisMatrix(result.afterMeasurement.controlPair, BellState.PHI_PLUS)
         },
         successful: result.afterMeasurement.successful
       });
@@ -143,7 +143,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
         newPairs.push({
           id: result.control.id,
           densityMatrix: wernerState,
-          fidelity: fidelityFromBellBasisMatrix(wernerState)
+          fidelity: fidelityFromBellBasisMatrix(wernerState, BellState.PSI_MINUS)
         });
       }
     }

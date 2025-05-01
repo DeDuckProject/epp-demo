@@ -3,7 +3,6 @@ import {vi} from 'vitest';
 import {AverageSimulationEngine} from '../../src/engine/averageSimulationEngine';
 import {SimulationParameters} from '../../src/engine/types';
 import {createNoisyEPR} from '../../src/engine/quantumStates';
-import {fidelityFromBellBasisMatrix} from "../../src/engine_real_calculations/bell/bell-basis.ts";
 import {expectMatrixClose} from "../_test_utils.ts";
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
@@ -32,7 +31,7 @@ describe('AverageSimulationEngine', () => {
         test('initializes pairs with expected noise level', () => {
             const state = engine.getCurrentState();
             const expectedInitialMatrix = createNoisyEPR(initialParams.noiseParameter); // Returns DensityMatrix
-            const expectedInitialFidelity = fidelityFromBellBasisMatrix(expectedInitialMatrix); // Helper uses get()
+            const expectedInitialFidelity = 1 - noiseParameter;
 
             state.pairs.forEach(pair => {
                 expectMatrixClose(pair.densityMatrix, expectedInitialMatrix); // Helper uses get()
@@ -57,8 +56,8 @@ describe('AverageSimulationEngine', () => {
             // Check that pairs were actually depolarized (fidelities might change)
             state.pairs.forEach(pair => {
                 // The fidelity stored should now be the result *after* the depolarize operation
-                // We need to recalculate the expected fidelity after depolarize, should be noiseParameter/3
-                const expectedFidelity = noiseParameter/3;
+                // We need to recalculate the expected fidelity after depolarize, should be 1 - noiseParameter
+                const expectedFidelity = 1 - noiseParameter;
                 expect(pair.fidelity).toBeCloseTo(expectedFidelity);
             });
         });
@@ -200,9 +199,10 @@ describe('AverageSimulationEngine', () => {
         });
 
         test('updateParams() changes parameters for subsequent reset', () => {
+            const noiseParameter1 = 0.05;
             const newParams: SimulationParameters = {
                 initialPairs: 6,
-                noiseParameter: 0.05,
+                noiseParameter: noiseParameter1,
                 targetFidelity: 0.98
             };
             engine.updateParams(newParams);
@@ -210,8 +210,7 @@ describe('AverageSimulationEngine', () => {
 
             expect(resetState.pairs.length).toBe(newParams.initialPairs);
             // Check fidelity reflects new noise parameter
-            const expectedMatrix = createNoisyEPR(newParams.noiseParameter); // Returns DensityMatrix
-            const expectedFidelity = fidelityFromBellBasisMatrix(expectedMatrix); // Helper uses get()
+            const expectedFidelity = 1 - noiseParameter1;
             resetState.pairs.forEach(pair => {
                 expect(pair.fidelity).toBeCloseTo(expectedFidelity);
             });
