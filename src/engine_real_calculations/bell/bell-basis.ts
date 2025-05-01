@@ -51,24 +51,41 @@ export function toComputationalBasis(rhoBell: Matrix): Matrix {
 }
 
 /**
- * Calculates the fidelity with respect to the Bell state Phi+ (|00> + |11>)/sqrt(2).
- * Assumes the input density matrix is already in the Bell basis.
- * Fidelity is the top-left element (index 0,0) of the density matrix in the Bell basis.
- * @param rhoBell The density matrix in the Bell basis.
- * @returns The fidelity value (real number).
+ * Bell state enum for identifying which Bell state to use for fidelity calculation.
  */
-export function fidelityFromBellBasisMatrix(rhoBell: Matrix): number {
-  // Returns the fidelity with respect to Phi+ (first element of the density matrix in Bell basis)
-  return rhoBell.get(0, 0).re;
+export enum BellState {
+  PHI_PLUS = 0,  // (|00⟩ + |11⟩)/√2
+  PHI_MINUS = 1, // (|00⟩ - |11⟩)/√2
+  PSI_PLUS = 2,  // (|01⟩ + |10⟩)/√2
+  PSI_MINUS = 3  // (|01⟩ - |10⟩)/√2
 }
 
 /**
- * Calculates the fidelity with respect to the Bell state Phi+ starting from a density matrix
- * in the computational basis. It first converts the matrix to the Bell basis.
- * @param rhoComputational The density matrix in the computational basis.
+ * Calculates the fidelity with respect to a specific Bell state.
+ * Assumes the input density matrix is already in the Bell basis.
+ * Fidelity is the diagonal element corresponding to the Bell state.
+ * @param rhoBell The density matrix in the Bell basis.
+ * @param bellState Which Bell state to calculate fidelity against (default: PHI_PLUS).
  * @returns The fidelity value (real number).
  */
-export function fidelityFromComputationalBasisMatrix(rhoComputational: Matrix): number {
+export function fidelityFromBellBasisMatrix(
+  rhoBell: Matrix, 
+  bellState: BellState = BellState.PHI_PLUS
+): number {
+  return rhoBell.get(bellState, bellState).re;
+}
+
+/**
+ * Calculates the fidelity with respect to a specific Bell state starting from a density matrix
+ * in the computational basis. It first converts the matrix to the Bell basis.
+ * @param rhoComputational The density matrix in the computational basis.
+ * @param bellState Which Bell state to calculate fidelity against (default: PHI_PLUS).
+ * @returns The fidelity value (real number).
+ */
+export function fidelityFromComputationalBasisMatrix(
+  rhoComputational: Matrix,
+  bellState: BellState = BellState.PHI_PLUS
+): number {
   const rhoBell = toBellBasis(rhoComputational);
-  return fidelityFromBellBasisMatrix(rhoBell);
+  return fidelityFromBellBasisMatrix(rhoBell, bellState);
 } 

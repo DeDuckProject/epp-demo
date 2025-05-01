@@ -3,6 +3,7 @@ import {MonteCarloSimulationEngine} from '../../src/engine/monteCarloSimulationE
 import {SimulationParameters} from '../../src/engine/types';
 import {DensityMatrix} from '../../src/engine_real_calculations/matrix/densityMatrix';
 import {ComplexNum} from '../../src/engine_real_calculations/types/complex';
+import {fidelityFromComputationalBasisMatrix, BellState} from '../../src/engine_real_calculations/bell/bell-basis';
 
 describe('MonteCarloSimulationEngine', () => {
   let engine: MonteCarloSimulationEngine;
@@ -44,7 +45,94 @@ describe('MonteCarloSimulationEngine', () => {
         const trace = pair.densityMatrix.trace();
         expect(trace.re).toBeCloseTo(1.0);
         expect(trace.im).toBeCloseTo(0.0);
+        
+        // Verify that matrices are Hermitian (ρ = ρ†)
+        expect(pair.densityMatrix.validate()).toBe(true);
       });
+    });
+
+    test('with zero noise, pairs initialize as perfect Bell Psi-Minus states', () => {
+      // Create engine with zero noise
+      const perfectEngine = new MonteCarloSimulationEngine({
+        ...initialParams,
+        noiseParameter: 0
+      });
+      
+      const state = perfectEngine.getCurrentState();
+      const perfectBellPsiMinus = DensityMatrix.bellPsiMinus();
+      
+      state.pairs.forEach(pair => {
+        // Check that matrix matches the expected Bell state
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            const actual = pair.densityMatrix.get(i, j);
+            const expected = perfectBellPsiMinus.get(i, j);
+            expect(actual.re).toBeCloseTo(expected.re);
+            expect(actual.im).toBeCloseTo(expected.im);
+          }
+        }
+        
+        // Verify fidelity is 1.0 for perfect bell state
+        expect(pair.fidelity).toBeCloseTo(1.0);
+      });
+    });
+    
+    test('with high noise, fidelity is reduced but matrices remain valid', () => {
+      // Create engine with maximum noise
+      const noisyEngine = new MonteCarloSimulationEngine({
+        ...initialParams,
+        noiseParameter: 1.0
+      });
+      
+      const state = noisyEngine.getCurrentState();
+      const perfectBellPsiMinus = DensityMatrix.bellPsiMinus();
+      
+      state.pairs.forEach(pair => {
+        // Matrices should still be valid density matrices
+        expect(pair.densityMatrix.validate()).toBe(true);
+        
+        // Fidelity should be reduced with high noise
+        expect(pair.fidelity).toBeLessThan(1.0);
+        
+        // The matrix should be different from a perfect Bell state
+        let isDifferent = false;
+        for (let i = 0; i < 4 && !isDifferent; i++) {
+          for (let j = 0; j < 4 && !isDifferent; j++) {
+            const actual = pair.densityMatrix.get(i, j);
+            const expected = perfectBellPsiMinus.get(i, j);
+            if (Math.abs(actual.re - expected.re) > 1e-5 || 
+                Math.abs(actual.im - expected.im) > 1e-5) {
+              isDifferent = true;
+            }
+          }
+        }
+        expect(isDifferent).toBe(true);
+      });
+    });
+    
+    test('noise parameter correctly affects fidelity', () => {
+      // Test with different noise levels
+      const noiseValues = [0, 0.25, 0.5, 0.75, 1.0];
+      const fidelities: number[] = [];
+      
+      // Collect fidelities for different noise levels
+      for (const noise of noiseValues) {
+        const testEngine = new MonteCarloSimulationEngine({
+          ...initialParams,
+          noiseParameter: noise
+        });
+        const state = testEngine.getCurrentState();
+        fidelities.push(state.pairs[0].fidelity);
+      }
+      
+      // Fidelity should monotonically decrease with increasing noise
+      for (let i = 1; i < fidelities.length; i++) {
+        expect(fidelities[i]).toBeLessThanOrEqual(fidelities[i-1]);
+      }
+      
+      // First value (no noise) should be 1.0, last value (max noise) should be significantly less
+      expect(fidelities[0]).toBeCloseTo(1.0);
+      expect(fidelities[fidelities.length-1]).toBeLessThan(0.9);
     });
 
     test('getCurrentState returns the current state', () => {

@@ -1,6 +1,7 @@
 import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine} from './types';
 import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
-import {ComplexNum} from "../engine_real_calculations/types/complex";
+import {applyDephasing} from "../engine_real_calculations/channels/noise";
+import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
 
 /**
  * Monte Carlo Simulation Engine that uses the computational basis for calculations
@@ -18,24 +19,20 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
   private initialize(): SimulationState {
     const pairs: QubitPair[] = [];
     
-    // Create initial noisy EPR pairs in computational basis
-    // TODO: Implement with computational basis methods from engine_real_calculations
+    // Create initial Bell pairs (Psi-minus) and apply noise to Bob's qubit
     for (let i = 0; i < this.params.initialPairs; i++) {
-      // Placeholder - will be replaced with actual computational basis implementation
-      // This uses the identity matrix as placeholder, which is not physically correct
-      // but works as a placeholder until we implement the real quantum states
-      const complexData = Array(4).fill(0).map(() => 
-        Array(4).fill(0).map(() => ComplexNum.zero())
-      );
-      // Set the (0,0) element to 1 to make it the |00⟩⟨00| state
-      complexData[0][0] = ComplexNum.fromReal(1);
-      const densityMatrix = new DensityMatrix(complexData);
+      // Create a perfect Bell state |Ψ-⟩ = (|01⟩ - |10⟩)/√2
+      const pureRho = DensityMatrix.bellPsiMinus();
       
-      const fidelity = 1.0; // Will be calculated properly later
+      // Apply dephasing noise to Bob's qubit (qubit 1)
+      const noisyRho = applyDephasing(pureRho, /* bobQubit= */ 1, this.params.noiseParameter);
+      
+      // Calculate fidelity with respect to the Psi-Minus Bell state
+      const fidelity = fidelityFromComputationalBasisMatrix(noisyRho, BellState.PSI_MINUS);
       
       pairs.push({
         id: i,
-        densityMatrix,
+        densityMatrix: noisyRho,
         fidelity
       });
     }
