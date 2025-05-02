@@ -1,9 +1,7 @@
 import {vi} from 'vitest';
 import {MonteCarloSimulationEngine} from '../../src/engine/monteCarloSimulationEngine';
-import {SimulationParameters} from '../../src/engine/types';
+import {Basis, SimulationParameters} from '../../src/engine/types';
 import {DensityMatrix} from '../../src/engine_real_calculations/matrix/densityMatrix';
-import {ComplexNum} from '../../src/engine_real_calculations/types/complex';
-import {fidelityFromComputationalBasisMatrix, BellState} from '../../src/engine_real_calculations/bell/bell-basis';
 import * as PauliTwirling from '../../src/engine_real_calculations/operations/pauliTwirling';
 
 describe('MonteCarloSimulationEngine', () => {
@@ -18,15 +16,6 @@ describe('MonteCarloSimulationEngine', () => {
   beforeEach(() => {
     engine = new MonteCarloSimulationEngine(initialParams);
   });
-
-  // Helper function to create a basic density matrix for testing
-  function createTestMatrix(): DensityMatrix {
-    const complexData = Array(4).fill(0).map(() => 
-      Array(4).fill(0).map(() => ComplexNum.zero())
-    );
-    complexData[0][0] = ComplexNum.fromReal(1);
-    return new DensityMatrix(complexData);
-  }
 
   describe('Initialization', () => {
     test('initializes with the correct number of pairs', () => {
@@ -49,6 +38,15 @@ describe('MonteCarloSimulationEngine', () => {
         
         // Verify that matrices are Hermitian (ρ = ρ†)
         expect(pair.densityMatrix.validate()).toBe(true);
+      });
+    });
+
+    test('pairs are initialized with computational basis', () => {
+      const state = engine.getCurrentState();
+      
+      state.pairs.forEach(pair => {
+        // Verify each pair has the correct basis
+        expect(pair.basis).toBe(Basis.Computational);
       });
     });
 
@@ -234,6 +232,37 @@ describe('MonteCarloSimulationEngine', () => {
       // Run the discard step which checks for completion
       const nextState = highFidEngine.nextStep();
       expect(nextState.complete).toBe(true);
+    });
+  });
+  
+  describe('basis preservation during operations', () => {
+    test('maintains computational basis through a complete step cycle', () => {
+      // Run a full step and verify basis is preserved
+      const afterStep = engine.step();
+      
+      // Check all pairs still have computational basis
+      afterStep.pairs.forEach(pair => {
+        expect(pair.basis).toBe(Basis.Computational);
+      });
+    });
+    
+    test('preserves basis during measurement and result processing', () => {
+      // Set up to measurement stage
+      engine.nextStep(); // initial -> twirled
+      engine.nextStep(); // twirled -> exchanged
+      engine.nextStep(); // exchanged -> cnot
+      const measuredState = engine.nextStep(); // cnot -> measured
+      
+      // Check controlPairs in pending results have basis preserved
+      measuredState.pendingPairs?.results?.forEach(result => {
+        expect(result.control.basis).toBe(Basis.Computational);
+      });
+      
+      // Process results and check final pairs
+      const finalState = engine.nextStep(); // measured -> completed
+      finalState.pairs.forEach(pair => {
+        expect(pair.basis).toBe(Basis.Computational);
+      });
     });
   });
   

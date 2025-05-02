@@ -2,10 +2,11 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import EnsembleDisplay from '../../src/components/EnsembleDisplay';
+import {Basis} from "../../src/engine/types.ts";
 
 // Mock the QubitPair component to simplify testing
 vi.mock('../../src/components/QubitPair', () => ({
-  default: vi.fn(({ pair, location, willBeDiscarded, pairRole, partnerId, purificationStep, basis }) => (
+  default: vi.fn(({ pair, location, willBeDiscarded, pairRole, partnerId, purificationStep }) => (
     <div 
       data-testid="qubit-pair-mock" 
       data-pair-id={pair.id}
@@ -14,7 +15,6 @@ vi.mock('../../src/components/QubitPair', () => ({
       data-pair-role={pairRole}
       data-partner-id={partnerId}
       data-step={purificationStep}
-      data-basis={basis}
     >
       {pair.fidelity.toFixed(3)}
     </div>
@@ -27,7 +27,8 @@ describe('EnsembleDisplay', () => {
     Array.from({ length: count }, (_, i) => ({
       id: i + 1,
       fidelity: 0.7 + (i * 0.05),
-      densityMatrix: {} as any
+      densityMatrix: {} as any,
+      basis: Basis.Bell
     }));
 
   beforeEach(() => {
@@ -65,46 +66,6 @@ describe('EnsembleDisplay', () => {
     // Check that no lines are marked for discard in the initial step
     const discardedLines = container.querySelectorAll('.entanglement-line.will-be-discarded');
     expect(discardedLines).toHaveLength(0);
-  });
-
-  test('passes basis prop to QubitPair components', () => {
-    const testPairs = createTestPairs(1);
-    
-    render(
-      <EnsembleDisplay 
-        pairs={testPairs} 
-        purificationStep="initial"
-        basis="computational"
-      />
-    );
-    
-    // Get all QubitPair mocks
-    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
-    expect(qubitPairs).toHaveLength(2); // 1 pair, each rendered for Alice and Bob
-    
-    // Check basis was passed correctly
-    qubitPairs.forEach(pair => {
-      expect(pair.getAttribute('data-basis')).toBe('computational');
-    });
-  });
-  
-  test('uses bell basis by default', () => {
-    const testPairs = createTestPairs(1);
-    
-    render(
-      <EnsembleDisplay 
-        pairs={testPairs} 
-        purificationStep="initial"
-      />
-    );
-    
-    // Get all QubitPair mocks
-    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
-    
-    // Check default basis was passed
-    qubitPairs.forEach(pair => {
-      expect(pair.getAttribute('data-basis')).toBe('bell');
-    });
   });
 
   test('identifies control and target pairs correctly in CNOT step', () => {

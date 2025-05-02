@@ -1,4 +1,4 @@
-import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine} from './types';
+import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine, Basis} from './types';
 import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
 import {applyDephasing} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
@@ -34,7 +34,8 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
       pairs.push({
         id: i,
         densityMatrix: noisyRho,
-        fidelity
+        fidelity,
+        basis: Basis.Computational
       });
     }
     
@@ -116,9 +117,7 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     const { controlPairs } = this.state.pendingPairs;
     const results = controlPairs.map(controlPair => ({
       control: {
-        id: controlPair.id,
-        densityMatrix: controlPair.densityMatrix,
-        fidelity: controlPair.fidelity
+        ...controlPair
       },
       successful: Math.random() > 0.5 // Will be based on actual measurement calculation
     }));
@@ -140,11 +139,8 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     for (const result of this.state.pendingPairs.results) {
       if (result.successful) {
         // TODO: Implement post-measurement processing in computational basis
-        
         newPairs.push({
-          id: result.control.id,
-          densityMatrix: result.control.densityMatrix,
-          fidelity: result.control.fidelity
+          ...result.control
         });
       }
     }

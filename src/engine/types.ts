@@ -2,9 +2,14 @@ import { DensityMatrix } from "../engine_real_calculations/matrix/densityMatrix"
 import { MonteCarloSimulationEngine } from './monteCarloSimulationEngine';
 import { AverageSimulationEngine } from './averageSimulationEngine';
 
+export enum Basis {
+  'Bell' = 'bell',
+  'Computational' = 'computational'
+}
 export type QubitPair = {
   id: number;
   densityMatrix: DensityMatrix; // Placeholder - will be updated later if needed by other files
+  basis: Basis;
   fidelity: number;
 };
 

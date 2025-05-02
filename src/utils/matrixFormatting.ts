@@ -1,8 +1,9 @@
 /**
  * Utility functions for formatting and analyzing matrix data
  */
+import {Basis} from "../engine/types";
 import {ComplexNum, Matrix} from "../engine_real_calculations";
-import { toBellBasis } from "../engine_real_calculations/bell/bell-basis";
+import {toBellBasis} from "../engine_real_calculations/bell/bell-basis";
 
 /**
  * Format a complex number for display
@@ -64,11 +65,11 @@ export function hasOffDiagonalElements(matrix: Matrix, threshold = 0.001): boole
  */
 export function isWerner(
   matrix: Matrix, 
-  basis: 'bell' | 'computational' = 'bell',
+  basis: Basis = Basis.Bell,
   threshold = 0.001
 ): boolean {
   // If matrix is in computational basis, convert to Bell basis first
-  const bellMatrix = basis === 'computational' ? toBellBasis(matrix) : matrix;
+  const bellMatrix = basis === Basis.Computational ? toBellBasis(matrix) : matrix;
   
   // Werner states are diagonal in Bell basis
   return !hasOffDiagonalElements(bellMatrix, threshold);

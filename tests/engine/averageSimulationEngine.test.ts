@@ -1,7 +1,7 @@
 // import { jest } from '@jest/globals';
 import {vi} from 'vitest';
 import {AverageSimulationEngine} from '../../src/engine/averageSimulationEngine';
-import {SimulationParameters} from '../../src/engine/types';
+import {Basis, SimulationParameters} from '../../src/engine/types';
 import {createNoisyEPR} from '../../src/engine/quantumStates';
 import {expectMatrixClose} from "../_test_utils.ts";
 
@@ -36,6 +36,15 @@ describe('AverageSimulationEngine', () => {
             state.pairs.forEach(pair => {
                 expectMatrixClose(pair.densityMatrix, expectedInitialMatrix); // Helper uses get()
                 expect(pair.fidelity).toBeCloseTo(expectedInitialFidelity);
+            });
+        });
+
+        test('initializes pairs with bell basis', () => {
+            const state = engine.getCurrentState();
+            
+            state.pairs.forEach(pair => {
+                // Verify each pair has the correct basis
+                expect(pair.basis).toBe(Basis.Bell);
             });
         });
 
@@ -154,6 +163,60 @@ describe('AverageSimulationEngine', () => {
             }
             expect(state.complete).toBe(true);
             expect(state.pairs.length).toBeLessThan(2);
+        });
+    });
+
+    describe('basis preservation during operations', () => {
+        test('maintains bell basis through a complete step cycle', () => {
+            // Run a full step and verify basis is preserved
+            const afterStep = engine.step();
+            
+            // Check all pairs still have bell basis
+            afterStep.pairs.forEach(pair => {
+                expect(pair.basis).toBe(Basis.Bell);
+            });
+        });
+
+        test('preserves basis through all purification steps', () => {
+            // Check basis after each step in the purification process
+            
+            // After twirling
+            engine.nextStep(); // initial -> twirled
+            let state = engine.getCurrentState();
+            state.pairs.forEach(pair => {
+                expect(pair.basis).toBe(Basis.Bell);
+            });
+            
+            // After exchange
+            engine.nextStep(); // twirled -> exchanged
+            state = engine.getCurrentState();
+            state.pairs.forEach(pair => {
+                expect(pair.basis).toBe(Basis.Bell);
+            });
+            
+            // After CNOT setup
+            engine.nextStep(); // exchanged -> cnot
+            state = engine.getCurrentState();
+            state.pendingPairs?.controlPairs.forEach(pair => {
+                expect(pair.basis).toBe(Basis.Bell);
+            });
+            state.pendingPairs?.targetPairs.forEach(pair => {
+                expect(pair.basis).toBe(Basis.Bell);
+            });
+            
+            // After measurement
+            engine.nextStep(); // cnot -> measured
+            state = engine.getCurrentState();
+            state.pendingPairs?.results?.forEach(result => {
+                expect(result.control.basis).toBe(Basis.Bell);
+            });
+            
+            // After discarding and completing the round
+            engine.nextStep(); // measured -> completed/initial
+            state = engine.getCurrentState();
+            state.pairs.forEach(pair => {
+                expect(pair.basis).toBe(Basis.Bell);
+            });
         });
     });
 

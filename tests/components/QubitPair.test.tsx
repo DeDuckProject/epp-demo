@@ -4,7 +4,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import QubitPair from '../../src/components/QubitPair';
 import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
 import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
-import {toBellBasis, toComputationalBasis} from "../../src/engine_real_calculations/bell/bell-basis.ts";
+import {Basis} from "../../src/engine/types.ts";
+import {toComputationalBasis} from "../../src/engine_real_calculations/bell/bell-basis.ts";
 
 describe('QubitPair', () => {
   // Create a simple density matrix for testing
@@ -29,7 +30,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 42,
       fidelity: 0.12345,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -50,68 +52,12 @@ describe('QubitPair', () => {
     expect(screen.getByText('0.123')).toBeDefined();
   });
 
-  test('passes basis prop to DensityMatrixView when set', () => {
-    const pair = {
-      id: 1,
-      fidelity: 0.75,
-      densityMatrix: mockMatrix
-    };
-
-    const { container } = render(
-      <QubitPair 
-        pair={pair} 
-        location="alice" 
-        purificationStep="initial"
-        basis="computational"
-      />
-    );
-
-    // Trigger mouse enter to show the matrix popup
-    const rootElement = container.firstChild as HTMLElement;
-    fireEvent.mouseEnter(rootElement);
-    
-    // Find the DensityMatrixView - it should include "Computational Basis" in the title
-    const popup = container.querySelector('.matrix-popup');
-    expect(popup).not.toBeNull();
-    
-    // Verify the title in DensityMatrixView shows computational basis
-    const matrixTitle = container.querySelector('.matrix-title');
-    expect(matrixTitle?.textContent).toContain('Computational Basis');
-  });
-
-  test('uses bell basis by default', () => {
-    const pair = {
-      id: 1,
-      fidelity: 0.75,
-      densityMatrix: mockMatrix
-    };
-
-    const { container } = render(
-      <QubitPair 
-        pair={pair} 
-        location="alice" 
-        purificationStep="initial"
-      />
-    );
-
-    // Trigger mouse enter to show the matrix popup
-    const rootElement = container.firstChild as HTMLElement;
-    fireEvent.mouseEnter(rootElement);
-    
-    // Find the DensityMatrixView - it should include "Bell Basis" in the title
-    const popup = container.querySelector('.matrix-popup');
-    expect(popup).not.toBeNull();
-    
-    // Verify the title in DensityMatrixView shows bell basis
-    const matrixTitle = container.querySelector('.matrix-title');
-    expect(matrixTitle?.textContent).toContain('Bell Basis');
-  });
-
   test('applies correct styling when marked as will be discarded', () => {
     const pair = {
       id: 1,
       fidelity: 0.75,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -135,7 +81,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 2,
       fidelity: 0.85,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -159,7 +106,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 3,
       fidelity: 0.9,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -185,7 +133,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 4,
       fidelity: 0.8,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -211,7 +160,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 6,
       fidelity: 0.95,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -242,7 +192,8 @@ describe('QubitPair', () => {
     const perfectPair = {
       id: 8,
       fidelity: 1.0,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container: perfectContainer, rerender } = render(
@@ -261,7 +212,8 @@ describe('QubitPair', () => {
     const moderatePair = {
       id: 9,
       fidelity: 0.5,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     rerender(
@@ -276,7 +228,8 @@ describe('QubitPair', () => {
     const lowPair = {
       id: 10,
       fidelity: 0.1,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     rerender(
@@ -316,7 +269,8 @@ describe('QubitPair', () => {
     const wernerPair = {
       id: 10,
       fidelity: 0.9,
-      densityMatrix: wernerMatrix
+      densityMatrix: wernerMatrix,
+      basis: Basis.Bell
     };
     
     const { container: wernerContainer, rerender } = render(
@@ -336,7 +290,8 @@ describe('QubitPair', () => {
     const nonWernerPair = {
       id: 11,
       fidelity: 0.85,
-      densityMatrix: nonWernerMatrix
+      densityMatrix: nonWernerMatrix,
+      basis: Basis.Bell
     };
     
     rerender(
@@ -367,7 +322,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 12,
       fidelity: 0.9,
-      densityMatrix: wernerMatrix
+      densityMatrix: wernerMatrix,
+      basis: Basis.Bell
     };
     
     // Render with Bell basis (default)
@@ -384,13 +340,13 @@ describe('QubitPair', () => {
     expect(wernerIndicatorBell).not.toBeNull();
 
     pair.densityMatrix = new DensityMatrix(toComputationalBasis(pair.densityMatrix));
+    pair.basis = Basis.Computational;
     // Render with computational basis explicitly specified
     rerender(
       <QubitPair 
         pair={pair} 
         location="alice" 
         purificationStep="initial"
-        basis="computational" 
       />
     );
     

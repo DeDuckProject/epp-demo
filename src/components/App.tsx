@@ -36,9 +36,6 @@ const App: React.FC = () => {
     setEngineType(type);
   };
   
-  // Determine basis based on engine type
-  const basis = engineType === EngineType.MonteCarlo ? 'computational' : 'bell';
-  
   return (
     <div className="app-container">
       <header>
@@ -64,8 +61,7 @@ const App: React.FC = () => {
           <EnsembleDisplay 
             pairs={state.pairs} 
             pendingPairs={state.pendingPairs} 
-            purificationStep={state.purificationStep}
-            basis={basis}
+            purificationStep={state.purificationStep} 
           />
         </div>
       </main>

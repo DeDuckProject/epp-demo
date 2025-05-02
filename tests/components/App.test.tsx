@@ -1,10 +1,9 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import {beforeEach, describe, expect, test, vi} from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import {fireEvent, render, screen} from '@testing-library/react';
 import App from '../../src/components/App';
-import { SimulationController } from '../../src/controller/simulationController';
-import { SimulationState, PurificationStep, SimulationParameters, EngineType } from '../../src/engine/types';
-import EnsembleDisplay from '../../src/components/EnsembleDisplay';
+import {SimulationController} from '../../src/controller/simulationController';
+import {Basis, EngineType, PurificationStep, SimulationParameters, SimulationState} from '../../src/engine/types';
 
 // Mock the simulation controller
 vi.mock('../../src/controller/simulationController', () => {
@@ -13,24 +12,15 @@ vi.mock('../../src/controller/simulationController', () => {
   };
 });
 
-// Mock the EnsembleDisplay component to check basis prop
-vi.mock('../../src/components/EnsembleDisplay', () => ({
-  default: vi.fn(props => (
-    <div data-testid="mock-ensemble-display" data-basis={props.basis}>
-      {props.pairs.length} pairs shown
-    </div>
-  ))
-}));
-
 describe('App', () => {
   // Create a mock state for testing
   const mockState: SimulationState = {
-    pairs: [{ id: 1, fidelity: 0.8, densityMatrix: {} as any }],
+    pairs: [{ id: 1, fidelity: 0.8, densityMatrix: {} as any, basis: Basis.Bell }],
     round: 2,
     complete: false,
     purificationStep: 'cnot' as PurificationStep,
     pendingPairs: {
-      controlPairs: [{ id: 1, fidelity: 0.8, densityMatrix: {} as any }],
+      controlPairs: [{ id: 1, fidelity: 0.8, densityMatrix: {} as any, basis: Basis.Bell }],
       targetPairs: []
     }
   };
@@ -45,9 +35,6 @@ describe('App', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Reset mocks
-    vi.mocked(EnsembleDisplay).mockClear();
     
     // Setup the controller mock to provide immediate state
     (SimulationController as unknown as ReturnType<typeof vi.fn>).mockImplementation(
@@ -94,9 +81,9 @@ describe('App', () => {
     // Should show the ControlPanel component
     expect(screen.getByText('Simulation Controls')).toBeDefined();
     
-    // Should show the mocked EnsembleDisplay component
-    expect(screen.getByTestId('mock-ensemble-display')).toBeDefined();
-    expect(screen.getByText('1 pairs shown')).toBeDefined();
+    // Should show the EnsembleDisplay component (check for participant labels)
+    expect(screen.getByText('Alice')).toBeDefined();
+    expect(screen.getByText('Bob')).toBeDefined();
   });
 
   test('passes correct props to ControlPanel from state', () => {
@@ -157,43 +144,27 @@ describe('App', () => {
   test('passes correct props to EnsembleDisplay from state', () => {
     render(<App />);
     
-    // Get the mocked EnsembleDisplay
-    screen.getByTestId('mock-ensemble-display');
-// Verify the correct number of pairs is being passed
-    expect(screen.getByText('1 pairs shown')).toBeDefined();
+    // The EnsembleDisplay should show the pairs from state
+    // For this test, check that the QubitPair is rendered with correct fidelity
+    // Since we have both Alice and Bob's side showing the same fidelity, 
+    // we should get multiple elements with this text
+    const pairElements = screen.getAllByText('0.800');
+    expect(pairElements).toHaveLength(2); // One for Alice, one for Bob
     
-    // Check the EnsembleDisplay props using vi.mocked
-    const mockCalls = vi.mocked(EnsembleDisplay).mock.calls;
-    expect(mockCalls.length).toBeGreaterThan(0);
-    
-    // Get the most recent call
-    const lastCall = mockCalls[mockCalls.length - 1];
-    
-    // Check that props were passed correctly
-    expect(lastCall[0].pairs).toEqual(mockState.pairs);
-    expect(lastCall[0].pendingPairs).toEqual(mockState.pendingPairs);
-    expect(lastCall[0].purificationStep).toEqual(mockState.purificationStep);
+    // Check that they're in qubit-pair elements with the control-pair class
+    const firstPairElement = pairElements[0].closest('.qubit-pair');
+    expect(firstPairElement?.classList.contains('control-pair')).toBe(true);
   });
   
-  test('Allows changing engine type and passes correct basis to EnsembleDisplay based on engineType', () => {
-    // First, ensure we have access to the mock
-    vi.resetModules();
-    
-    // Render with the default engine type (Average)
+  test('updates engine type when changed in control panel', () => {
     render(<App />);
-    const ensembleDisplay = screen.getByTestId('mock-ensemble-display');
-    expect(ensembleDisplay.getAttribute('data-basis')).toBe('bell');
     
-    // Find and change the engine type to MonteCarlo
+    // Find and change the engine type dropdown
     const engineTypeSelect = screen.getByLabelText('Engine Type:');
     fireEvent.change(engineTypeSelect, { target: { value: EngineType.MonteCarlo } });
     
-    // The updateEngineType method should have been called
+    // Verify controller method was called with the new engine type
+    expect(mockUpdateEngineType).toHaveBeenCalledTimes(1);
     expect(mockUpdateEngineType).toHaveBeenCalledWith(EngineType.MonteCarlo);
-    
-    // Re-render to see the change (we need a simpler test setup to verify the basis directly)
-    // Let's see if the handler was assigned correctly at least
-    const handlerCalls = mockUpdateEngineType.mock.calls;
-    expect(handlerCalls[0][0]).toBe(EngineType.MonteCarlo);
   });
 }); 

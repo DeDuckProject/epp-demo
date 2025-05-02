@@ -1,7 +1,8 @@
-import { describe, test, expect } from 'vitest';
-import { formatComplex, hasOffDiagonalElements, isWerner } from '../../src/utils/matrixFormatting';
-import { Matrix } from '../../src/engine_real_calculations/matrix/matrix';
+import {describe, expect, test} from 'vitest';
+import {formatComplex, hasOffDiagonalElements, isWerner} from '../../src/utils/matrixFormatting';
+import {Matrix} from '../../src/engine_real_calculations/matrix/matrix';
 import {toComputationalBasis} from "../../src/engine_real_calculations/bell/bell-basis";
+import {Basis} from "../../src/engine/types.ts";
 
 describe('Matrix Formatting Utilities', () => {
   describe('formatComplex', () => {
@@ -74,7 +75,7 @@ describe('Matrix Formatting Utilities', () => {
         [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.1, im: 0 }]
       ]);
       
-      expect(isWerner(wernerBell, 'bell')).toBe(true);
+      expect(isWerner(wernerBell, Basis.Bell)).toBe(true);
     });
     
     test('identifies non-Werner states correctly in Bell basis', () => {
@@ -86,7 +87,7 @@ describe('Matrix Formatting Utilities', () => {
         [{ re: 0.05, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.1, im: 0 }]
       ]);
       
-      expect(isWerner(nonWernerBell, 'bell')).toBe(false);
+      expect(isWerner(nonWernerBell, Basis.Bell)).toBe(false);
     });
     
     test('correctly transforms computational basis matrices before checking', () => {
@@ -102,7 +103,7 @@ describe('Matrix Formatting Utilities', () => {
       const computationalMatrix = toComputationalBasis(wernerBell);
       
       // Call isWerner with the computational basis flag
-      const result = isWerner(computationalMatrix, 'computational');
+      const result = isWerner(computationalMatrix, Basis.Computational);
 
       expect(result).toBe(true);
     });

@@ -1,4 +1,4 @@
-import {ISimulationEngine, QubitPair, SimulationParameters, SimulationState} from './types';
+import {Basis, ISimulationEngine, QubitPair, SimulationParameters, SimulationState} from './types';
 import {createNoisyEPR} from './quantumStates';
 import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus} from './operations';
 import {BellState, fidelityFromBellBasisMatrix} from "../engine_real_calculations/bell/bell-basis.ts";
@@ -22,7 +22,8 @@ export class AverageSimulationEngine implements ISimulationEngine {
       pairs.push({
         id: i,
         densityMatrix,
-        fidelity
+        fidelity,
+        basis: Basis.Bell
       });
     }
 
@@ -111,7 +112,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
 
       results.push({
         control: {
-          id: controlPair.id,
+          ...controlPair,
           densityMatrix: result.afterMeasurement.controlPair,
           fidelity: fidelityFromBellBasisMatrix(result.afterMeasurement.controlPair, BellState.PHI_PLUS)
         },
@@ -141,7 +142,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
         const wernerState = depolarize(swappedBack);
 
         newPairs.push({
-          id: result.control.id,
+          ...result.control,
           densityMatrix: wernerState,
           fidelity: fidelityFromBellBasisMatrix(wernerState, BellState.PSI_MINUS)
         });

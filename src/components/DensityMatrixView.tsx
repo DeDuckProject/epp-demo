@@ -2,19 +2,20 @@ import React from 'react';
 import { DensityMatrix } from '../engine_real_calculations';
 import { formatComplex } from '../utils/matrixFormatting';
 import './DensityMatrixView.css';
+import { Basis } from '../engine/types';
 
 interface DensityMatrixViewProps {
   /** The raw density matrix to render */
   matrix: DensityMatrix;
   /** Which basis to label: 'bell' (default) or 'computational' */
-  basis?: 'bell' | 'computational';
+  basis?: Basis;
   /** True if this is a Werner state (i.e. no significant off-diagonals) */
   isWerner: boolean;
 }
 
 const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ 
   matrix, 
-  basis = 'bell',
+  basis = Basis.Bell,
   isWerner 
 }) => {
   // Bell basis state labels
@@ -36,10 +37,10 @@ const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({
   })();
   
   // Select the labels based on the basis prop
-  const labels = basis === 'computational' ? computationalLabels : bellLabels;
+  const labels = basis === Basis.Computational ? computationalLabels : bellLabels;
   
   // Title based on the basis
-  const title = `Density Matrix (${basis === 'computational' ? 'Computational' : 'Bell'} Basis)`;
+  const title = `Density Matrix (${basis === Basis.Computational ? 'Computational' : 'Bell'} Basis)`;
   
   return (
     <div className="density-matrix">
