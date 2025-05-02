@@ -5,7 +5,7 @@ import EnsembleDisplay from '../../src/components/EnsembleDisplay';
 
 // Mock the QubitPair component to simplify testing
 vi.mock('../../src/components/QubitPair', () => ({
-  default: vi.fn(({ pair, location, willBeDiscarded, pairRole, partnerId, purificationStep }) => (
+  default: vi.fn(({ pair, location, willBeDiscarded, pairRole, partnerId, purificationStep, basis }) => (
     <div 
       data-testid="qubit-pair-mock" 
       data-pair-id={pair.id}
@@ -14,6 +14,7 @@ vi.mock('../../src/components/QubitPair', () => ({
       data-pair-role={pairRole}
       data-partner-id={partnerId}
       data-step={purificationStep}
+      data-basis={basis}
     >
       {pair.fidelity.toFixed(3)}
     </div>
@@ -64,6 +65,46 @@ describe('EnsembleDisplay', () => {
     // Check that no lines are marked for discard in the initial step
     const discardedLines = container.querySelectorAll('.entanglement-line.will-be-discarded');
     expect(discardedLines).toHaveLength(0);
+  });
+
+  test('passes basis prop to QubitPair components', () => {
+    const testPairs = createTestPairs(1);
+    
+    render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        purificationStep="initial"
+        basis="computational"
+      />
+    );
+    
+    // Get all QubitPair mocks
+    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
+    expect(qubitPairs).toHaveLength(2); // 1 pair, each rendered for Alice and Bob
+    
+    // Check basis was passed correctly
+    qubitPairs.forEach(pair => {
+      expect(pair.getAttribute('data-basis')).toBe('computational');
+    });
+  });
+  
+  test('uses bell basis by default', () => {
+    const testPairs = createTestPairs(1);
+    
+    render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        purificationStep="initial"
+      />
+    );
+    
+    // Get all QubitPair mocks
+    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
+    
+    // Check default basis was passed
+    qubitPairs.forEach(pair => {
+      expect(pair.getAttribute('data-basis')).toBe('bell');
+    });
   });
 
   test('identifies control and target pairs correctly in CNOT step', () => {

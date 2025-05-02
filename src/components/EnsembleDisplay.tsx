@@ -14,9 +14,10 @@ interface EnsembleDisplayProps {
     }[];
   };
   purificationStep: string;
+  basis?: 'bell' | 'computational';
 }
 
-const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, purificationStep }) => {
+const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, purificationStep, basis = 'bell' }) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Determine which pairs will be discarded in the measured step
@@ -216,6 +217,7 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
               pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
               partnerId={getPartnerId(pair)}
               purificationStep={purificationStep}
+              basis={basis}
             />
           ))}
         </div>
@@ -233,6 +235,7 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
               pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
               partnerId={getPartnerId(pair)}
               purificationStep={purificationStep}
+              basis={basis}
             />
           ))}
         </div>

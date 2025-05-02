@@ -360,4 +360,67 @@ describe('SimulationController', () => {
       expect(createEngine).toHaveBeenCalledWith(EngineType.MonteCarlo, mockInitialParams);
     });
   });
+
+  describe('Engine type switching', () => {
+    beforeEach(() => {
+      controller = new SimulationController(mockInitialParams, onStateChange);
+      // Reset the call counts since constructor calls createEngine
+      vi.mocked(createEngine).mockClear();
+      vi.mocked(onStateChange).mockClear();
+    });
+    
+    test('should create a new engine when updateEngineType is called', () => {
+      // Create a new mock engine for the second call
+      const newMockEngine = {
+        getCurrentState: vi.fn(),
+        nextStep: vi.fn(),
+        step: vi.fn(),
+        reset: vi.fn(),
+        updateParams: vi.fn()
+      };
+      
+      const newMockState = {
+        ...mockInitialState,
+        round: 0
+      };
+      
+      // Mock the new engine's getCurrentState method
+      vi.mocked(newMockEngine.getCurrentState).mockReturnValue(newMockState);
+      
+      // Make createEngine return the new mock engine
+      vi.mocked(createEngine).mockReturnValueOnce(newMockEngine);
+      
+      // Call method under test
+      controller.updateEngineType(EngineType.MonteCarlo);
+      
+      // Verify interactions
+      expect(createEngine).toHaveBeenCalledTimes(1);
+      expect(createEngine).toHaveBeenCalledWith(EngineType.MonteCarlo, mockInitialParams);
+      expect(newMockEngine.getCurrentState).toHaveBeenCalledTimes(1);
+      expect(onStateChange).toHaveBeenCalledTimes(1);
+      expect(onStateChange).toHaveBeenCalledWith(newMockState);
+    });
+    
+    test('should use current parameters when creating new engine', () => {
+      // First update parameters
+      const updatedParams = {
+        initialPairs: 8,
+        noiseParameter: 0.2,
+        targetFidelity: 0.98
+      };
+      
+      controller.updateParameters(updatedParams);
+      
+      // Reset mocks
+      vi.mocked(createEngine).mockClear();
+      vi.mocked(onStateChange).mockClear();
+      
+      // Then update engine type
+      controller.updateEngineType(EngineType.MonteCarlo);
+      
+      // Verify createEngine called with updated params
+      expect(createEngine).toHaveBeenCalledTimes(1);
+      expect(createEngine).toHaveBeenCalledWith(EngineType.MonteCarlo, updatedParams);
+    });
+  });
 }); 

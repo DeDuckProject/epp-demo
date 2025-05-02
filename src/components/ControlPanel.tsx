@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SimulationParameters, PurificationStep } from '../engine/types';
+import { SimulationParameters, PurificationStep, EngineType } from '../engine/types';
 import './ControlPanel.css';
 
 interface ControlPanelProps {
@@ -8,10 +8,12 @@ interface ControlPanelProps {
   onRunAll: () => void;
   onReset: () => void;
   onParametersChanged: (params: SimulationParameters) => void;
+  onEngineTypeChanged: (type: EngineType) => void;
   isComplete: boolean;
   currentRound: number;
   currentStep: PurificationStep;
   pairsRemaining: number;
+  engineType: EngineType;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -20,10 +22,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   onRunAll,
   onReset,
   onParametersChanged,
+  onEngineTypeChanged,
   isComplete,
   currentRound,
   currentStep,
-  pairsRemaining
+  pairsRemaining,
+  engineType
 }) => {
   const [initialPairs, setInitialPairs] = useState(10);
   const [noiseParameter, setNoiseParameter] = useState(0.3);
@@ -61,6 +65,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       
       <div className="parameter-section">
         <h3>Parameters</h3>
+        <div className="parameter-input">
+          <label htmlFor="engineType">Engine Type:</label>
+          <select
+            id="engineType"
+            value={engineType}
+            onChange={(e) => onEngineTypeChanged(e.target.value as EngineType)}
+          >
+            <option value={EngineType.Average}>Average</option>
+            <option value={EngineType.MonteCarlo}>Monte Carlo</option>
+          </select>
+        </div>
+        
         <div className="parameter-input">
           <label htmlFor="initialPairs">Initial Pairs:</label>
           <input

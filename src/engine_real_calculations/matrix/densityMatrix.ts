@@ -5,8 +5,17 @@ import { ComplexNum } from '../types/complex';
  * DensityMatrix extends Matrix for quantum density operators (2^n x 2^n)
  */
 export class DensityMatrix extends Matrix {
-  constructor(data: ComplexNum[][]) {
-    super(data);
+  constructor(data: ComplexNum[][] | Matrix) {
+    if (data instanceof Matrix) {
+      // If data is already a Matrix, copy its elements
+      const matrixData = Array(data.rows).fill(0).map((_, i) => 
+        Array(data.cols).fill(0).map((_, j) => data.get(i, j))
+      );
+      super(matrixData);
+    } else {
+      super(data);
+    }
+    
     if (this.rows !== this.cols) {
       throw new Error('DensityMatrix must be square');
     }

@@ -11,6 +11,7 @@ interface QubitPairProps {
   pairRole?: 'control' | 'target'; // New prop to indicate pair role
   partnerId?: number; // New prop to indicate which pair it's connected to
   purificationStep: string; // Add this to show connection at the right steps
+  basis?: 'bell' | 'computational'; // Add basis prop
 }
 
 const QubitPair: React.FC<QubitPairProps> = ({ 
@@ -19,7 +20,8 @@ const QubitPair: React.FC<QubitPairProps> = ({
   willBeDiscarded = false,
   pairRole,
   partnerId,
-  purificationStep
+  purificationStep,
+  basis = 'bell' // Default to bell basis
 }) => {
   const [showMatrix, setShowMatrix] = useState(false);
   
@@ -51,8 +53,8 @@ const QubitPair: React.FC<QubitPairProps> = ({
   };
   
   // Determine if the matrix is in Werner form (diagonal in Bell basis)
-  // For this simulation, the matrices are already in Bell basis, so we pass 'bell'
-  const werner = isWerner(pair.densityMatrix, 'bell');
+  // TODO add a tests for this
+  const werner = isWerner(pair.densityMatrix, basis);
   
   return (
     <div 
@@ -76,7 +78,11 @@ const QubitPair: React.FC<QubitPairProps> = ({
       
       {showMatrix && (
         <div className="matrix-popup">
-          <DensityMatrixView matrix={pair.densityMatrix} isWerner={werner} />
+          <DensityMatrixView 
+            matrix={pair.densityMatrix} 
+            isWerner={werner} 
+            basis={basis}
+          />
         </div>
       )}
     </div>

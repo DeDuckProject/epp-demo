@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import ControlPanel from '../../src/components/ControlPanel';
-import { PurificationStep } from '../../src/engine/types';
+import { PurificationStep, EngineType } from '../../src/engine/types';
 
 describe('ControlPanel', () => {
   // Mock functions for all callback props
@@ -11,6 +11,7 @@ describe('ControlPanel', () => {
   const mockOnRunAll = vi.fn();
   const mockOnReset = vi.fn();
   const mockOnParametersChanged = vi.fn();
+  const mockOnEngineTypeChanged = vi.fn();
 
   // Default props for rendering
   const defaultProps = {
@@ -19,10 +20,12 @@ describe('ControlPanel', () => {
     onRunAll: mockOnRunAll,
     onReset: mockOnReset,
     onParametersChanged: mockOnParametersChanged,
+    onEngineTypeChanged: mockOnEngineTypeChanged,
     isComplete: false,
     currentRound: 1,
     currentStep: 'initial' as PurificationStep,
-    pairsRemaining: 10
+    pairsRemaining: 10,
+    engineType: EngineType.Average
   };
 
   // Helper function to render the component with custom props
@@ -47,8 +50,14 @@ describe('ControlPanel', () => {
     // Get the parameter input containers
     const parameterInputs = container.querySelectorAll('.parameter-input');
     
-    // Check first parameter input - Initial Pairs
-    const initialPairsContainer = parameterInputs[0] as HTMLElement;
+    // Check engine type dropdown
+    const engineTypeContainer = parameterInputs[0] as HTMLElement;
+    expect(within(engineTypeContainer).getByText('Engine Type:')).toBeDefined();
+    const engineTypeSelect = within(engineTypeContainer).getByRole('combobox') as HTMLSelectElement;
+    expect(engineTypeSelect.value).toBe(EngineType.Average);
+    
+    // Check initial pairs
+    const initialPairsContainer = parameterInputs[1] as HTMLElement;
     expect(within(initialPairsContainer).getByText('Initial Pairs:')).toBeDefined();
     const initialPairsInput = within(initialPairsContainer).getByRole('spinbutton') as HTMLInputElement;
     expect(initialPairsInput.value).toBe('10');
@@ -84,24 +93,45 @@ describe('ControlPanel', () => {
     expect(applyParamsButton).toBeDefined();
   });
 
+  test('renders with Monte Carlo engine type selected', () => {
+    renderControlPanel({ engineType: EngineType.MonteCarlo });
+    
+    const engineTypeSelect = screen.getByRole('combobox') as HTMLSelectElement;
+    expect(engineTypeSelect.value).toBe(EngineType.MonteCarlo);
+  });
+
+  test('can switch engine type', () => {
+    renderControlPanel();
+    
+    // Get the engine type select
+    const engineTypeSelect = screen.getByRole('combobox') as HTMLSelectElement;
+    
+    // Change to Monte Carlo
+    fireEvent.change(engineTypeSelect, { target: { value: EngineType.MonteCarlo } });
+    
+    // Verify callback called
+    expect(mockOnEngineTypeChanged).toHaveBeenCalledTimes(1);
+    expect(mockOnEngineTypeChanged).toHaveBeenCalledWith(EngineType.MonteCarlo);
+  });
+
   test('user can adjust parameters and apply them', async () => {
     const { container } = renderControlPanel();
     
     // Get the parameter input containers
     const parameterInputs = container.querySelectorAll('.parameter-input');
     
-    // Change initial pairs
-    const initialPairsContainer = parameterInputs[0] as HTMLElement;
+    // Change initial pairs (index 1 now because engine type is at index 0)
+    const initialPairsContainer = parameterInputs[1] as HTMLElement;
     const initialPairsInput = within(initialPairsContainer).getByRole('spinbutton');
     fireEvent.change(initialPairsInput, { target: { value: '20' } });
     
     // Change noise parameter
-    const noiseContainer = parameterInputs[1] as HTMLElement;
+    const noiseContainer = parameterInputs[2] as HTMLElement;
     const noiseSlider = within(noiseContainer).getByRole('slider');
     fireEvent.change(noiseSlider, { target: { value: '0.42' } });
     
     // Change target fidelity
-    const fidelityContainer = parameterInputs[2] as HTMLElement;
+    const fidelityContainer = parameterInputs[3] as HTMLElement;
     const fidelitySlider = within(fidelityContainer).getByRole('slider');
     fireEvent.change(fidelitySlider, { target: { value: '0.87' } });
     

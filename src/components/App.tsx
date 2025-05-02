@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SimulationController } from '../controller/simulationController';
-import { SimulationState, SimulationParameters } from '../engine/types';
+import { SimulationState, SimulationParameters, EngineType } from '../engine/types';
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
 import './App.css';
@@ -8,6 +8,7 @@ import './App.css';
 const App: React.FC = () => {
   const [state, setState] = useState<SimulationState | null>(null);
   const [controller, setController] = useState<SimulationController | null>(null);
+  const [engineType, setEngineType] = useState<EngineType>(EngineType.Average);
   
   useEffect(() => {
     // Initialize controller with default parameters
@@ -19,7 +20,8 @@ const App: React.FC = () => {
     
     const newController = new SimulationController(
       initialParams,
-      (newState: SimulationState) => setState(newState)
+      (newState: SimulationState) => setState(newState),
+      engineType
     );
     
     setController(newController);
@@ -28,6 +30,14 @@ const App: React.FC = () => {
   if (!controller || !state) {
     return <div>Loading simulation...</div>;
   }
+
+  const handleEngineTypeChange = (type: EngineType) => {
+    controller.updateEngineType(type);
+    setEngineType(type);
+  };
+  
+  // Determine basis based on engine type
+  const basis = engineType === EngineType.MonteCarlo ? 'computational' : 'bell';
   
   return (
     <div className="app-container">
@@ -43,16 +53,19 @@ const App: React.FC = () => {
             onRunAll={() => controller.runUntilComplete()}
             onReset={() => controller.reset()}
             onParametersChanged={(params) => controller.updateParameters(params)}
+            onEngineTypeChanged={handleEngineTypeChange}
             isComplete={state.complete}
             currentRound={state.round}
             currentStep={state.purificationStep}
             pairsRemaining={state.pairs.length}
+            engineType={engineType}
           />
           
           <EnsembleDisplay 
             pairs={state.pairs} 
             pendingPairs={state.pendingPairs} 
-            purificationStep={state.purificationStep} 
+            purificationStep={state.purificationStep}
+            basis={basis}
           />
         </div>
       </main>

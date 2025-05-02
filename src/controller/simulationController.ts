@@ -3,12 +3,14 @@ import { ISimulationEngine, SimulationParameters, SimulationState, EngineType, c
 export class SimulationController {
   private engine: ISimulationEngine;
   private onStateChange: (state: SimulationState) => void;
+  private currentParams: SimulationParameters;
   
   constructor(
     initialParams: SimulationParameters, 
     onStateChange: (state: SimulationState) => void,
     engineType: EngineType = EngineType.Average
   ) {
+    this.currentParams = initialParams;
     this.engine = createEngine(engineType, initialParams);
     this.onStateChange = onStateChange;
     
@@ -58,7 +60,13 @@ export class SimulationController {
   }
   
   public updateParameters(params: SimulationParameters): void {
+    this.currentParams = params;
     this.engine.updateParams(params);
+    this.onStateChange(this.engine.getCurrentState());
+  }
+
+  public updateEngineType(type: EngineType): void {
+    this.engine = createEngine(type, this.currentParams);
     this.onStateChange(this.engine.getCurrentState());
   }
 } 
