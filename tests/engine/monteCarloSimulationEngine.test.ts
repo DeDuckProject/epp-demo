@@ -4,6 +4,7 @@ import {SimulationParameters} from '../../src/engine/types';
 import {DensityMatrix} from '../../src/engine_real_calculations/matrix/densityMatrix';
 import {ComplexNum} from '../../src/engine_real_calculations/types/complex';
 import {fidelityFromComputationalBasisMatrix, BellState} from '../../src/engine_real_calculations/bell/bell-basis';
+import * as PauliTwirling from '../../src/engine_real_calculations/operations/pauliTwirling';
 
 describe('MonteCarloSimulationEngine', () => {
   let engine: MonteCarloSimulationEngine;
@@ -283,6 +284,77 @@ describe('MonteCarloSimulationEngine', () => {
       const resetState = engine.reset();
 
       expect(resetState.pairs.length).toBe(newParams.initialPairs);
+    });
+  });
+
+  describe('Pauli Twirling Step', () => {
+    test('applies pauliTwirl to each pair during applyRandomTwirling', () => {
+      // Spy on the pauliTwirl function
+      const pauliTwirlSpy = vi.spyOn(PauliTwirling, 'pauliTwirl');
+      
+      // Call nextStep to trigger the applyRandomTwirling method
+      engine.nextStep();
+      
+      // Verify pauliTwirl was called for each pair
+      expect(pauliTwirlSpy).toHaveBeenCalledTimes(initialParams.initialPairs);
+      
+      // Verify all calls were with a DensityMatrix
+      for (let i = 0; i < pauliTwirlSpy.mock.calls.length; i++) {
+        expect(pauliTwirlSpy.mock.calls[i][0]).toBeInstanceOf(DensityMatrix);
+      }
+      
+      // Clean up spy
+      pauliTwirlSpy.mockRestore();
+    });
+    
+    test('recalculates fidelity after twirling', () => {
+      // Create a predictable twirling result
+      const originalTwirl = PauliTwirling.pauliTwirl;
+      
+      // Mock pauliTwirl to return a known density matrix
+      vi.spyOn(PauliTwirling, 'pauliTwirl').mockImplementation((rho) => {
+        // For test simplicity, return a pure Bell state with known fidelity
+        return DensityMatrix.bellPsiMinus();
+      });
+      
+      // Get initial state for comparison
+      const initialState = engine.getCurrentState();
+      
+      // Run twirling step
+      const afterTwirlingState = engine.nextStep();
+      
+      // Check fidelity was recalculated
+      afterTwirlingState.pairs.forEach(pair => {
+        // Since we're returning a pure Bell state in our mock, fidelity should be 1.0
+        expect(pair.fidelity).toBeCloseTo(1.0);
+      });
+      
+      // Restore original implementation
+      vi.mocked(PauliTwirling.pauliTwirl).mockRestore();
+    });
+    
+    test('updates purificationStep to twirled', () => {
+      // Get initial state
+      const initialState = engine.getCurrentState();
+      expect(initialState.purificationStep).toBe('initial');
+      
+      // Run twirling step
+      const afterState = engine.nextStep();
+      
+      // Check state was updated correctly
+      expect(afterState.purificationStep).toBe('twirled');
+    });
+    
+    test('preserves the number of pairs', () => {
+      // Get initial count
+      const initialState = engine.getCurrentState();
+      const initialCount = initialState.pairs.length;
+      
+      // Run twirling step
+      const afterState = engine.nextStep();
+      
+      // Check number of pairs is preserved
+      expect(afterState.pairs.length).toBe(initialCount);
     });
   });
 }); 

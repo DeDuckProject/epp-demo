@@ -2,6 +2,7 @@ import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine} fro
 import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
 import {applyDephasing} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
+import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
 
 /**
  * Monte Carlo Simulation Engine that uses the computational basis for calculations
@@ -47,9 +48,21 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
   
   // Step 1: Apply random twirling operations instead of depolarizing
   private applyRandomTwirling(): void {
-    // TODO: Implement Monte Carlo twirling in computational basis
+    // Apply Pauli twirling to each pair
+    this.state.pairs = this.state.pairs.map(pair => {
+      // Apply random Pauli twirl to create a Werner state
+      const twirledRho = pauliTwirl(pair.densityMatrix);
+      
+      // Recalculate fidelity with respect to the Psi-Minus Bell state
+      const fidelity = fidelityFromComputationalBasisMatrix(twirledRho, BellState.PSI_MINUS);
+      
+      return {
+        ...pair,
+        densityMatrix: twirledRho,
+        fidelity
+      };
+    });
     
-    // Placeholder implementation
     this.state.purificationStep = 'twirled';
   }
   
