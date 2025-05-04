@@ -197,6 +197,88 @@ describe('MonteCarloSimulationEngine', () => {
       expect(state.pendingPairs?.targetPairs.length).toBe(initialParams.initialPairs / 2);
     });
     
+    test('creates joint states with proper dimensions during bilateral CNOT', () => {
+      engine.nextStep(); // initial -> twirled
+      engine.nextStep(); // twirled -> exchanged
+      const state = engine.nextStep(); // exchanged -> cnot
+      
+      // Verify joint states are created
+      expect(state.pendingPairs?.jointStates).toBeDefined();
+      expect(state.pendingPairs?.jointStates?.length).toBe(initialParams.initialPairs / 2);
+      
+      // Verify each joint state is a 16x16 density matrix (4 qubits)
+      state.pendingPairs?.jointStates?.forEach(jointState => {
+        expect(jointState.rows).toBe(16);
+        expect(jointState.cols).toBe(16);
+        
+        // Verify it's a valid density matrix (trace = 1)
+        const trace = jointState.trace();
+        expect(trace.re).toBeCloseTo(1.0);
+        expect(trace.im).toBeCloseTo(0.0);
+        
+        // Verify that matrices are Hermitian (ρ = ρ†)
+        expect(jointState.validate()).toBe(true);
+      });
+    });
+    
+    test('applies correct bilateral CNOT operation', () => {
+      // Mock the applyCNOT function to verify it's called properly
+      const applyCNOTSpy = vi.spyOn(RealCalculations, 'applyCNOT');
+      
+      engine.nextStep(); // initial -> twirled
+      engine.nextStep(); // twirled -> exchanged
+      engine.nextStep(); // exchanged -> cnot
+      
+      // Verify applyCNOT was called twice per joint state (Alice's and Bob's CNOTs)
+      const expectedCalls = initialParams.initialPairs; // 2 calls per joint state
+      expect(applyCNOTSpy).toHaveBeenCalledTimes(expectedCalls);
+      
+      // Check specific calls - first Alice's CNOT with control=0, target=2
+      expect(applyCNOTSpy).toHaveBeenCalledWith(
+        expect.any(DensityMatrix),
+        0, // Alice's control qubit
+        2  // Alice's target qubit
+      );
+      
+      // Then Bob's CNOT with control=1, target=3
+      expect(applyCNOTSpy).toHaveBeenCalledWith(
+        expect.any(DensityMatrix),
+        1, // Bob's control qubit
+        3  // Bob's target qubit
+      );
+      
+      applyCNOTSpy.mockRestore();
+    });
+    
+    test('tensor product combines the correct pairs', () => {
+      // Mock the tensor function to verify it's called with the right pairs
+      const tensorSpy = vi.spyOn(RealCalculations, 'tensor');
+      
+      engine.nextStep(); // initial -> twirled
+      engine.nextStep(); // twirled -> exchanged
+      engine.nextStep(); // exchanged -> cnot
+      
+      // Verify tensor was called for each control-target pair
+      expect(tensorSpy).toHaveBeenCalledTimes(initialParams.initialPairs / 2);
+      
+      // Get the state with paired qubits
+      const state = engine.getCurrentState();
+      
+      // Check that each tensor call used density matrices from paired qubits
+      for (let i = 0; i < initialParams.initialPairs / 2; i++) {
+        const controlMatrix = state.pendingPairs?.controlPairs[i].densityMatrix;
+        const targetMatrix = state.pendingPairs?.targetPairs[i].densityMatrix;
+        
+        // Verify tensor was called with these specific matrices
+        expect(tensorSpy).toHaveBeenCalledWith(
+          expect.objectContaining({ data: controlMatrix?.data }),
+          expect.objectContaining({ data: targetMatrix?.data })
+        );
+      }
+      
+      tensorSpy.mockRestore();
+    });
+
     test('handles odd number of pairs correctly during CNOT setup', () => {
       const oddParams = { ...initialParams, initialPairs: 3 };
       const oddEngine = new MonteCarloSimulationEngine(oddParams);

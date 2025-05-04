@@ -1,8 +1,9 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import EnsembleDisplay from '../../src/components/EnsembleDisplay';
 import {Basis} from "../../src/engine/types.ts";
+import { DensityMatrix } from '../../src/engine_real_calculations';
 
 // Mock the QubitPair component to simplify testing
 vi.mock('../../src/components/QubitPair', () => ({
@@ -22,6 +23,15 @@ vi.mock('../../src/components/QubitPair', () => ({
   )
 }));
 
+// Mock DensityMatrixView component
+vi.mock('../../src/components/DensityMatrixView', () => ({
+  default: ({ matrix }: any) => (
+    <div data-testid="density-matrix-view">
+      <span data-testid="matrix-size">{matrix.rows}x{matrix.cols}</span>
+    </div>
+  )
+}));
+
 describe('EnsembleDisplay', () => {
   // Test data
   const createTestPairs = (count: number) => 
@@ -31,6 +41,19 @@ describe('EnsembleDisplay', () => {
       densityMatrix: {} as any,
       basis: Basis.Bell
     }));
+
+  // Create a mock DensityMatrix
+  const createMockDensityMatrix = (size: number) => {
+    return {
+      rows: size,
+      cols: size,
+      data: Array(size).fill(0).map(() => Array(size).fill(0)),
+      get: vi.fn(),
+      set: vi.fn(),
+      trace: vi.fn(() => ({ re: 1, im: 0 })),
+      validate: vi.fn(() => true)
+    } as unknown as DensityMatrix;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -306,5 +329,168 @@ describe('EnsembleDisplay', () => {
         expect(element.textContent).toBe(Basis.Computational);
       });
     });
+  });
+
+  test('passes joint state dimensions to DensityMatrixView', () => {
+    const testPairs = createTestPairs(2);
+    
+    // Create mock joint state - 16x16 matrix for 4 qubits
+    const mockJointState = createMockDensityMatrix(16);
+    
+    const pendingPairs = {
+      controlPairs: [testPairs[0]],
+      targetPairs: [testPairs[1]],
+      jointStates: [mockJointState]
+    };
+    
+    render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        pendingPairs={pendingPairs}
+        purificationStep="cnot" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // First, click on the control pair to show the joint state
+    const controlPair = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`)[0];
+    fireEvent.click(controlPair);
+    
+    // Now check that the joint state popup is shown
+    const jointStateView = screen.getByTestId('density-matrix-view');
+    expect(jointStateView).toBeTruthy();
+    
+    // Verify the matrix dimensions are shown correctly (16x16)
+    const matrixSize = screen.getByTestId('matrix-size');
+    expect(matrixSize.textContent).toBe('16x16');
+  });
+  
+  test('shows joint state when clicking on a control pair', () => {
+    const testPairs = createTestPairs(2);
+    const mockJointState = createMockDensityMatrix(16);
+    
+    const pendingPairs = {
+      controlPairs: [testPairs[0]],
+      targetPairs: [testPairs[1]],
+      jointStates: [mockJointState]
+    };
+    
+    const { container } = render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        pendingPairs={pendingPairs}
+        purificationStep="cnot" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // Before clicking, joint state popup should not exist
+    expect(container.querySelector('.joint-state-popup')).toBeNull();
+    
+    // Click on the control pair
+    const controlPair = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`)[0];
+    fireEvent.click(controlPair);
+    
+    // After clicking, joint state popup should exist
+    expect(container.querySelector('.joint-state-popup')).not.toBeNull();
+    
+    // Check popup content shows the right pair IDs
+    const popupContent = container.querySelector('.joint-state-info');
+    expect(popupContent?.textContent).toContain('Control Pair 1');
+    expect(popupContent?.textContent).toContain('Target Pair 2');
+  });
+  
+  test('also shows joint state when clicking on a target pair', () => {
+    const testPairs = createTestPairs(2);
+    const mockJointState = createMockDensityMatrix(16);
+    
+    const pendingPairs = {
+      controlPairs: [testPairs[0]],
+      targetPairs: [testPairs[1]],
+      jointStates: [mockJointState]
+    };
+    
+    const { container } = render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        pendingPairs={pendingPairs}
+        purificationStep="cnot" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // Click on the target pair instead of the control pair
+    const targetPair = screen.getAllByTestId(`qubit-pair-${testPairs[1].id}`)[0];
+    fireEvent.click(targetPair);
+    
+    // Popup should still show with the correct pair IDs
+    const popupContent = container.querySelector('.joint-state-info');
+    expect(popupContent?.textContent).toContain('Control Pair 1');
+    expect(popupContent?.textContent).toContain('Target Pair 2');
+  });
+  
+  test('closes joint state view when clicking the close button', () => {
+    const testPairs = createTestPairs(2);
+    const mockJointState = createMockDensityMatrix(16);
+    
+    const pendingPairs = {
+      controlPairs: [testPairs[0]],
+      targetPairs: [testPairs[1]],
+      jointStates: [mockJointState]
+    };
+    
+    const { container } = render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        pendingPairs={pendingPairs}
+        purificationStep="cnot" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // Click on a control pair to open popup
+    const controlPair = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`)[0];
+    fireEvent.click(controlPair);
+    
+    // Confirm popup is shown
+    let popup = container.querySelector('.joint-state-popup');
+    expect(popup).not.toBeNull();
+    
+    // Click the close button
+    const closeButton = container.querySelector('.close-button');
+    fireEvent.click(closeButton as HTMLElement);
+    
+    // Check that popup is no longer shown
+    popup = container.querySelector('.joint-state-popup');
+    expect(popup).toBeNull();
+  });
+  
+  test('does not show joint state popup in steps other than cnot', () => {
+    const testPairs = createTestPairs(2);
+    const mockJointState = createMockDensityMatrix(16);
+    
+    const pendingPairs = {
+      controlPairs: [testPairs[0]],
+      targetPairs: [testPairs[1]],
+      jointStates: [mockJointState]
+    };
+    
+    // Render in 'measured' step instead of 'cnot'
+    const { container } = render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        pendingPairs={pendingPairs}
+        purificationStep="measured" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // Click on a control pair
+    const controlPair = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`)[0];
+    fireEvent.click(controlPair);
+    
+    // Joint state popup should not appear in 'measured' step
+    const popup = container.querySelector('.joint-state-popup');
+    expect(popup).toBeNull();
   });
 }); 

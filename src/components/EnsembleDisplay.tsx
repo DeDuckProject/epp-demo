@@ -1,13 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { QubitPair as QubitPairType, Basis } from '../engine/types';
 import QubitPair from './QubitPair';
+import DensityMatrixView from './DensityMatrixView';
 import './EnsembleDisplay.css';
+import { DensityMatrix } from '../engine_real_calculations';
 
 interface EnsembleDisplayProps {
   pairs: QubitPairType[];
   pendingPairs?: {
     controlPairs: QubitPairType[];
     targetPairs: QubitPairType[];
+    jointStates?: DensityMatrix[];
     results?: {
       control: QubitPairType;
       successful: boolean;
@@ -19,6 +22,11 @@ interface EnsembleDisplayProps {
 
 const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, purificationStep, viewBasis }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [selectedJointState, setSelectedJointState] = useState<{
+    jointState: DensityMatrix;
+    controlId: number;
+    targetId: number;
+  } | null>(null);
 
   // Determine which pairs will be discarded in the measured step
   const willBeDiscarded = (pair: QubitPairType): boolean => {
@@ -203,22 +211,68 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
     }
   }, [pairs, pendingPairs, purificationStep]);
   
+  // Determine if we should display a 4-qubit joint state when clicking on a pair
+  const hasJointStates = purificationStep === 'cnot' && pendingPairs?.jointStates && pendingPairs.jointStates.length > 0;
+
+  // Get a joint state for a specific pair during CNOT step
+  const getJointStateForPair = (pairId: number) => {
+    if (!hasJointStates) return null;
+
+    // Find if this is a control pair
+    const controlIndex = pendingPairs!.controlPairs.findIndex(p => p.id === pairId);
+    if (controlIndex >= 0 && controlIndex < pendingPairs!.jointStates!.length) {
+      return {
+        jointState: pendingPairs!.jointStates![controlIndex],
+        controlId: pairId,
+        targetId: pendingPairs!.targetPairs[controlIndex].id
+      };
+    }
+
+    // Find if this is a target pair
+    const targetIndex = pendingPairs!.targetPairs.findIndex(p => p.id === pairId);
+    if (targetIndex >= 0 && targetIndex < pendingPairs!.jointStates!.length) {
+      return {
+        jointState: pendingPairs!.jointStates![targetIndex],
+        controlId: pendingPairs!.controlPairs[targetIndex].id,
+        targetId: pairId
+      };
+    }
+
+    return null;
+  };
+
+  // Handle click on a qubit pair to display joint state
+  const handlePairClick = (pair: QubitPairType) => {
+    if (hasJointStates) {
+      const jointStateInfo = getJointStateForPair(pair.id);
+      setSelectedJointState(jointStateInfo);
+    } else {
+      setSelectedJointState(null);
+    }
+  };
+
+  // Close the joint state view
+  const closeJointStateView = () => {
+    setSelectedJointState(null);
+  };
+
   return (
     <div className="ensemble-display">
       <div className="participant-section">
         <div className="participant-label alice-label">Alice</div>
         <div className="pair-row alice-row">
           {pairs.map(pair => (
-            <QubitPair 
-              key={pair.id} 
-              pair={pair} 
-              location="alice" 
-              willBeDiscarded={willBeDiscarded(pair)}
-              pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
-              partnerId={getPartnerId(pair)}
-              purificationStep={purificationStep}
-              viewBasis={viewBasis}
-            />
+            <div key={pair.id} onClick={() => handlePairClick(pair)}>
+              <QubitPair 
+                pair={pair} 
+                location="alice" 
+                willBeDiscarded={willBeDiscarded(pair)}
+                pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
+                partnerId={getPartnerId(pair)}
+                purificationStep={purificationStep}
+                viewBasis={viewBasis}
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -227,16 +281,17 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
         <div className="participant-label bob-label">Bob</div>
         <div className="pair-row bob-row">
           {pairs.map(pair => (
-            <QubitPair 
-              key={pair.id} 
-              pair={pair} 
-              location="bob" 
-              willBeDiscarded={willBeDiscarded(pair)}
-              pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
-              partnerId={getPartnerId(pair)}
-              purificationStep={purificationStep}
-              viewBasis={viewBasis}
-            />
+            <div key={pair.id} onClick={() => handlePairClick(pair)}>
+              <QubitPair 
+                pair={pair} 
+                location="bob" 
+                willBeDiscarded={willBeDiscarded(pair)}
+                pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
+                partnerId={getPartnerId(pair)}
+                purificationStep={purificationStep}
+                viewBasis={viewBasis}
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -270,6 +325,28 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
           zIndex: 10,
         }}
       ></svg>
+
+      {/* Joint state popup */}
+      {selectedJointState && (
+        <div className="joint-state-overlay" onClick={closeJointStateView}>
+          <div className="joint-state-popup" onClick={e => e.stopPropagation()}>
+            <div className="joint-state-header">
+              <h3>4-Qubit Joint State</h3>
+              <span className="joint-state-info">
+                Between Control Pair {selectedJointState.controlId} and Target Pair {selectedJointState.targetId}
+              </span>
+              <button className="close-button" onClick={closeJointStateView}>×</button>
+            </div>
+            <div className="joint-state-content">
+              <DensityMatrixView 
+                matrix={selectedJointState.jointState} 
+                isWerner={false} 
+                basis={viewBasis}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -29,6 +29,7 @@ export interface SimulationState {
   pendingPairs?: { // Store intermediate state during a round
     controlPairs: QubitPair[];
     targetPairs: QubitPair[];
+    jointStates?: DensityMatrix[]; // Store the 4-qubit joint states after applying bilateral CNOT
     results?: {
       control: QubitPair;
       successful: boolean;

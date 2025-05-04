@@ -3,7 +3,7 @@ import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
 import {applyDephasing} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
 import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
-import {applyPauli} from "../engine_real_calculations";
+import {applyPauli, applyCNOT, tensor} from "../engine_real_calculations";
 import {preparePairsForCNOT} from "./operations";
 
 /**
@@ -98,10 +98,31 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     }
     
     const { controlPairs, targetPairs } = preparePairsForCNOT(this.state.pairs);
+    const jointStates: DensityMatrix[] = [];
+    
+    // Create joint states and apply bilateral CNOT for each control-target pair
+    for (let i = 0; i < controlPairs.length; i++) {
+      const controlPair = controlPairs[i];
+      const targetPair = targetPairs[i];
+      
+      // Create joint 4-qubit state using tensor product 
+      // (qubit ordering: Alice's control, Bob's control, Alice's target, Bob's target)
+      let jointState = tensor(controlPair.densityMatrix, targetPair.densityMatrix);
+      
+      // Apply CNOT on Alice's side (qubit 0 controls qubit 2)
+      jointState = applyCNOT(jointState, 0, 2);
+      
+      // Apply CNOT on Bob's side (qubit 1 controls qubit 3)
+      jointState = applyCNOT(jointState, 1, 3);
+      
+      // Store the resulting joint state
+      jointStates.push(jointState);
+    }
     
     this.state.pendingPairs = {
       controlPairs,
-      targetPairs
+      targetPairs,
+      jointStates
     };
     
     this.state.purificationStep = 'cnot';
