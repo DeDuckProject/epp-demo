@@ -4,6 +4,7 @@ import {applyDephasing} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
 import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
 import {applyPauli, applyCNOT, tensor} from "../engine_real_calculations";
+import {partialTrace} from "../engine_real_calculations/operations/partialTrace";
 import {preparePairsForCNOT} from "./operations";
 
 /**
@@ -99,6 +100,8 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     
     const { controlPairs, targetPairs } = preparePairsForCNOT(this.state.pairs);
     const jointStates: DensityMatrix[] = [];
+    const updatedControlPairs: QubitPair[] = [];
+    const updatedTargetPairs: QubitPair[] = [];
     
     // Create joint states and apply bilateral CNOT for each control-target pair
     for (let i = 0; i < controlPairs.length; i++) {
@@ -117,13 +120,58 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
       
       // Store the resulting joint state
       jointStates.push(jointState);
+      
+      // Update control pair's density matrix by tracing out target qubits (2,3)
+      const reducedControlMatrix = partialTrace(jointState, [2, 3]);
+      const updatedControlFidelity = fidelityFromComputationalBasisMatrix(
+        reducedControlMatrix, 
+        BellState.PHI_PLUS // Already in PHI_PLUS basis from the exchange step
+      );
+      
+      // Update target pair's density matrix by tracing out control qubits (0,1)
+      const reducedTargetMatrix = partialTrace(jointState, [0, 1]);
+      const updatedTargetFidelity = fidelityFromComputationalBasisMatrix(
+        reducedTargetMatrix, 
+        BellState.PHI_PLUS
+      );
+      
+      // Save updated pairs
+      updatedControlPairs.push({
+        ...controlPair,
+        densityMatrix: reducedControlMatrix,
+        fidelity: updatedControlFidelity
+      });
+      
+      updatedTargetPairs.push({
+        ...targetPair,
+        densityMatrix: reducedTargetMatrix,
+        fidelity: updatedTargetFidelity
+      });
     }
     
+    // Update the state with new pairs and joint states
     this.state.pendingPairs = {
-      controlPairs,
-      targetPairs,
+      controlPairs: updatedControlPairs,
+      targetPairs: updatedTargetPairs,
       jointStates
     };
+    
+    // Update the pairs in the main state array
+    this.state.pairs = this.state.pairs.map(pair => {
+      // Find if this pair is a control or target pair
+      const controlIndex = controlPairs.findIndex(p => p.id === pair.id);
+      if (controlIndex >= 0) {
+        return updatedControlPairs[controlIndex];
+      }
+      
+      const targetIndex = targetPairs.findIndex(p => p.id === pair.id);
+      if (targetIndex >= 0) {
+        return updatedTargetPairs[targetIndex];
+      }
+      
+      // Otherwise, leave unchanged
+      return pair;
+    });
     
     this.state.purificationStep = 'cnot';
   }
