@@ -1,6 +1,6 @@
 import {Basis, ISimulationEngine, QubitPair, SimulationParameters, SimulationState} from './types';
 import {createNoisyEPR} from './quantumStates';
-import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus} from './operations';
+import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus, preparePairsForCNOT} from './operations';
 import {BellState, fidelityFromBellBasisMatrix} from "../engine_real_calculations/bell/bell-basis.ts";
 
 export class AverageSimulationEngine implements ISimulationEngine {
@@ -71,18 +71,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
       return;
     }
 
-    const controlPairs: QubitPair[] = [];
-    const targetPairs: QubitPair[] = [];
-
-    // Group pairs for purification, ensuring we only group complete pairs
-    const numPairsToProcess = Math.floor(this.state.pairs.length / 2) * 2;
-    for (let i = 0; i < numPairsToProcess; i++) { // Only loop through pairs that will be used
-      if (i % 2 === 0) {
-        controlPairs.push(this.state.pairs[i]);
-      } else {
-        targetPairs.push(this.state.pairs[i]);
-      }
-    }
+    const { controlPairs, targetPairs, hasUnpairedPair } = preparePairsForCNOT(this.state.pairs);
 
     this.state.pendingPairs = {
       controlPairs,
@@ -150,7 +139,8 @@ export class AverageSimulationEngine implements ISimulationEngine {
     }
 
     // If odd number of pairs, the last one doesn't participate
-    if (this.state.pairs.length % 2 !== 0) {
+    const { hasUnpairedPair } = preparePairsForCNOT(this.state.pairs);
+    if (hasUnpairedPair) {
       newPairs.push(this.state.pairs[this.state.pairs.length - 1]);
     }
 

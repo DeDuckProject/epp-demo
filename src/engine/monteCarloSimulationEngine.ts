@@ -4,6 +4,7 @@ import {applyDephasing} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
 import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
 import {applyPauli} from "../engine_real_calculations";
+import {preparePairsForCNOT} from "./operations";
 
 /**
  * Monte Carlo Simulation Engine that uses the computational basis for calculations
@@ -96,18 +97,7 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
       return;
     }
     
-    const controlPairs: QubitPair[] = [];
-    const targetPairs: QubitPair[] = [];
-    
-    // Group pairs for purification, ensuring we only group complete pairs
-    const numPairsToProcess = Math.floor(this.state.pairs.length / 2) * 2; 
-    for (let i = 0; i < numPairsToProcess; i++) {
-      if (i % 2 === 0) {
-        controlPairs.push(this.state.pairs[i]);
-      } else {
-        targetPairs.push(this.state.pairs[i]);
-      }
-    }
+    const { controlPairs, targetPairs } = preparePairsForCNOT(this.state.pairs);
     
     this.state.pendingPairs = {
       controlPairs,
@@ -159,7 +149,8 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     }
     
     // If odd number of pairs, the last one doesn't participate
-    if (this.state.pairs.length % 2 !== 0) {
+    const { hasUnpairedPair } = preparePairsForCNOT(this.state.pairs);
+    if (hasUnpairedPair) {
       newPairs.push(this.state.pairs[this.state.pairs.length - 1]);
     }
     

@@ -1,5 +1,6 @@
 import { ComplexNum } from '../engine_real_calculations/types/complex';
 import { DensityMatrix } from '../engine_real_calculations/matrix/densityMatrix';
+import { QubitPair } from './types';
 
 // Depolarize/Twirl a pair to convert to Werner form
 export const depolarize = (rho: DensityMatrix): DensityMatrix => {
@@ -137,5 +138,34 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
       controlPair,
       successful
     }
+  };
+};
+
+// Utility function to prepare control and target pairs for CNOT operation
+export const preparePairsForCNOT = (pairs: QubitPair[]): { 
+  controlPairs: QubitPair[], 
+  targetPairs: QubitPair[],
+  hasUnpairedPair: boolean
+} => {
+  const controlPairs: QubitPair[] = [];
+  const targetPairs: QubitPair[] = [];
+  
+  // Group pairs for purification, ensuring we only group complete pairs
+  const numPairsToProcess = Math.floor(pairs.length / 2) * 2;
+  for (let i = 0; i < numPairsToProcess; i++) {
+    if (i % 2 === 0) {
+      controlPairs.push(pairs[i]);
+    } else {
+      targetPairs.push(pairs[i]);
+    }
+  }
+  
+  // Check if we have an odd number of pairs
+  const hasUnpairedPair = pairs.length % 2 !== 0;
+  
+  return {
+    controlPairs,
+    targetPairs,
+    hasUnpairedPair
   };
 }; 
