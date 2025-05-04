@@ -3,6 +3,7 @@ import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
 import {applyDephasing} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
 import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
+import {applyPauli} from "../engine_real_calculations";
 
 /**
  * Monte Carlo Simulation Engine that uses the computational basis for calculations
@@ -67,11 +68,23 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     this.state.purificationStep = 'twirled';
   }
   
-  // Step 2: Prepare for the bilateral CNOT in computational basis
-  private prepareForBilateralCNOT(): void {
-    // TODO: Implement preparation step in computational basis
+  // Step 2: Exchange |Ψ-⟩ and |Φ+⟩ components by applying Y gate on Alice's qubit
+  private exchangePsiPhiComponents(): void {
+    // Apply Y gate on Alice's qubit (qubit 0) to exchange Psi-Minus and Phi-Plus
+    this.state.pairs = this.state.pairs.map(pair => {
+      // Apply Y gate on Alice's qubit to achieve the exchange
+      const exchangedRho = applyPauli(pair.densityMatrix, [0], ['Y']);
+      
+      // Recalculate fidelity with respect to the Phi-Plus Bell state
+      const fidelity = fidelityFromComputationalBasisMatrix(exchangedRho, BellState.PHI_PLUS);
+      
+      return {
+        ...pair,
+        densityMatrix: exchangedRho,
+        fidelity
+      };
+    });
     
-    // Placeholder implementation
     this.state.purificationStep = 'exchanged';
   }
   
@@ -177,7 +190,7 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
         this.applyRandomTwirling();
         break;
       case 'twirled':
-        this.prepareForBilateralCNOT();
+        this.exchangePsiPhiComponents();
         break;
       case 'exchanged':
         this.applyBilateralCNOT();
@@ -204,7 +217,7 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
         this.applyRandomTwirling();
       }
       if (this.state.purificationStep === 'twirled') {
-        this.prepareForBilateralCNOT();
+        this.exchangePsiPhiComponents();
       }
       if (this.state.purificationStep === 'exchanged') {
         this.applyBilateralCNOT();

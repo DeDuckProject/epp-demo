@@ -3,6 +3,8 @@ import {MonteCarloSimulationEngine} from '../../src/engine/monteCarloSimulationE
 import {Basis, SimulationParameters} from '../../src/engine/types';
 import {DensityMatrix} from '../../src/engine_real_calculations/matrix/densityMatrix';
 import * as PauliTwirling from '../../src/engine_real_calculations/operations/pauliTwirling';
+import * as RealCalculations from '../../src/engine_real_calculations';
+import {BellState, fidelityFromComputationalBasisMatrix} from '../../src/engine_real_calculations/bell/bell-basis';
 
 describe('MonteCarloSimulationEngine', () => {
   let engine: MonteCarloSimulationEngine;
@@ -154,6 +156,35 @@ describe('MonteCarloSimulationEngine', () => {
       engine.nextStep(); // initial -> twirled
       const state = engine.nextStep(); // twirled -> exchanged
       expect(state.purificationStep).toBe('exchanged');
+    });
+
+    test('exchange Ψ⁻↔Φ⁺ via Y gate on Alice\'s qubit', () => {
+      const spy = vi.spyOn(RealCalculations, 'applyPauli');
+      
+      engine.nextStep(); // initial -> twirled
+      const state = engine.nextStep(); // twirled -> exchanged
+      
+      // Verify applyPauli was called once per pair with correct params
+      expect(spy).toHaveBeenCalledTimes(initialParams.initialPairs);
+      expect(spy).toHaveBeenCalledWith(
+        expect.any(DensityMatrix), 
+        [0], // Alice's qubit
+        ['Y'] // Y gate
+      );
+      
+      // Verify the step updated correctly
+      expect(state.purificationStep).toBe('exchanged');
+      
+      // Verify fidelity is now calculated with respect to PHI_PLUS
+      state.pairs.forEach(pair => {
+        const calculatedFidelity = fidelityFromComputationalBasisMatrix(
+          pair.densityMatrix, 
+          BellState.PHI_PLUS
+        );
+        expect(pair.fidelity).toBeCloseTo(calculatedFidelity);
+      });
+      
+      spy.mockRestore();
     });
 
     test('progresses through purification steps: exchanged -> cnot', () => {
