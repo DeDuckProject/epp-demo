@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { QubitPair as QubitPairType } from '../engine/types';
+import { QubitPair as QubitPairType, Basis } from '../engine/types';
 import QubitPair from './QubitPair';
 import './EnsembleDisplay.css';
 
@@ -14,9 +14,10 @@ interface EnsembleDisplayProps {
     }[];
   };
   purificationStep: string;
+  viewBasis: Basis;
 }
 
-const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, purificationStep }) => {
+const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, purificationStep, viewBasis }) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Determine which pairs will be discarded in the measured step
@@ -216,6 +217,7 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
               pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
               partnerId={getPartnerId(pair)}
               purificationStep={purificationStep}
+              viewBasis={viewBasis}
             />
           ))}
         </div>
@@ -233,6 +235,7 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
               pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
               partnerId={getPartnerId(pair)}
               purificationStep={purificationStep}
+              viewBasis={viewBasis}
             />
           ))}
         </div>

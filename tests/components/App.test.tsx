@@ -12,6 +12,25 @@ vi.mock('../../src/controller/simulationController', () => {
   };
 });
 
+// Mock the EnsembleDisplay component
+vi.mock('../../src/components/EnsembleDisplay', () => ({
+  default: (props: any) => (
+    <div data-testid="ensemble-display" data-view-basis={props.viewBasis}>
+      <div className="participants">
+        <div>Alice</div>
+        <div>Bob</div>
+      </div>
+      <div className="pairs">
+        {props.pairs.map((pair: any) => (
+          <div key={pair.id} className="qubit-pair control-pair">
+            <span>{pair.fidelity.toFixed(3)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}));
+
 describe('App', () => {
   // Create a mock state for testing
   const mockState: SimulationState = {
@@ -120,9 +139,9 @@ describe('App', () => {
     render(<App />);
     
     // Find input elements
-    const initialPairsInput = screen.getByRole('spinbutton', { name: /Initial Pairs/ });
-    const noiseSlider = screen.getByRole('slider', { name: /Noise Parameter/ });
-    const fidelitySlider = screen.getByRole('slider', { name: /Target Fidelity/ });
+    const initialPairsInput = screen.getByLabelText('Initial Pairs:');
+    const noiseSlider = screen.getByLabelText('Noise Parameter:');
+    const fidelitySlider = screen.getByLabelText('Target Fidelity:');
     
     // Change values
     fireEvent.change(initialPairsInput, { target: { value: '20' } });
@@ -144,16 +163,12 @@ describe('App', () => {
   test('passes correct props to EnsembleDisplay from state', () => {
     render(<App />);
     
-    // The EnsembleDisplay should show the pairs from state
-    // For this test, check that the QubitPair is rendered with correct fidelity
-    // Since we have both Alice and Bob's side showing the same fidelity, 
-    // we should get multiple elements with this text
-    const pairElements = screen.getAllByText('0.800');
-    expect(pairElements).toHaveLength(2); // One for Alice, one for Bob
+    // Check that the fidelity value from our mock state is displayed
+    expect(screen.getByText('0.800')).toBeDefined();
     
-    // Check that they're in qubit-pair elements with the control-pair class
-    const firstPairElement = pairElements[0].closest('.qubit-pair');
-    expect(firstPairElement?.classList.contains('control-pair')).toBe(true);
+    // Check that the data-view-basis attribute is set correctly on the mock EnsembleDisplay
+    const ensembleDisplay = screen.getByTestId('ensemble-display');
+    expect(ensembleDisplay.getAttribute('data-view-basis')).toBe(Basis.Bell);
   });
   
   test('updates engine type when changed in control panel', () => {
@@ -166,5 +181,48 @@ describe('App', () => {
     // Verify controller method was called with the new engine type
     expect(mockUpdateEngineType).toHaveBeenCalledTimes(1);
     expect(mockUpdateEngineType).toHaveBeenCalledWith(EngineType.MonteCarlo);
+  });
+
+  test('initializes with Bell basis as default view basis', () => {
+    render(<App />);
+    
+    // Find the view basis dropdown
+    const viewBasisSelect = screen.getByLabelText('View Basis:');
+    
+    // Check default is Bell basis
+    expect((viewBasisSelect as HTMLSelectElement).value).toBe(Basis.Bell);
+  });
+  
+  test('updates view basis when changed in control panel', () => {
+    render(<App />);
+    
+    // Find and change the view basis dropdown
+    const viewBasisSelect = screen.getByLabelText('View Basis:');
+    
+    // Change to Computational basis
+    fireEvent.change(viewBasisSelect, { target: { value: Basis.Computational } });
+    
+    // Verify the value changed in the UI
+    expect((viewBasisSelect as HTMLSelectElement).value).toBe(Basis.Computational);
+    
+    // Change back to Bell basis
+    fireEvent.change(viewBasisSelect, { target: { value: Basis.Bell } });
+    
+    // Verify the value changed in the UI
+    expect((viewBasisSelect as HTMLSelectElement).value).toBe(Basis.Bell);
+  });
+  
+  test('passes view basis to EnsembleDisplay component', () => {
+    render(<App />);
+    
+    // Find and change the view basis dropdown
+    const viewBasisSelect = screen.getByLabelText('View Basis:');
+    
+    // Change to Computational basis
+    fireEvent.change(viewBasisSelect, { target: { value: Basis.Computational } });
+    
+    // Check that the EnsembleDisplay component received the updated viewBasis
+    const ensembleDisplay = screen.getByTestId('ensemble-display');
+    expect(ensembleDisplay.getAttribute('data-view-basis')).toBe(Basis.Computational);
   });
 }); 

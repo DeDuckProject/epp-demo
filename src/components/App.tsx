@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SimulationController } from '../controller/simulationController';
-import { SimulationState, SimulationParameters, EngineType } from '../engine/types';
+import { SimulationState, SimulationParameters, EngineType, Basis } from '../engine/types';
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
 import './App.css';
@@ -9,6 +9,7 @@ const App: React.FC = () => {
   const [state, setState] = useState<SimulationState | null>(null);
   const [controller, setController] = useState<SimulationController | null>(null);
   const [engineType, setEngineType] = useState<EngineType>(EngineType.Average);
+  const [viewBasis, setViewBasis] = useState<Basis>(Basis.Bell);
   
   useEffect(() => {
     // Initialize controller with default parameters
@@ -51,17 +52,20 @@ const App: React.FC = () => {
             onReset={() => controller.reset()}
             onParametersChanged={(params) => controller.updateParameters(params)}
             onEngineTypeChanged={handleEngineTypeChange}
+            onViewBasisChanged={setViewBasis}
             isComplete={state.complete}
             currentRound={state.round}
             currentStep={state.purificationStep}
             pairsRemaining={state.pairs.length}
             engineType={engineType}
+            viewBasis={viewBasis}
           />
           
           <EnsembleDisplay 
             pairs={state.pairs} 
             pendingPairs={state.pendingPairs} 
             purificationStep={state.purificationStep} 
+            viewBasis={viewBasis}
           />
         </div>
       </main>

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { QubitPair as QubitPairType } from '../engine/types';
+import { QubitPair as QubitPairType, Basis } from '../engine/types';
 import DensityMatrixView from './DensityMatrixView';
 import { isWerner } from '../utils/matrixFormatting';
+import { toBellBasis, toComputationalBasis } from '../engine_real_calculations/bell/bell-basis';
+import { DensityMatrix } from '../engine_real_calculations';
 import './QubitPair.css';
 
 interface QubitPairProps {
@@ -11,6 +13,7 @@ interface QubitPairProps {
   pairRole?: 'control' | 'target'; // New prop to indicate pair role
   partnerId?: number; // New prop to indicate which pair it's connected to
   purificationStep: string; // Add this to show connection at the right steps
+  viewBasis: Basis; // Add viewBasis prop to control basis display
 }
 
 const QubitPair: React.FC<QubitPairProps> = ({ 
@@ -19,7 +22,8 @@ const QubitPair: React.FC<QubitPairProps> = ({
   willBeDiscarded = false,
   pairRole,
   partnerId,
-  purificationStep
+  purificationStep,
+  viewBasis
 }) => {
   const [showMatrix, setShowMatrix] = useState(false);
   
@@ -53,6 +57,13 @@ const QubitPair: React.FC<QubitPairProps> = ({
   // Determine if the matrix is in Werner form (diagonal in Bell basis)
   const werner = isWerner(pair.densityMatrix, pair.basis);
   
+  // Transform the matrix if needed based on the viewBasis
+  const displayMatrix = pair.basis === viewBasis
+    ? pair.densityMatrix
+    : viewBasis === Basis.Bell
+      ? new DensityMatrix(toBellBasis(pair.densityMatrix))
+      : new DensityMatrix(toComputationalBasis(pair.densityMatrix));
+  
   return (
     <div 
       className={`qubit-pair ${location} ${willBeDiscarded ? 'will-be-discarded' : ''} ${showConnection ? getRoleClass() : ''}`}
@@ -76,9 +87,9 @@ const QubitPair: React.FC<QubitPairProps> = ({
       {showMatrix && (
         <div className="matrix-popup">
           <DensityMatrixView 
-            matrix={pair.densityMatrix} 
+            matrix={displayMatrix} 
             isWerner={werner} 
-            basis={pair.basis}
+            basis={viewBasis}
           />
         </div>
       )}

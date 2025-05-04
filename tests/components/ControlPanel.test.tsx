@@ -1,8 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ControlPanel from '../../src/components/ControlPanel';
-import { PurificationStep, EngineType } from '../../src/engine/types';
+import { PurificationStep, EngineType, Basis } from '../../src/engine/types';
 
 describe('ControlPanel', () => {
   // Mock functions for all callback props
@@ -12,6 +12,7 @@ describe('ControlPanel', () => {
   const mockOnReset = vi.fn();
   const mockOnParametersChanged = vi.fn();
   const mockOnEngineTypeChanged = vi.fn();
+  const mockOnViewBasisChanged = vi.fn();
 
   // Default props for rendering
   const defaultProps = {
@@ -21,11 +22,13 @@ describe('ControlPanel', () => {
     onReset: mockOnReset,
     onParametersChanged: mockOnParametersChanged,
     onEngineTypeChanged: mockOnEngineTypeChanged,
+    onViewBasisChanged: mockOnViewBasisChanged,
     isComplete: false,
     currentRound: 1,
-    currentStep: 'initial' as PurificationStep,
-    pairsRemaining: 10,
-    engineType: EngineType.Average
+    currentStep: 'twirled' as PurificationStep,
+    pairsRemaining: 5,
+    engineType: EngineType.Average,
+    viewBasis: Basis.Bell
   };
 
   // Helper function to render the component with custom props
@@ -47,33 +50,34 @@ describe('ControlPanel', () => {
     expect(screen.getByText('Simulation')).toBeDefined();
     expect(screen.getByText('Status')).toBeDefined();
 
-    // Get the parameter input containers
-    const parameterInputs = container.querySelectorAll('.parameter-input');
-    
     // Check engine type dropdown
-    const engineTypeContainer = parameterInputs[0] as HTMLElement;
-    expect(within(engineTypeContainer).getByText('Engine Type:')).toBeDefined();
-    const engineTypeSelect = within(engineTypeContainer).getByRole('combobox') as HTMLSelectElement;
+    const engineTypeSelect = screen.getByLabelText('Engine Type:') as HTMLSelectElement;
     expect(engineTypeSelect.value).toBe(EngineType.Average);
-    
-    // Check initial pairs
-    const initialPairsContainer = parameterInputs[1] as HTMLElement;
-    expect(within(initialPairsContainer).getByText('Initial Pairs:')).toBeDefined();
-    const initialPairsInput = within(initialPairsContainer).getByRole('spinbutton') as HTMLInputElement;
+
+    // Check view basis dropdown
+    const viewBasisSelect = screen.getByLabelText('View Basis:') as HTMLSelectElement;
+    expect(viewBasisSelect.value).toBe(Basis.Bell);
+
+    // Check initial pairs input
+    const initialPairsInput = screen.getByLabelText('Initial Pairs:') as HTMLInputElement;
     expect(initialPairsInput.value).toBe('10');
 
-    // Check noise parameter
-    expect(screen.getByText('0.30')).toBeDefined();
-    expect(screen.getByText('0.95')).toBeDefined();
+    // Check noise parameter slider
+    const noiseSlider = screen.getByLabelText('Noise Parameter:') as HTMLInputElement;
+    expect(noiseSlider.value).toBe('0.3');
+
+    // Check target fidelity slider
+    const fidelitySlider = screen.getByLabelText('Target Fidelity:') as HTMLInputElement;
+    expect(fidelitySlider.value).toBe('0.95');
 
     // Check status information
     expect(screen.getByText('Distillation Round: 1')).toBeDefined();
-    expect(screen.getByText('Current Step: initial')).toBeDefined();
-    expect(screen.getByText('Pairs Remaining: 10')).toBeDefined();
+    expect(screen.getByText('Current Step: twirled')).toBeDefined();
+    expect(screen.getByText('Pairs Remaining: 5')).toBeDefined();
     expect(screen.getByText('Status: In Progress')).toBeDefined();
 
     // Check buttons
-    const nextStepButton = screen.getByText('Next Step: Twirl') as HTMLButtonElement;
+    const nextStepButton = screen.getByText('Next Step: Exchange States') as HTMLButtonElement;
     expect(nextStepButton).toBeDefined();
     expect(nextStepButton.disabled).toBe(false);
     
@@ -96,7 +100,7 @@ describe('ControlPanel', () => {
   test('renders with Monte Carlo engine type selected', () => {
     renderControlPanel({ engineType: EngineType.MonteCarlo });
     
-    const engineTypeSelect = screen.getByRole('combobox') as HTMLSelectElement;
+    const engineTypeSelect = screen.getByLabelText('Engine Type:') as HTMLSelectElement;
     expect(engineTypeSelect.value).toBe(EngineType.MonteCarlo);
   });
 
@@ -104,7 +108,7 @@ describe('ControlPanel', () => {
     renderControlPanel();
     
     // Get the engine type select
-    const engineTypeSelect = screen.getByRole('combobox') as HTMLSelectElement;
+    const engineTypeSelect = screen.getByLabelText('Engine Type:') as HTMLSelectElement;
     
     // Change to Monte Carlo
     fireEvent.change(engineTypeSelect, { target: { value: EngineType.MonteCarlo } });
@@ -115,24 +119,18 @@ describe('ControlPanel', () => {
   });
 
   test('user can adjust parameters and apply them', async () => {
-    const { container } = renderControlPanel();
+    renderControlPanel();
     
-    // Get the parameter input containers
-    const parameterInputs = container.querySelectorAll('.parameter-input');
-    
-    // Change initial pairs (index 1 now because engine type is at index 0)
-    const initialPairsContainer = parameterInputs[1] as HTMLElement;
-    const initialPairsInput = within(initialPairsContainer).getByRole('spinbutton');
+    // Change initial pairs input
+    const initialPairsInput = screen.getByLabelText('Initial Pairs:');
     fireEvent.change(initialPairsInput, { target: { value: '20' } });
     
     // Change noise parameter
-    const noiseContainer = parameterInputs[2] as HTMLElement;
-    const noiseSlider = within(noiseContainer).getByRole('slider');
+    const noiseSlider = screen.getByLabelText('Noise Parameter:');
     fireEvent.change(noiseSlider, { target: { value: '0.42' } });
     
     // Change target fidelity
-    const fidelityContainer = parameterInputs[3] as HTMLElement;
-    const fidelitySlider = within(fidelityContainer).getByRole('slider');
+    const fidelitySlider = screen.getByLabelText('Target Fidelity:');
     fireEvent.change(fidelitySlider, { target: { value: '0.87' } });
     
     // Apply parameters
@@ -152,7 +150,7 @@ describe('ControlPanel', () => {
     renderControlPanel();
     
     // Click next step button
-    fireEvent.click(screen.getByText('Next Step: Twirl'));
+    fireEvent.click(screen.getByText('Next Step: Exchange States'));
     expect(mockOnNextStep).toHaveBeenCalledTimes(1);
     
     // Click complete round button
@@ -220,5 +218,40 @@ describe('ControlPanel', () => {
       // Cleanup before testing next step
       unmount();
     });
+  });
+
+  test('renders with default Bell basis selected', () => {
+    render(<ControlPanel {...defaultProps} />);
+    
+    // Find viewBasis dropdown
+    const viewBasisSelect = screen.getByLabelText(/view basis/i);
+    expect(viewBasisSelect).toBeDefined();
+    expect((viewBasisSelect as HTMLSelectElement).value).toBe(Basis.Bell);
+  });
+
+  test('calls onViewBasisChanged when basis is changed', () => {
+    render(<ControlPanel {...defaultProps} />);
+    
+    // Get the select and change to Computational
+    const viewBasisSelect = screen.getByLabelText(/view basis/i);
+    fireEvent.change(viewBasisSelect, { target: { value: Basis.Computational } });
+    
+    // Verify the handler was called with Computational basis
+    expect(mockOnViewBasisChanged).toHaveBeenCalledWith(Basis.Computational);
+  });
+
+  test('displays correct basis when viewBasis prop changes', () => {
+    // First render with Bell basis
+    const { rerender } = render(<ControlPanel {...defaultProps} />);
+    
+    // Verify Bell basis is selected
+    const viewBasisSelect = screen.getByLabelText(/view basis/i);
+    expect((viewBasisSelect as HTMLSelectElement).value).toBe(Basis.Bell);
+    
+    // Re-render with Computational basis
+    rerender(<ControlPanel {...defaultProps} viewBasis={Basis.Computational} />);
+    
+    // Verify Computational basis is now selected
+    expect((viewBasisSelect as HTMLSelectElement).value).toBe(Basis.Computational);
   });
 }); 

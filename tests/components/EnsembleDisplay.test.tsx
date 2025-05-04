@@ -6,19 +6,20 @@ import {Basis} from "../../src/engine/types.ts";
 
 // Mock the QubitPair component to simplify testing
 vi.mock('../../src/components/QubitPair', () => ({
-  default: vi.fn(({ pair, location, willBeDiscarded, pairRole, partnerId, purificationStep }) => (
+  default: ({ pair, location, willBeDiscarded, pairRole, partnerId, purificationStep, viewBasis }: any) => (
     <div 
-      data-testid="qubit-pair-mock" 
-      data-pair-id={pair.id}
+      data-testid={`qubit-pair-${pair.id}`} 
+      className={`qubit-pair ${pairRole === 'target' ? 'target-pair' : pairRole === 'control' ? 'control-pair' : ''}`}
       data-location={location}
       data-will-be-discarded={willBeDiscarded ? 'true' : 'false'}
-      data-pair-role={pairRole}
-      data-partner-id={partnerId}
+      data-pair-role={pairRole || null}
+      data-partner-id={partnerId || null}
       data-step={purificationStep}
     >
-      {pair.fidelity.toFixed(3)}
+      <span>Fidelity: {pair.fidelity.toFixed(3)}</span>
+      <span data-testid={`basis-${pair.id}`}>{viewBasis}</span>
     </div>
-  ))
+  )
 }));
 
 describe('EnsembleDisplay', () => {
@@ -42,22 +43,26 @@ describe('EnsembleDisplay', () => {
       <EnsembleDisplay 
         pairs={testPairs} 
         purificationStep="initial" 
+        viewBasis={Basis.Bell}
       />
     );
     
     // Check that we rendered the correct number of QubitPair components
-    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
-    expect(qubitPairs).toHaveLength(4); // 2 pairs, each rendered for Alice and Bob
+    testPairs.forEach(pair => {
+      // Each pair should be rendered twice - once for Alice and once for Bob
+      const pairElements = screen.getAllByTestId(`qubit-pair-${pair.id}`);
+      expect(pairElements).toHaveLength(2);
+    });
     
     // Check Alice's pairs
     const aliceRow = container.querySelector('.alice-row');
     expect(aliceRow).not.toBeNull();
-    expect(aliceRow?.querySelectorAll('[data-testid="qubit-pair-mock"]')).toHaveLength(2);
+    expect(aliceRow?.querySelectorAll('[data-testid^="qubit-pair-"]')).toHaveLength(2);
     
     // Check Bob's pairs
     const bobRow = container.querySelector('.bob-row');
     expect(bobRow).not.toBeNull();
-    expect(bobRow?.querySelectorAll('[data-testid="qubit-pair-mock"]')).toHaveLength(2);
+    expect(bobRow?.querySelectorAll('[data-testid^="qubit-pair-"]')).toHaveLength(2);
     
     // Check that entanglement lines are rendered
     const entanglementLines = container.querySelectorAll('.entanglement-line');
@@ -80,37 +85,31 @@ describe('EnsembleDisplay', () => {
         pairs={testPairs} 
         pendingPairs={pendingPairs}
         purificationStep="cnot" 
+        viewBasis={Basis.Bell}
       />
     );
     
-    // Get all QubitPair mocks
-    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
-    
     // Find control pairs - should be marked for both Alice and Bob sides
-    const controlPairs = qubitPairs.filter(el => el.getAttribute('data-pair-role') === 'control');
+    const controlPairs = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`);
     expect(controlPairs).toHaveLength(2);
-    expect(controlPairs[0].getAttribute('data-pair-id')).toBe('1');
-    expect(controlPairs[1].getAttribute('data-pair-id')).toBe('1');
-    
-    // Find target pairs - should be marked for both Alice and Bob sides
-    const targetPairs = qubitPairs.filter(el => el.getAttribute('data-pair-role') === 'target');
-    expect(targetPairs).toHaveLength(2);
-    expect(targetPairs[0].getAttribute('data-pair-id')).toBe('2');
-    expect(targetPairs[1].getAttribute('data-pair-id')).toBe('2');
-    
-    // For pairs that are neither control nor target, role should not be set
-    const neutralPairs = qubitPairs.filter(el => el.getAttribute('data-pair-id') === '3');
-    expect(neutralPairs).toHaveLength(2);
-    expect(neutralPairs[0].getAttribute('data-pair-role')).toBeNull();
-    expect(neutralPairs[1].getAttribute('data-pair-role')).toBeNull();
-    
-    // Check that partner IDs are correctly set
     controlPairs.forEach(el => {
+      expect(el.getAttribute('data-pair-role')).toBe('control');
       expect(el.getAttribute('data-partner-id')).toBe('2');
     });
     
+    // Find target pairs - should be marked for both Alice and Bob sides
+    const targetPairs = screen.getAllByTestId(`qubit-pair-${testPairs[1].id}`);
+    expect(targetPairs).toHaveLength(2);
     targetPairs.forEach(el => {
+      expect(el.getAttribute('data-pair-role')).toBe('target');
       expect(el.getAttribute('data-partner-id')).toBe('1');
+    });
+    
+    // For pairs that are neither control nor target, role should not be set
+    const neutralPairs = screen.getAllByTestId(`qubit-pair-${testPairs[2].id}`);
+    expect(neutralPairs).toHaveLength(2);
+    neutralPairs.forEach(el => {
+      expect(el.getAttribute('data-pair-role')).toBeNull();
     });
   });
 
@@ -130,28 +129,26 @@ describe('EnsembleDisplay', () => {
         pairs={testPairs} 
         pendingPairs={pendingPairs}
         purificationStep="measured" 
+        viewBasis={Basis.Bell}
       />
     );
     
-    // Get all QubitPair mocks
-    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
-    
     // Target pairs should always be marked for discard
-    const targetPairs = qubitPairs.filter(el => el.getAttribute('data-pair-id') === '2');
+    const targetPairs = screen.getAllByTestId(`qubit-pair-${testPairs[1].id}`);
     expect(targetPairs).toHaveLength(2); // One for Alice, one for Bob
     targetPairs.forEach(el => {
       expect(el.getAttribute('data-will-be-discarded')).toBe('true');
     });
     
     // Successful control pair should not be marked for discard
-    const successfulPairs = qubitPairs.filter(el => el.getAttribute('data-pair-id') === '1');
+    const successfulPairs = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`);
     expect(successfulPairs).toHaveLength(2);
     successfulPairs.forEach(el => {
       expect(el.getAttribute('data-will-be-discarded')).toBe('false');
     });
     
     // Failed control pair should be marked for discard
-    const failedPairs = qubitPairs.filter(el => el.getAttribute('data-pair-id') === '3');
+    const failedPairs = screen.getAllByTestId(`qubit-pair-${testPairs[2].id}`);
     expect(failedPairs).toHaveLength(2);
     failedPairs.forEach(el => {
       expect(el.getAttribute('data-will-be-discarded')).toBe('true');
@@ -177,21 +174,19 @@ describe('EnsembleDisplay', () => {
         pairs={testPairs} 
         pendingPairs={unbalancedPendingPairs}
         purificationStep="cnot" 
+        viewBasis={Basis.Bell}
       />
     );
     
-    // Get all QubitPair mocks
-    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
-    
     // Partner ID for the first control pair should be 3
-    const firstControlPairs = qubitPairs.filter(el => el.getAttribute('data-pair-id') === '1');
+    const firstControlPairs = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`);
     expect(firstControlPairs).toHaveLength(2);
     firstControlPairs.forEach(el => {
       expect(el.getAttribute('data-partner-id')).toBe('3');
     });
     
     // Partner ID for the second control pair should be undefined (no target)
-    const secondControlPairs = qubitPairs.filter(el => el.getAttribute('data-pair-id') === '2');
+    const secondControlPairs = screen.getAllByTestId(`qubit-pair-${testPairs[1].id}`);
     expect(secondControlPairs).toHaveLength(2);
     secondControlPairs.forEach(el => {
       expect(el.getAttribute('data-partner-id')).toBeNull();
@@ -211,20 +206,18 @@ describe('EnsembleDisplay', () => {
         pairs={testPairs} 
         pendingPairs={pendingPairsNoResults}
         purificationStep="measured" 
+        viewBasis={Basis.Bell}
       />
     );
     
-    // Get all QubitPair mocks
-    const qubitPairs = screen.getAllByTestId('qubit-pair-mock');
-    
     // Target pairs should still be marked for discard even without results
-    const targetPairs = qubitPairs.filter(el => el.getAttribute('data-pair-id') === '2');
+    const targetPairs = screen.getAllByTestId(`qubit-pair-${testPairs[1].id}`);
     targetPairs.forEach(el => {
       expect(el.getAttribute('data-will-be-discarded')).toBe('true');
     });
     
     // Control pairs should not be marked for discard when results are missing
-    const controlPairs = qubitPairs.filter(el => el.getAttribute('data-pair-id') === '1');
+    const controlPairs = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`);
     controlPairs.forEach(el => {
       expect(el.getAttribute('data-will-be-discarded')).toBe('false');
     });
@@ -238,6 +231,7 @@ describe('EnsembleDisplay', () => {
       <EnsembleDisplay 
         pairs={testPairs} 
         purificationStep="initial" 
+        viewBasis={Basis.Bell}
       />
     );
     
@@ -258,6 +252,7 @@ describe('EnsembleDisplay', () => {
         pairs={testPairs} 
         pendingPairs={pendingPairs}
         purificationStep="cnot" 
+        viewBasis={Basis.Bell}
       />
     );
     
@@ -266,5 +261,50 @@ describe('EnsembleDisplay', () => {
     
     // The SVG should have the ref applied but the mock for drawing DOM elements won't be called
     // in the test environment since it relies on getBoundingClientRect() and other DOM APIs
+  });
+
+  test('passes viewBasis to QubitPair components', () => {
+    const testPairs = createTestPairs(2);
+    
+    const { rerender } = render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        purificationStep="initial" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // Check that all qubit pairs have the Bell basis
+    testPairs.forEach(pair => {
+      // Get all basis elements for this pair (Alice and Bob sides)
+      const basisElements = screen.getAllByTestId(`basis-${pair.id}`);
+      expect(basisElements).toHaveLength(2);
+      
+      // Both elements should have Bell basis
+      basisElements.forEach(element => {
+        expect(element.textContent).toBe(Basis.Bell);
+      });
+    });
+    
+    // Re-render with Computational basis
+    rerender(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        purificationStep="initial" 
+        viewBasis={Basis.Computational}
+      />
+    );
+    
+    // Now check the updated basis
+    testPairs.forEach(pair => {
+      // Get all basis elements for this pair (Alice and Bob sides)
+      const basisElements = screen.getAllByTestId(`basis-${pair.id}`);
+      expect(basisElements).toHaveLength(2);
+      
+      // Both elements should have Computational basis
+      basisElements.forEach(element => {
+        expect(element.textContent).toBe(Basis.Computational);
+      });
+    });
   });
 }); 

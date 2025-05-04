@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SimulationParameters, PurificationStep, EngineType } from '../engine/types';
+import { SimulationParameters, PurificationStep, EngineType, Basis } from '../engine/types';
 import './ControlPanel.css';
 
 interface ControlPanelProps {
@@ -9,11 +9,13 @@ interface ControlPanelProps {
   onReset: () => void;
   onParametersChanged: (params: SimulationParameters) => void;
   onEngineTypeChanged: (type: EngineType) => void;
+  onViewBasisChanged: (basis: Basis) => void;
   isComplete: boolean;
   currentRound: number;
   currentStep: PurificationStep;
   pairsRemaining: number;
   engineType: EngineType;
+  viewBasis: Basis;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -23,11 +25,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   onReset,
   onParametersChanged,
   onEngineTypeChanged,
+  onViewBasisChanged,
   isComplete,
   currentRound,
   currentStep,
   pairsRemaining,
-  engineType
+  engineType,
+  viewBasis
 }) => {
   const [initialPairs, setInitialPairs] = useState(10);
   const [noiseParameter, setNoiseParameter] = useState(0.3);
@@ -74,6 +78,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           >
             <option value={EngineType.Average}>Average</option>
             <option value={EngineType.MonteCarlo}>Monte Carlo</option>
+          </select>
+        </div>
+        
+        <div className="parameter-input">
+          <label htmlFor="viewBasis">View Basis:</label>
+          <select
+            id="viewBasis"
+            value={viewBasis}
+            onChange={(e) => onViewBasisChanged(e.target.value as Basis)}
+          >
+            <option value={Basis.Bell}>Bell</option>
+            <option value={Basis.Computational}>Computational</option>
           </select>
         </div>
         
