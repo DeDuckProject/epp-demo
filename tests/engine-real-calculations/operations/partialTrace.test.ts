@@ -80,6 +80,8 @@ describe('Partial Trace Operations', () => {
     expect(traced.rows).toBe(2);
     expect(traced.get(0, 0).re).toBeCloseTo(0.5);
     expect(traced.get(1, 1).re).toBeCloseTo(0.5);
+    expect(traced.get(0, 1).re).toBeCloseTo(0);
+    expect(traced.get(1, 0).re).toBeCloseTo(0);
 
     // verify tracing other qubits still gives the mixed state
     traced = partialTrace(ghz, [0, 2]);
@@ -88,6 +90,8 @@ describe('Partial Trace Operations', () => {
     expect(traced.rows).toBe(2);
     expect(traced.get(0, 0).re).toBeCloseTo(0.5);
     expect(traced.get(1, 1).re).toBeCloseTo(0.5);
+    expect(traced.get(0, 1).re).toBeCloseTo(0);
+    expect(traced.get(1, 0).re).toBeCloseTo(0);
   });
   
   test('tracing out all qubits gives a scalar', () => {

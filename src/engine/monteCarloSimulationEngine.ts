@@ -3,7 +3,7 @@ import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
 import {applyDephasing} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
 import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
-import {applyPauli, applyCNOT, tensor} from "../engine_real_calculations";
+import {applyPauli, applyCNOT, tensor, measureQubit} from "../engine_real_calculations";
 import {partialTrace} from "../engine_real_calculations/operations/partialTrace";
 import {preparePairsForCNOT} from "./operations";
 
@@ -183,18 +183,76 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
       return;
     }
     
-    // TODO: Implement Monte Carlo measurement in computational basis
+    const { controlPairs, targetPairs, jointStates } = this.state.pendingPairs;
     
-    // Placeholder implementation
-    const { controlPairs } = this.state.pendingPairs;
-    const results = controlPairs.map(controlPair => ({
-      control: {
-        ...controlPair
-      },
-      successful: Math.random() > 0.5 // Will be based on actual measurement calculation
-    }));
+    if (!jointStates || jointStates.length === 0) {
+      console.error("No joint states to measure");
+      return;
+    }
+    
+    const results: {
+      control: QubitPair;
+      successful: boolean;
+    }[] = [];
+    
+    // Process each joint state (4-qubit system after bilateral CNOT)
+    for (let i = 0; i < jointStates.length; i++) {
+      const controlPair = controlPairs[i];
+      const targetPair = targetPairs[i];
+      const jointState = jointStates[i];
+      
+      // Measure Alice's target qubit (qubit 2)
+      const aliceMeasurement = measureQubit(jointState, 2);
+      // console.log('aliceMeasurement', aliceMeasurement);
+      // console.log('aliceMeasurement postState', partialTrace(aliceMeasurement.postState, [2]));
+
+      // Measure Bob's target qubit (qubit 3) on the post-measurement state
+      const bobMeasurement = measureQubit(aliceMeasurement.postState, 3);
+      // console.log('bobMeasurement', bobMeasurement);
+      // console.log('bobMeasurement postState', partialTrace(bobMeasurement.postState, [2,3]));
+      
+      // Success if both measurements yield the same result
+      const successful = aliceMeasurement.outcome === bobMeasurement.outcome;
+      
+      // The post-measurement state is now a 4-qubit state with qubits 2 and 3 measured
+      // Trace out qubits 2 and 3 to get the reduced state of the control pair (qubits 0 and 1)
+      // const postMeasurementControlState = partialTrace(bobMeasurement.postState, [2, 3]);
+      const postMeasurementControlState = partialTrace(bobMeasurement.postState, [0, 1]); // Testing big endian
+      // console.log('postMeasurementControlState', postMeasurementControlState);
+      
+      // Calculate updated fidelity of control pair
+      const updatedFidelity = fidelityFromComputationalBasisMatrix(
+        postMeasurementControlState,
+        BellState.PHI_PLUS
+      );
+      
+      // Create updated control pair with post-measurement state
+      const updatedControlPair = {
+        ...controlPair,
+        densityMatrix: postMeasurementControlState,
+        fidelity: updatedFidelity
+      };
+      
+      results.push({
+        control: updatedControlPair,
+        successful
+      });
+    }
     
     this.state.pendingPairs.results = results;
+    
+    // Update the main state.pairs array with post-measurement states for immediate visualization
+    this.state.pairs = this.state.pairs.map(pair => {
+      // Find if this pair is a control pair that was measured
+      const resultIndex = results.findIndex(result => result.control.id === pair.id);
+      if (resultIndex >= 0) {
+        // Update with post-measurement state
+        return results[resultIndex].control;
+      }
+      // Otherwise, leave unchanged
+      return pair;
+    });
+    
     this.state.purificationStep = 'measured';
   }
   

@@ -191,4 +191,10 @@ export class Matrix {
     }
     return true;
   }
+
+toString(): string {
+  return this.data.map(row => 
+    row.map(({ re, im }) => `${re}${im >= 0 ? '+' : ''}${im}i`).join(' ')
+  ).join('\n');
+}
 } 

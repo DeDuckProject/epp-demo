@@ -537,4 +537,195 @@ describe('MonteCarloSimulationEngine', () => {
       expect(afterState.pairs.length).toBe(initialCount);
     });
   });
+
+  describe('Measurement', () => {
+    test('returns success when Alice and Bob measure same outcomes', () => {
+      // Create a specific state that will lead to matching measurements
+      // Pure |00⟩ state: both Alice and Bob will measure 0
+      const pureState = new DensityMatrix([
+        [{ re: 1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
+      ]);
+      
+      // Create joint state with |0000⟩ - Both will measure 0
+      const jointState = DensityMatrix.tensor(pureState, pureState);
+      
+      // Mock the measureQubit function to return deterministic results
+      const measureSpy = vi.spyOn(RealCalculations, 'measureQubit');
+      
+      // First call (Alice's measurement) - return outcome 0
+      measureSpy.mockReturnValueOnce({ 
+        outcome: 0, 
+        probability: 1.0, 
+        postState: jointState 
+      });
+      
+      // Second call (Bob's measurement) - return outcome 0 (same as Alice)
+      measureSpy.mockReturnValueOnce({ 
+        outcome: 0, 
+        probability: 1.0, 
+        postState: jointState 
+      });
+      
+      // Setup the engine's state with our test data
+      engine = new MonteCarloSimulationEngine(initialParams);
+      
+      // Mock internal state to simulate being at the CNOT step
+      // @ts-ignore: Accessing private property
+      engine['state'].purificationStep = 'cnot';
+      // @ts-ignore: Accessing private property
+      engine['state'].pendingPairs = {
+        controlPairs: [{ id: 0, densityMatrix: pureState, fidelity: 1, basis: Basis.Computational }],
+        targetPairs: [{ id: 1, densityMatrix: pureState, fidelity: 1, basis: Basis.Computational }],
+        jointStates: [jointState]
+      };
+      
+      // Call the measurement step
+      // @ts-ignore: Accessing private method
+      engine['performMeasurement']();
+      
+      // Get updated state
+      const state = engine.getCurrentState();
+      
+      // Verify the measurement step succeeded
+      expect(state.purificationStep).toBe('measured');
+      expect(state.pendingPairs?.results).toBeDefined();
+      expect(state.pendingPairs?.results?.length).toBe(1);
+      expect(state.pendingPairs?.results?.[0].successful).toBe(true);
+      
+      // Cleanup
+      measureSpy.mockRestore();
+    });
+    
+    test('returns failure when Alice and Bob measure different outcomes', () => {
+      // Create a pure state |01⟩ that will lead to different measurements
+      const controlState = new DensityMatrix([
+        [{ re: 1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
+      ]);
+      
+      // Target state |01⟩ - Alice gets 0, Bob gets 1
+      const targetState = new DensityMatrix([
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
+      ]);
+      
+      // Create joint state
+      const jointState = DensityMatrix.tensor(controlState, targetState);
+      
+      // Mock the measureQubit function to return deterministic results
+      const measureSpy = vi.spyOn(RealCalculations, 'measureQubit');
+      
+      // First call (Alice's measurement) - return outcome 0
+      measureSpy.mockReturnValueOnce({ 
+        outcome: 0, 
+        probability: 1.0, 
+        postState: jointState 
+      });
+      
+      // Second call (Bob's measurement) - return outcome 1 (different from Alice)
+      measureSpy.mockReturnValueOnce({ 
+        outcome: 1, 
+        probability: 1.0, 
+        postState: jointState 
+      });
+      
+      // Setup the engine's state with our test data
+      engine = new MonteCarloSimulationEngine(initialParams);
+      
+      // Mock internal state to simulate being at the CNOT step
+      // @ts-ignore: Accessing private property
+      engine['state'].purificationStep = 'cnot';
+      // @ts-ignore: Accessing private property
+      engine['state'].pendingPairs = {
+        controlPairs: [{ id: 0, densityMatrix: controlState, fidelity: 1, basis: Basis.Computational }],
+        targetPairs: [{ id: 1, densityMatrix: targetState, fidelity: 1, basis: Basis.Computational }],
+        jointStates: [jointState]
+      };
+      
+      // Call the measurement step
+      // @ts-ignore: Accessing private method
+      engine['performMeasurement']();
+      
+      // Get updated state
+      const state = engine.getCurrentState();
+      
+      // Verify the measurement step failed
+      expect(state.purificationStep).toBe('measured');
+      expect(state.pendingPairs?.results).toBeDefined();
+      expect(state.pendingPairs?.results?.length).toBe(1);
+      expect(state.pendingPairs?.results?.[0].successful).toBe(false);
+      
+      // Cleanup
+      measureSpy.mockRestore();
+    });
+    
+    test('correctly traces out measured qubits to update control pair state', () => {
+      // Create simple states
+      const controlState = new DensityMatrix([
+        [{ re: 1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
+      ]);
+      
+      const targetState = new DensityMatrix([
+        [{ re: 1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
+      ]);
+      
+      // Create joint state
+      const jointState = DensityMatrix.tensor(controlState, targetState);
+      
+      // Mock the measureQubit function
+      const measureSpy = vi.spyOn(RealCalculations, 'measureQubit');
+      measureSpy.mockReturnValueOnce({ outcome: 0, probability: 1.0, postState: jointState });
+      measureSpy.mockReturnValueOnce({ outcome: 0, probability: 1.0, postState: jointState });
+      
+      // Mock the partialTrace function
+      const partialTraceSpy = vi.spyOn(PartialTrace, 'partialTrace');
+      const tracedOutState = new DensityMatrix([
+        [{ re: 1, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+        [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }]
+      ]);
+      partialTraceSpy.mockReturnValue(tracedOutState);
+      
+      // Setup the engine state
+      engine = new MonteCarloSimulationEngine(initialParams);
+      // @ts-ignore: Accessing private property
+      engine['state'].purificationStep = 'cnot';
+      // @ts-ignore: Accessing private property
+      engine['state'].pendingPairs = {
+        controlPairs: [{ id: 0, densityMatrix: controlState, fidelity: 1, basis: Basis.Computational }],
+        targetPairs: [{ id: 1, densityMatrix: targetState, fidelity: 1, basis: Basis.Computational }],
+        jointStates: [jointState]
+      };
+      
+      // Call the measurement step
+      // @ts-ignore: Accessing private method
+      engine['performMeasurement']();
+      
+      // Verify that partialTrace was called correctly
+      // TODO make sure this is correct and we don't the wrong qubits here. I think its ok
+      expect(partialTraceSpy).toHaveBeenCalledWith(expect.any(DensityMatrix), [0, 1]);
+      
+      // Verify the control pair was updated with the traced out state
+      const state = engine.getCurrentState();
+      expect(state.pendingPairs?.results?.[0].control.densityMatrix).toBe(tracedOutState);
+      
+      // Cleanup
+      measureSpy.mockRestore();
+      partialTraceSpy.mockRestore();
+    });
+  });
 }); 
