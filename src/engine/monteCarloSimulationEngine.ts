@@ -287,15 +287,24 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
 
   // Step 5b: Twirl and exchange survivors
   private twirlExchange(): void {
+    // First check if we've reached our target or can't purify further
+    const isComplete = this.state.pairs.length < 2 || 
+                     (this.state.pairs.length > 0 && this.state.pairs[0].fidelity >= this.params.targetFidelity);
+
     // Increment round counter
     this.state.round++;
     
-    // Check if we've reached our target or can't purify further
-    if (this.state.pairs.length < 2 || 
-        (this.state.pairs.length > 0 && this.state.pairs[0].fidelity >= this.params.targetFidelity)) {
+    if (isComplete) {
       this.state.complete = true;
       this.state.purificationStep = 'completed';
     } else {
+      // Now apply the operations for the next round
+      // First exchange psiPhi components
+      this.exchangePsiPhiComponents();
+      
+      // Then apply random twirling 
+      this.applyRandomTwirling();
+      
       // Reset to initial state for the next round
       this.state.purificationStep = 'initial';
     }

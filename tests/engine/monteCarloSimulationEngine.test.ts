@@ -375,29 +375,31 @@ describe('MonteCarloSimulationEngine', () => {
       }
     });
 
-    test.skip('reaches completion when target fidelity is met', () => {
-      // Override state to make a pair have high fidelity
-      const highFidEngine = new MonteCarloSimulationEngine(initialParams);
-      const state = highFidEngine.getCurrentState();
-      state.pairs = state.pairs.map(pair => ({
-        ...pair,
-        fidelity: 0.96 // Above target fidelity
-      }));
+    test('reaches completion when target fidelity is met', () => {
+      // Create engine with high-fidelity pairs
+      const highFidEngine = new MonteCarloSimulationEngine({
+        ...initialParams,
+        targetFidelity: 0.9 // Lower target so we can easily exceed it
+      });
       
-      // Apply CNOT to reach the point where we check for completion
-      state.purificationStep = 'measured';
-      state.pendingPairs = {
-        controlPairs: [state.pairs[0]],
-        targetPairs: [state.pairs[1]],
-        results: [{
-          control: state.pairs[0],
-          successful: true
-        }]
-      };
+      // Set up state to be at discard step, which will trigger twirlExchange
+      // @ts-ignore: Accessing private property
+      highFidEngine['state'].purificationStep = 'discard';
+      // @ts-ignore: Accessing private property
+      highFidEngine['state'].round = 0;
       
-      // Run the discard step which checks for completion
+      // Set pairs to have very high fidelity
+      // @ts-ignore: Accessing private property
+      highFidEngine['state'].pairs.forEach(pair => {
+        pair.fidelity = 0.95; // Higher than our target
+      });
+      
+      // Run the step which should trigger twirlExchange and check for completion
       const nextState = highFidEngine.nextStep();
+      
+      // Verify completion
       expect(nextState.complete).toBe(true);
+      expect(nextState.purificationStep).toBe('completed');
     });
   });
   
@@ -754,6 +756,46 @@ describe('MonteCarloSimulationEngine', () => {
       // Cleanup
       measureSpy.mockRestore();
       partialTraceSpy.mockRestore();
+    });
+  });
+
+  describe('twirlExchange step', () => {
+    test('applies exchange followed by twirl when transitioning from discard to initial', () => {
+      // Create an engine at the discard step
+      const engine = new MonteCarloSimulationEngine(initialParams);
+      
+      // Set up the engine state to be at discard step
+      // @ts-ignore: Accessing private property
+      engine['state'].purificationStep = 'discard';
+      // @ts-ignore: Accessing private property
+      engine['state'].round = 0;
+
+      // Spy on the Pauli operations and twirling
+      const pauliSpy = vi.spyOn(RealCalculations, 'applyPauli');
+      const twirlSpy = vi.spyOn(PauliTwirling, 'pauliTwirl');
+      
+      // Execute the step
+      const state = engine.nextStep();
+      
+      // Verify the Y-gate was called for each pair (from exchangePsiPhiComponents)
+      expect(pauliSpy).toHaveBeenCalledTimes(initialParams.initialPairs);
+      expect(pauliSpy).toHaveBeenCalledWith(
+        expect.any(DensityMatrix),
+        [0], // Alice's qubit
+        ['Y'] // Y gate
+      );
+      
+      // Verify pauliTwirl was called for each pair (from applyRandomTwirling)
+      expect(twirlSpy).toHaveBeenCalledTimes(initialParams.initialPairs);
+      
+      // Verify state updates
+      expect(state.round).toBe(1); // Round incremented
+      expect(state.purificationStep).toBe('initial'); // Ready for next round
+      expect(state.pendingPairs).toBeUndefined(); // No pending pairs
+      
+      // Clean up spies
+      pauliSpy.mockRestore();
+      twirlSpy.mockRestore();
     });
   });
 }); 
