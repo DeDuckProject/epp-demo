@@ -206,7 +206,9 @@ describe('ControlPanel', () => {
       'twirled': 'Exchange States',
       'exchanged': 'Apply CNOT',
       'cnot': 'Measure',
-      'measured': 'Process Results',
+      'measured': 'Discard Failures',
+      'discard': 'Twirl + Exchange',
+      'twirlExchange': 'Start Next Round',
       'completed': 'Start Next Round'
     };
     

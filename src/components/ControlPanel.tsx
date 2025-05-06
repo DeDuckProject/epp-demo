@@ -52,7 +52,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       case 'twirled': return 'Exchange States';
       case 'exchanged': return 'Apply CNOT';
       case 'cnot': return 'Measure';
-      case 'measured': return 'Process Results';
+      case 'measured': return 'Discard Failures';
+      case 'discard': return 'Twirl + Exchange';
+      case 'twirlExchange': return 'Start Next Round';
       case 'completed': return 'Start Next Round';
       default: return `Unknown step: ${step}`;
     }

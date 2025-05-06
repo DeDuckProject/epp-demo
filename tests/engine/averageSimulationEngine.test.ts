@@ -111,7 +111,7 @@ describe('AverageSimulationEngine', () => {
             expect(state.pendingPairs?.results?.length).toBe(initialParams.initialPairs / 2);
         });
 
-        test('progresses through purification steps: measured -> completed (next round or finished)', () => {
+        test('completes post-measurement purification (measured -> discard -> initial)', () => {
             // Mock Math.random for deterministic measurement outcomes in this test
             const originalMathRandom = Math.random;
             const mockRandom = vi.fn(() => 0.1); // Assume 0.1 leads to success
@@ -121,20 +121,76 @@ describe('AverageSimulationEngine', () => {
                 engine.nextStep(); // initial -> twirled
                 engine.nextStep(); // twirled -> exchanged
                 engine.nextStep(); // exchanged -> cnot
-                engine.nextStep(); // cnot -> measured (uses mocked Math.random)
-                const state = engine.nextStep(); // measured -> completed
-
-                // Assertions based on mocked success (expecting 2 pairs remaining)
-                expect(state.round).toBe(1);
-                expect(state.pendingPairs).toBeUndefined();
-                expect(state.pairs.length).toBe(initialParams.initialPairs / 2); // Should be 2 if all succeeded
-                expect(state.complete).toBe(false); // Should not be complete yet
-                expect(state.purificationStep).toBe('initial'); // Ready for round 1
-
+                const measuredState = engine.nextStep(); // cnot -> measured
+                
+                // Verify we're in measured state with results
+                expect(measuredState.purificationStep).toBe('measured');
+                expect(measuredState.pendingPairs?.results).toBeDefined();
+                
+                // Save matrices before discard for comparison
+                const controlMatricesBefore = measuredState.pendingPairs?.results
+                    ?.filter(r => r.successful)
+                    .map(r => r.control.densityMatrix);
+                
+                // Apply discard step (just filters)
+                const discardState = engine.nextStep(); // measured -> discard
+                
+                // Verify discard step behavior
+                expect(discardState.purificationStep).toBe('discard');
+                expect(discardState.pendingPairs).toBeUndefined();
+                expect(discardState.round).toBe(0); // Round not incremented yet
+                expect(discardState.pairs.length).toBe(initialParams.initialPairs / 2);
+                
+                // Verify pairs were filtered but not yet transformed
+                discardState.pairs.forEach((pair, idx) => {
+                    if (idx < (controlMatricesBefore?.length || 0)) {
+                        // Matrices should be the same references (not yet exchanged/twirled)
+                        expect(pair.densityMatrix).toBe(controlMatricesBefore?.[idx]);
+                    }
+                });
+                
+                // Apply twirl+exchange step
+                const finalState = engine.nextStep(); // discard -> initial
+                
+                // Verify final state after full sequence
+                expect(finalState.round).toBe(1); // Round should increment
+                expect(finalState.pendingPairs).toBeUndefined();
+                expect(finalState.purificationStep).toBe('initial'); // Ready for next round
+                
+                // Verify pairs were transformed (no longer same matrices)
+                finalState.pairs.forEach((pair, idx) => {
+                    if (idx < (controlMatricesBefore?.length || 0)) {
+                        // Matrix references should be different after transform
+                        expect(pair.densityMatrix).not.toBe(controlMatricesBefore?.[idx]);
+                        
+                        // Verify each has a valid fidelity with respect to Psi-Minus
+                        expect(pair.fidelity).toBeGreaterThan(0);
+                        expect(pair.fidelity).toBeLessThanOrEqual(1);
+                        expect(pair.densityMatrix.get(3, 3).re).toBeCloseTo(pair.fidelity);
+                    }
+                });
             } finally {
                 // Restore original Math.random
                 Math.random = originalMathRandom;
             }
+        });
+
+        test('preserves unpaired qubit during purification with odd number of pairs', () => {
+            const oddParams = { ...initialParams, initialPairs: 3 };
+            const oddEngine = new AverageSimulationEngine(oddParams);
+            
+            // Run through to discard step
+            oddEngine.nextStep(); // -> twirled
+            oddEngine.nextStep(); // -> exchanged
+            oddEngine.nextStep(); // -> cnot
+            oddEngine.nextStep(); // -> measured
+            const discardState = oddEngine.nextStep(); // -> discard
+            
+            // Should have paired qubits + the unpaired one
+            expect(discardState.pairs.length).toBeGreaterThanOrEqual(1);
+            
+            // The unpaired qubit (id=2) should be preserved
+            expect(discardState.pairs.some(p => p.id === 2)).toBe(true);
         });
 
         test('reaches completion when target fidelity is met', () => {

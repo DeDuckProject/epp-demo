@@ -113,8 +113,8 @@ export class AverageSimulationEngine implements ISimulationEngine {
     this.state.purificationStep = 'measured';
   }
 
-  // Step 5: Discard failed pairs and prepare for next round
-  private discardFailedPairs(): void {
+  // Step 5a: Discard failed pairs only
+  private discardFailed(): void {
     if (!this.state.pendingPairs || !this.state.pendingPairs.results) {
       console.error("No measurement results to process");
       return;
@@ -125,15 +125,8 @@ export class AverageSimulationEngine implements ISimulationEngine {
     // Keep only successful pairs
     for (const result of this.state.pendingPairs.results) {
       if (result.successful) {
-        // First swap back |Φ⁺⟩ and |Ψ⁻⟩
-        const swappedBack = exchangePsiMinusPhiPlus(result.control.densityMatrix);
-        // Then twirl to create Werner state with |Ψ⁻⟩ as target
-        const wernerState = depolarize(swappedBack);
-
         newPairs.push({
-          ...result.control,
-          densityMatrix: wernerState,
-          fidelity: fidelityFromBellBasisMatrix(wernerState, BellState.PSI_MINUS)
+          ...result.control
         });
       }
     }
@@ -146,13 +139,33 @@ export class AverageSimulationEngine implements ISimulationEngine {
 
     this.state.pairs = newPairs;
     this.state.pendingPairs = undefined;
-    this.state.purificationStep = 'completed';
+    this.state.purificationStep = 'discard';
+  }
+
+  // Step 5b: Exchange Psi<->Phi and twirl to Werner state
+  private twirlExchange(): void {
+    // Apply post-measurement operations to each surviving pair
+    this.state.pairs = this.state.pairs.map(pair => {
+      // First swap back |Φ⁺⟩ and |Ψ⁻⟩
+      const swappedBack = exchangePsiMinusPhiPlus(pair.densityMatrix);
+      // Then twirl to create Werner state with |Ψ⁻⟩ as target
+      const wernerState = depolarize(swappedBack);
+
+      return {
+        ...pair,
+        densityMatrix: wernerState,
+        fidelity: fidelityFromBellBasisMatrix(wernerState, BellState.PSI_MINUS)
+      };
+    });
+
+    this.state.pendingPairs = undefined;
     this.state.round++;
 
     // Check if we've reached our target or can't purify further
     if (this.state.pairs.length < 2 ||
         (this.state.pairs.length > 0 && this.state.pairs[0].fidelity >= this.params.targetFidelity)) {
       this.state.complete = true;
+      this.state.purificationStep = 'completed';
     } else {
       // Reset to initial state for the next round
       this.state.purificationStep = 'initial';
@@ -180,7 +193,10 @@ export class AverageSimulationEngine implements ISimulationEngine {
         this.performMeasurement();
         break;
       case 'measured':
-        this.discardFailedPairs();
+        this.discardFailed();
+        break;
+      case 'discard':
+        this.twirlExchange();
         break;
       case 'completed':
         // Should not happen, but handle it gracefully
@@ -207,7 +223,10 @@ export class AverageSimulationEngine implements ISimulationEngine {
         this.performMeasurement();
       }
       if (this.state.purificationStep === 'measured') {
-        this.discardFailedPairs();
+        this.discardFailed();
+      }
+      if (this.state.purificationStep === 'discard') {
+        this.twirlExchange();
       }
     }
     return this.getCurrentState();

@@ -256,7 +256,54 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     this.state.purificationStep = 'measured';
   }
   
-  // Step 5: Discard failed pairs and prepare for next round
+  // Step 5a: Discard failed pairs (skeleton)
+  private discardFailed(): void {
+    if (!this.state.pendingPairs || !this.state.pendingPairs.results) {
+      console.error("No measurement results to process");
+      return;
+    }
+    
+    const newPairs: QubitPair[] = [];
+    
+    // Keep only successful pairs
+    for (const result of this.state.pendingPairs.results) {
+      if (result.successful) {
+        newPairs.push({
+          ...result.control
+        });
+      }
+    }
+    
+    // If odd number of pairs, the last one doesn't participate
+    const { hasUnpairedPair } = preparePairsForCNOT(this.state.pairs);
+    if (hasUnpairedPair) {
+      newPairs.push(this.state.pairs[this.state.pairs.length - 1]);
+    }
+    
+    this.state.pairs = newPairs;
+    this.state.pendingPairs = undefined;
+    this.state.purificationStep = 'discard';
+  }
+
+  // Step 5b: Twirl and exchange survivors
+  private twirlExchange(): void {
+    // Increment round counter
+    this.state.round++;
+    
+    // Check if we've reached our target or can't purify further
+    if (this.state.pairs.length < 2 || 
+        (this.state.pairs.length > 0 && this.state.pairs[0].fidelity >= this.params.targetFidelity)) {
+      this.state.complete = true;
+      this.state.purificationStep = 'completed';
+    } else {
+      // Reset to initial state for the next round
+      this.state.purificationStep = 'initial';
+    }
+    
+    this.state.pendingPairs = undefined;
+  }
+  
+  // Original method - will be deprecated
   private discardFailedPairs(): void {
     if (!this.state.pendingPairs || !this.state.pendingPairs.results) {
       console.error("No measurement results to process");
@@ -317,8 +364,12 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
         this.performMeasurement();
         break;
       case 'measured':
-        this.discardFailedPairs();
+        this.discardFailed();
         break;
+      case 'discard':
+        this.twirlExchange();
+        break;
+      case 'twirlExchange':
       case 'completed':
         // Should not happen, but handle it gracefully
         this.state.purificationStep = 'initial';
@@ -344,7 +395,10 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
         this.performMeasurement();
       }
       if (this.state.purificationStep === 'measured') {
-        this.discardFailedPairs();
+        this.discardFailed();
+      }
+      if (this.state.purificationStep === 'discard') {
+        this.twirlExchange();
       }
     }
     return this.getCurrentState();

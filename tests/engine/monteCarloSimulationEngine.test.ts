@@ -159,7 +159,7 @@ describe('MonteCarloSimulationEngine', () => {
       expect(state.purificationStep).toBe('exchanged');
     });
 
-    test('exchange Ψ⁻↔Φ⁺ via Y gate on Alice\'s qubit', () => {
+    test("exchange Ψ⁻↔Φ⁺ via Y gate on Alice's qubit", () => {
       const spy = vi.spyOn(RealCalculations, 'applyPauli');
       
       engine.nextStep(); // initial -> twirled
@@ -338,7 +338,7 @@ describe('MonteCarloSimulationEngine', () => {
       expect(state.pendingPairs?.results?.length).toBe(initialParams.initialPairs / 2);
     });
 
-    test('progresses through purification steps: measured -> completed (next round or finished)', () => {
+    test('completes post-measurement purification (measured -> discard -> initial)', () => {
       // Mock Math.random for deterministic measurement outcomes
       const originalMathRandom = Math.random;
       const mockRandom = vi.fn(() => 0.1); // Assume 0.1 leads to success
@@ -348,12 +348,27 @@ describe('MonteCarloSimulationEngine', () => {
         engine.nextStep(); // initial -> twirled
         engine.nextStep(); // twirled -> exchanged
         engine.nextStep(); // exchanged -> cnot
-        engine.nextStep(); // cnot -> measured
-        const state = engine.nextStep(); // measured -> completed
+        const measuredState = engine.nextStep(); // cnot -> measured
         
-        // Assertions based on mocked success
-        expect(state.round).toBe(1);
-        expect(state.pendingPairs).toBeUndefined();
+        // Verify we're in measured state with results
+        expect(measuredState.purificationStep).toBe('measured');
+        expect(measuredState.pendingPairs?.results).toBeDefined();
+        
+        // Apply discard step (just filters)
+        const discardState = engine.nextStep(); // measured -> discard
+        
+        // Verify discard step behavior
+        expect(discardState.purificationStep).toBe('discard');
+        expect(discardState.pendingPairs).toBeUndefined();
+        expect(discardState.round).toBe(0); // Round not incremented yet
+        
+        // Apply twirl+exchange step
+        const finalState = engine.nextStep(); // discard -> initial
+        
+        // Verify final state after full sequence
+        expect(finalState.round).toBe(1); // Round should have incremented
+        expect(finalState.pendingPairs).toBeUndefined();
+        expect(finalState.purificationStep).toBe('initial'); // Ready for next round
       } finally {
         // Restore original Math.random
         Math.random = originalMathRandom;
@@ -409,28 +424,41 @@ describe('MonteCarloSimulationEngine', () => {
         expect(result.control.basis).toBe(Basis.Computational);
       });
       
-      // Process results and check final pairs
-      const finalState = engine.nextStep(); // measured -> completed
+      // Process results through both discard and exchange steps
+      const discardState = engine.nextStep(); // measured -> discard
+      discardState.pairs.forEach(pair => {
+        expect(pair.basis).toBe(Basis.Computational);
+      });
+      
+      // Final state after complete purification
+      const finalState = engine.nextStep(); // discard -> initial
       finalState.pairs.forEach(pair => {
         expect(pair.basis).toBe(Basis.Computational);
       });
     });
   });
   
-  describe('step() method', () => {
-    test('executes a full purification round with step()', () => {
-      let state = engine.getCurrentState();
-      expect(state.round).toBe(0);
+  describe('step() method with new purification steps', () => {
+    test('step() method executes the full sequence including new steps', () => {
+      // Mock Math.random for deterministic outcomes
+      const originalMathRandom = Math.random;
+      const mockRandom = vi.fn(() => 0.1); // Assume 0.1 leads to success
+      Math.random = mockRandom;
       
-      state = engine.step(); // Executes one full round
-      expect(state.round).toBe(1);
-      
-      // Check step completed a full round
-      const successfulPairs = state.pairs.length;
-      if (successfulPairs < 2) {
-        expect(state.complete).toBe(true);
-      } else {
-        expect(state.purificationStep).toBe('initial');
+      try {
+        const initialState = engine.getCurrentState();
+        expect(initialState.round).toBe(0);
+        expect(initialState.purificationStep).toBe('initial');
+        
+        // Execute a full round with step()
+        const afterState = engine.step();
+        
+        // Should have completed a full round
+        expect(afterState.round).toBe(1);
+        expect(afterState.purificationStep).toBe('initial');
+      } finally {
+        // Restore original Math.random
+        Math.random = originalMathRandom;
       }
     });
   });
