@@ -303,46 +303,6 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     this.state.pendingPairs = undefined;
   }
   
-  // Original method - will be deprecated
-  private discardFailedPairs(): void {
-    if (!this.state.pendingPairs || !this.state.pendingPairs.results) {
-      console.error("No measurement results to process");
-      return;
-    }
-    
-    const newPairs: QubitPair[] = [];
-    
-    // Keep only successful pairs
-    for (const result of this.state.pendingPairs.results) {
-      if (result.successful) {
-        // TODO: Implement post-measurement processing in computational basis
-        newPairs.push({
-          ...result.control
-        });
-      }
-    }
-    
-    // If odd number of pairs, the last one doesn't participate
-    const { hasUnpairedPair } = preparePairsForCNOT(this.state.pairs);
-    if (hasUnpairedPair) {
-      newPairs.push(this.state.pairs[this.state.pairs.length - 1]);
-    }
-    
-    this.state.pairs = newPairs;
-    this.state.pendingPairs = undefined;
-    this.state.purificationStep = 'completed';
-    this.state.round++;
-    
-    // Check if we've reached our target or can't purify further
-    if (this.state.pairs.length < 2 || 
-        (this.state.pairs.length > 0 && this.state.pairs[0].fidelity >= this.params.targetFidelity)) {
-      this.state.complete = true;
-    } else {
-      // Reset to initial state for the next round
-      this.state.purificationStep = 'initial';
-    }
-  }
-  
   // Public methods - same API as AverageSimulationEngine
   
   public nextStep(): SimulationState {
