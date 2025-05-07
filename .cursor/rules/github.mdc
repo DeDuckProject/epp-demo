@@ -1,0 +1,9 @@
+---
+description: Github or GH is mentioned
+globs: 
+alwaysApply: false
+---
+
+# Your rule content
+
+Whenever prompt mentions Github or GH repo, always try to use GH CLI to interact with the repo.
