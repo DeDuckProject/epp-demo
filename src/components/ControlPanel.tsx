@@ -49,13 +49,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     });
   };
   
-  // Register keyboard shortcuts
-  useHotkeys('n', () => !isComplete && onNextStep(), { enabled: !isComplete });
-  useHotkeys('c', () => !isComplete && onCompleteRound(), { enabled: !isComplete });
-  useHotkeys('a', () => !isComplete && onRunAll(), { enabled: !isComplete });
-  useHotkeys('r', onReset);
-  useHotkeys('p', handleParameterChange);
-  useHotkeys('?', () => setShowHelp(prev => !prev));
+  // Register keyboard shortcuts with enableOnFormTags to ensure they work when select elements have focus
+  useHotkeys('n', () => !isComplete && onNextStep(), { enabled: !isComplete, enableOnFormTags: true });
+  useHotkeys('c', () => !isComplete && onCompleteRound(), { enabled: !isComplete, enableOnFormTags: true });
+  useHotkeys('a', () => !isComplete && onRunAll(), { enabled: !isComplete, enableOnFormTags: true });
+  useHotkeys('r', onReset, { enableOnFormTags: true });
+  useHotkeys('p', handleParameterChange, { enableOnFormTags: true });
+  useHotkeys('?', () => setShowHelp(prev => !prev), { enableOnFormTags: true });
   
   // Helper function to get the name of the current/next step
   const getStepName = (step: PurificationStep): string => {

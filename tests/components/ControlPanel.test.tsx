@@ -193,4 +193,34 @@ describe('ControlPanel', () => {
     expect(screen.queryByTestId('popup-component')).not.toBeInTheDocument();
     expect(screen.queryByTestId('help-panel')).not.toBeInTheDocument();
   });
+
+  test('hotkeys work when select elements are in focus', async () => {
+    render(<ControlPanel {...defaultProps} />);
+    
+    // Find the select elements
+    const engineTypeSelect = screen.getByLabelText('Engine Type:');
+    
+    // Focus the select element
+    fireEvent.focus(engineTypeSelect);
+    
+    // Simulate pressing the hotkeys while select is focused
+    const nCallback = (window as any).__hotkeyCallbacks['n'];
+    const cCallback = (window as any).__hotkeyCallbacks['c'];
+    const aCallback = (window as any).__hotkeyCallbacks['a'];
+    const rCallback = (window as any).__hotkeyCallbacks['r'];
+    const pCallback = (window as any).__hotkeyCallbacks['p'];
+    
+    nCallback();
+    cCallback();
+    aCallback();
+    rCallback();
+    pCallback();
+    
+    // Verify that all the right handlers were called
+    expect(defaultProps.onNextStep).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onCompleteRound).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onRunAll).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onReset).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onParametersChanged).toHaveBeenCalledTimes(1);
+  });
 }); 
