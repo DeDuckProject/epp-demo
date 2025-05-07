@@ -3,6 +3,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { SimulationParameters, PurificationStep, EngineType, Basis } from '../engine/types';
 import './ControlPanel.css';
 import HelpPanel from './HelpPanel';
+import Popup from './Popup';
 
 interface ControlPanelProps {
   onNextStep: () => void;
@@ -89,7 +90,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </button>
       </div>
       
-      {showHelp && <HelpPanel />}
+      {showHelp && (
+        <Popup title="Help" isOpen={true} onClose={() => setShowHelp(false)}>
+          <HelpPanel />
+        </Popup>
+      )}
       
       <div className="parameter-section">
         <h3>Parameters</h3>

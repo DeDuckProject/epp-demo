@@ -1,12 +1,23 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import Popup from '../../src/components/Popup';
+
+// Mock createPortal to test content without needing an actual DOM element
+vi.mock('react-dom', () => ({
+  createPortal: (node: React.ReactNode) => node
+}));
 
 describe('Popup Component', () => {
   const mockOnClose = vi.fn();
   
-  afterEach(() => {
+  const portalRootDiv = document.createElement('div');
+  portalRootDiv.id = 'portal-root';
+  
+  beforeEach(() => {
+    // Reset DOM and add portal root for each test
+    document.body.innerHTML = '';
+    document.body.appendChild(portalRootDiv);
     mockOnClose.mockClear();
   });
   

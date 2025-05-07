@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import './Popup.css';
 
 interface PopupProps {
@@ -18,7 +19,7 @@ const Popup: React.FC<PopupProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
+  const portalContent = (
     <div className="popup-overlay" data-testid="popup-overlay" onClick={onClose}>
       <div className="popup" onClick={e => e.stopPropagation()}>
         <div className="popup-header">
@@ -31,6 +32,12 @@ const Popup: React.FC<PopupProps> = ({
         </div>
       </div>
     </div>
+  );
+
+  // Use portal to render outside the normal component hierarchy
+  return createPortal(
+    portalContent,
+    document.getElementById('portal-root') || document.body
   );
 };
 

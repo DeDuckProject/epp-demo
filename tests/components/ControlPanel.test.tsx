@@ -20,6 +20,22 @@ vi.mock('../../src/components/HelpPanel', () => ({
   default: () => <div data-testid="help-panel">Help Panel Content</div>
 }));
 
+// Mock the Popup component
+vi.mock('../../src/components/Popup', () => ({
+  default: ({ title, isOpen, onClose, children }: {
+    title: string;
+    isOpen: boolean;
+    onClose: () => void;
+    children: React.ReactNode;
+  }) => 
+    isOpen ? (
+      <div data-testid="popup-component" onClick={onClose}>
+        <div>{title}</div>
+        {children}
+      </div>
+    ) : null
+}));
+
 describe('ControlPanel', () => {
   const defaultProps = {
     onNextStep: vi.fn(),
@@ -56,14 +72,15 @@ describe('ControlPanel', () => {
     render(<ControlPanel {...defaultProps} />);
     
     // Help panel should not be shown initially
-    expect(screen.queryByTestId('help-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('popup-component')).not.toBeInTheDocument();
     
     // Click the help button using act
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /\?/ }));
     });
     
-    // Help panel should now be visible
+    // Popup should now be visible with HelpPanel inside
+    expect(screen.getByTestId('popup-component')).toBeInTheDocument();
     expect(screen.getByTestId('help-panel')).toBeInTheDocument();
     
     // Click the help button again to hide
@@ -71,7 +88,8 @@ describe('ControlPanel', () => {
       fireEvent.click(screen.getByRole('button', { name: /\?/ }));
     });
     
-    // Help panel should be hidden again
+    // Popup and HelpPanel should be hidden again
+    expect(screen.queryByTestId('popup-component')).not.toBeInTheDocument();
     expect(screen.queryByTestId('help-panel')).not.toBeInTheDocument();
   });
 
@@ -152,6 +170,7 @@ describe('ControlPanel', () => {
     render(<ControlPanel {...defaultProps} />);
     
     // Help panel should not be shown initially
+    expect(screen.queryByTestId('popup-component')).not.toBeInTheDocument();
     expect(screen.queryByTestId('help-panel')).not.toBeInTheDocument();
     
     // Simulate pressing the ? key using act for proper state handling
@@ -160,7 +179,8 @@ describe('ControlPanel', () => {
       questionCallback();
     });
     
-    // Help panel should now be visible
+    // Popup should now be visible with HelpPanel inside
+    expect(screen.getByTestId('popup-component')).toBeInTheDocument();
     expect(screen.getByTestId('help-panel')).toBeInTheDocument();
     
     // Simulate pressing the ? key again
@@ -169,7 +189,8 @@ describe('ControlPanel', () => {
       questionCallback();
     });
     
-    // Help panel should be hidden again
+    // Popup and HelpPanel should be hidden again
+    expect(screen.queryByTestId('popup-component')).not.toBeInTheDocument();
     expect(screen.queryByTestId('help-panel')).not.toBeInTheDocument();
   });
 }); 

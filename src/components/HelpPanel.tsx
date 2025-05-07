@@ -22,7 +22,7 @@ const HelpPanel: React.FC = () => {
   ];
 
   return (
-    <div className="help-panel">
+    <div className="help-panel" data-testid="help-panel">
       <h3>Keyboard Shortcuts</h3>
       <div className="shortcuts-section">
         {keyboardShortcuts.map((shortcut, index) => (

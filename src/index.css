@@ -13,6 +13,21 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* Common variables for use throughout the app, including portals */
+  --font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+  --text-color: #333;
+  --bg-color: #ffffff;
+  --primary-color: #3498db;
+  --secondary-color: #2c3e50;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Apply font to portals as well */
+#portal-root {
+  font-family: var(--font-family);
+  color: var(--text-color);
 }
 
 a {
