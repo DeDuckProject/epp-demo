@@ -168,4 +168,33 @@ export class Matrix {
     }
     return true;
   }
+
+  /**
+   * Checks if this matrix is equal to another matrix within a specified tolerance.
+   * @param other The matrix to compare with.
+   * @param tolerance The maximum allowed difference between corresponding elements.
+   * @returns True if matrices are equal within tolerance, false otherwise.
+   */
+  equals(other: Matrix, tolerance: number = 1e-10): boolean {
+    if (this.rows !== other.rows || this.cols !== other.cols) {
+      return false;
+    }
+    
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.cols; j++) {
+        const a = this.get(i, j);
+        const b = other.get(i, j);
+        if (Math.abs(a.re - b.re) > tolerance || Math.abs(a.im - b.im) > tolerance) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+toString(): string {
+  return this.data.map(row => 
+    row.map(({ re, im }) => `${re}${im >= 0 ? '+' : ''}${im}i`).join(' ')
+  ).join('\n');
+}
 } 

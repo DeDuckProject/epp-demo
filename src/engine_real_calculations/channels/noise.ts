@@ -19,7 +19,7 @@ function applyKraus(
 }
 
 /**
- * Depolarizing channel on a single qubit with probability p.
+ * Depolarizing channel on a single qubit with probability p. Note: In this implementation, the channel is completely depolarizing when p=0.75.
  */
 export function applyDepolarizing(
   rho: DensityMatrix,

@@ -4,6 +4,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import QubitPair from '../../src/components/QubitPair';
 import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
 import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
+import {Basis} from "../../src/engine/types.ts";
+import {toBellBasis, toComputationalBasis} from "../../src/engine_real_calculations/bell/bell-basis.ts";
 
 describe('QubitPair', () => {
   // Create a simple density matrix for testing
@@ -28,11 +30,12 @@ describe('QubitPair', () => {
     const pair = {
       id: 42,
       fidelity: 0.12345,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
-      <QubitPair pair={pair} location="alice" purificationStep="initial" />
+      <QubitPair pair={pair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
     );
 
     // Check root element has correct classes
@@ -53,7 +56,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 1,
       fidelity: 0.75,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -62,6 +66,7 @@ describe('QubitPair', () => {
         location="bob" 
         willBeDiscarded={true} 
         purificationStep="initial" 
+        viewBasis={Basis.Bell}
       />
     );
 
@@ -77,7 +82,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 2,
       fidelity: 0.85,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -86,6 +92,7 @@ describe('QubitPair', () => {
         location="alice" 
         pairRole="control" 
         purificationStep="initial" 
+        viewBasis={Basis.Bell}
       />
     );
 
@@ -101,7 +108,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 3,
       fidelity: 0.9,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -111,6 +119,7 @@ describe('QubitPair', () => {
         pairRole="control" 
         partnerId={5}
         purificationStep="cnot" 
+        viewBasis={Basis.Bell}
       />
     );
 
@@ -127,7 +136,8 @@ describe('QubitPair', () => {
     const pair = {
       id: 4,
       fidelity: 0.8,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
@@ -137,6 +147,7 @@ describe('QubitPair', () => {
         pairRole="target" 
         partnerId={7}
         purificationStep="measured" 
+        viewBasis={Basis.Bell}
       />
     );
 
@@ -153,11 +164,12 @@ describe('QubitPair', () => {
     const pair = {
       id: 6,
       fidelity: 0.95,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container } = render(
-      <QubitPair pair={pair} location="alice" purificationStep="initial" />
+      <QubitPair pair={pair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
     );
 
     const rootElement = container.firstChild as HTMLElement;
@@ -184,11 +196,12 @@ describe('QubitPair', () => {
     const perfectPair = {
       id: 8,
       fidelity: 1.0,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     const { container: perfectContainer, rerender } = render(
-      <QubitPair pair={perfectPair} location="alice" purificationStep="initial" />
+      <QubitPair pair={perfectPair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
     );
 
     // Since we don't know exactly how the browser will represent the hsla in the style attribute,
@@ -203,11 +216,12 @@ describe('QubitPair', () => {
     const moderatePair = {
       id: 9,
       fidelity: 0.5,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     rerender(
-      <QubitPair pair={moderatePair} location="alice" purificationStep="initial" />
+      <QubitPair pair={moderatePair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
     );
     
     // For moderate fidelity (0.5), hue should be around 60 (yellow)
@@ -218,15 +232,214 @@ describe('QubitPair', () => {
     const lowPair = {
       id: 10,
       fidelity: 0.1,
-      densityMatrix: mockMatrix
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
     };
 
     rerender(
-      <QubitPair pair={lowPair} location="alice" purificationStep="initial" />
+      <QubitPair pair={lowPair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
     );
     
     // For low fidelity (0.1), hue should be around 12 (reddish)
     expect(perfectContainer.querySelector('.qubit-pair')!.getAttribute('style'))
       .toContain('box-shadow: 0 0 1px rgba(46, 204, 113, 0.1); border: 3px solid rgba(235, 104, 71, 0.8)');
+  });
+
+  test('correctly handles Werner and non-Werner states based on density matrix', () => {
+    // Create a Werner state matrix (diagonal in Bell basis)
+    const wernerMatrixData = Array(4).fill(0).map(() => 
+      Array(4).fill(0).map(() => ComplexNum.zero())
+    );
+    wernerMatrixData[0][0] = ComplexNum.fromReal(0.7);
+    wernerMatrixData[1][1] = ComplexNum.fromReal(0.1);
+    wernerMatrixData[2][2] = ComplexNum.fromReal(0.1);
+    wernerMatrixData[3][3] = ComplexNum.fromReal(0.1);
+    const wernerMatrix = new DensityMatrix(wernerMatrixData);
+    
+    // Create a non-Werner state matrix (with off-diagonal elements in Bell basis)
+    const nonWernerMatrixData = Array(4).fill(0).map(() => 
+      Array(4).fill(0).map(() => ComplexNum.zero())
+    );
+    nonWernerMatrixData[0][0] = ComplexNum.fromReal(0.7);
+    nonWernerMatrixData[1][1] = ComplexNum.fromReal(0.1);
+    nonWernerMatrixData[2][2] = ComplexNum.fromReal(0.1);
+    nonWernerMatrixData[3][3] = ComplexNum.fromReal(0.1);
+    // Add non-zero off-diagonal element
+    nonWernerMatrixData[0][3] = ComplexNum.fromReal(0.05);
+    nonWernerMatrixData[3][0] = ComplexNum.fromReal(0.05);
+    const nonWernerMatrix = new DensityMatrix(nonWernerMatrixData);
+    
+    // Test with Werner state
+    const wernerPair = {
+      id: 10,
+      fidelity: 0.9,
+      densityMatrix: wernerMatrix,
+      basis: Basis.Bell
+    };
+    
+    const { container: wernerContainer, rerender } = render(
+      <QubitPair pair={wernerPair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
+    );
+    
+    // Trigger mouse enter to show the matrix popup
+    const wernerElement = wernerContainer.firstChild as HTMLElement;
+    fireEvent.mouseEnter(wernerElement);
+    
+    // Check Werner indicator is present
+    const wernerIndicator = wernerContainer.querySelector('.werner-indicator');
+    expect(wernerIndicator).not.toBeNull();
+    expect(wernerIndicator?.textContent).toContain('Werner');
+    
+    // Test with non-Werner state
+    const nonWernerPair = {
+      id: 11,
+      fidelity: 0.85,
+      densityMatrix: nonWernerMatrix,
+      basis: Basis.Bell
+    };
+    
+    rerender(
+      <QubitPair pair={nonWernerPair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
+    );
+    
+    // Trigger mouse enter to show the matrix popup
+    const nonWernerElement = wernerContainer.firstChild as HTMLElement;
+    fireEvent.mouseEnter(nonWernerElement);
+    
+    // Check non-Werner indicator is present
+    const nonWernerIndicator = wernerContainer.querySelector('.non-werner-indicator');
+    expect(nonWernerIndicator).not.toBeNull();
+    expect(nonWernerIndicator?.textContent).toContain('Non-Werner');
+  });
+  
+  test('isWerner calculation respects specified basis', () => {
+    // Create a Werner state matrix in bell basis
+    const wernerMatrixData = Array(4).fill(0).map(() => 
+      Array(4).fill(0).map(() => ComplexNum.zero())
+    );
+    wernerMatrixData[0][0] = ComplexNum.fromReal(0.7);
+    wernerMatrixData[1][1] = ComplexNum.fromReal(0.1);
+    wernerMatrixData[2][2] = ComplexNum.fromReal(0.1);
+    wernerMatrixData[3][3] = ComplexNum.fromReal(0.1);
+    const wernerMatrix = new DensityMatrix(wernerMatrixData);
+    
+    const pair = {
+      id: 12,
+      fidelity: 0.9,
+      densityMatrix: wernerMatrix,
+      basis: Basis.Bell
+    };
+    
+    // Render with Bell basis (default)
+    const { container: bellContainer, rerender } = render(
+      <QubitPair pair={pair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
+    );
+    
+    // Trigger mouse enter to show the matrix popup
+    const bellElement = bellContainer.firstChild as HTMLElement;
+    fireEvent.mouseEnter(bellElement);
+    
+    // Check Werner indicator is present when using bell basis
+    const wernerIndicatorBell = bellContainer.querySelector('.werner-indicator');
+    expect(wernerIndicatorBell).not.toBeNull();
+
+    pair.densityMatrix = new DensityMatrix(toComputationalBasis(pair.densityMatrix));
+    pair.basis = Basis.Computational;
+    // Render with computational basis explicitly specified
+    rerender(
+      <QubitPair 
+        pair={pair} 
+        location="alice" 
+        purificationStep="initial"
+        viewBasis={Basis.Computational}
+      />
+    );
+    
+    // Trigger mouse enter to show the matrix popup
+    const compElement = bellContainer.firstChild as HTMLElement;
+    fireEvent.mouseEnter(compElement);
+    
+    // Check the basis text in the title is correct
+    const matrixTitle = bellContainer.querySelector('.matrix-title');
+    expect(matrixTitle?.textContent).toContain('Computational Basis');
+    
+    // The Werner state check should still work correctly with computational basis specified
+    const wernerIndicatorComp = bellContainer.querySelector('.werner-indicator');
+    expect(wernerIndicatorComp).not.toBeNull();
+  });
+
+  test('transforms matrix when viewBasis differs from pair basis', () => {
+    // Create a matrix in Bell basis
+    const bellMatrixData = Array(4).fill(0).map(() => 
+      Array(4).fill(0).map(() => ComplexNum.zero())
+    );
+    bellMatrixData[0][0] = ComplexNum.fromReal(0.7); // Phi+ component
+    bellMatrixData[1][1] = ComplexNum.fromReal(0.1); // Phi- component
+    bellMatrixData[2][2] = ComplexNum.fromReal(0.1); // Psi+ component
+    bellMatrixData[3][3] = ComplexNum.fromReal(0.1); // Psi- component
+    const bellMatrix = new DensityMatrix(bellMatrixData);
+    
+    const pair = {
+      id: 13,
+      fidelity: 0.9,
+      densityMatrix: bellMatrix,
+      basis: Basis.Bell
+    };
+    
+    // First render with matching Bell basis (no transformation needed)
+    const { container, rerender } = render(
+      <QubitPair 
+        pair={pair} 
+        location="alice" 
+        purificationStep="initial" 
+        viewBasis={Basis.Bell} 
+      />
+    );
+
+    // Trigger mouse enter to show the matrix popup
+    const element = container.firstChild as HTMLElement;
+    fireEvent.mouseEnter(element);
+    
+    // Check that matrix title says Bell basis
+    expect(container.querySelector('.matrix-title')?.textContent).toContain('Bell Basis');
+    
+    // Now change viewBasis to Computational (should trigger transformation)
+    rerender(
+      <QubitPair 
+        pair={pair} 
+        location="alice" 
+        purificationStep="initial" 
+        viewBasis={Basis.Computational} 
+      />
+    );
+    
+    // Trigger mouse enter again
+    fireEvent.mouseEnter(element);
+    
+    // Check that matrix title now says Computational basis
+    expect(container.querySelector('.matrix-title')?.textContent).toContain('Computational Basis');
+    
+    // Convert pair to Computational basis and check viewBasis=Bell works
+    const compPair = {
+      id: 14,
+      fidelity: 0.9,
+      densityMatrix: new DensityMatrix(toComputationalBasis(bellMatrix)),
+      basis: Basis.Computational
+    };
+    
+    rerender(
+      <QubitPair 
+        pair={compPair} 
+        location="alice" 
+        purificationStep="initial" 
+        viewBasis={Basis.Bell} 
+      />
+    );
+    
+    // Trigger mouse enter again
+    fireEvent.mouseEnter(element);
+    
+    // Check that matrix title now shows Bell basis
+    expect(container.querySelector('.matrix-title')?.textContent).toContain('Bell Basis');
   });
 }); 

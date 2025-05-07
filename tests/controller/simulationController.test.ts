@@ -1,27 +1,20 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach, test } from 'vitest';
 import { SimulationController } from '../../src/controller/simulationController';
-import { SimulationEngine } from '../../src/engine/simulationEngine';
-import { SimulationParameters, SimulationState } from '../../src/engine/types';
+import { SimulationParameters, SimulationState, ISimulationEngine, EngineType, createEngine } from '../../src/engine/types';
 
-// Create a mock engine factory
-const mockEngineFactory = {
-  getCurrentState: vi.fn(),
-  nextStep: vi.fn(),
-  step: vi.fn(),
-  reset: vi.fn(),
-  updateParams: vi.fn()
-};
-
-// Mock the SimulationEngine module
-vi.mock('../../src/engine/simulationEngine', () => {
+// Create a mock for the createEngine function
+vi.mock('../../src/engine/types', async () => {
+  const actual = await import('../../src/engine/types');
   return {
-    SimulationEngine: vi.fn(() => mockEngineFactory)
+    ...actual,
+    createEngine: vi.fn()
   };
 });
 
 describe('SimulationController', () => {
   let controller: SimulationController;
   let onStateChange: ReturnType<typeof vi.fn>;
+  let mockEngine: ISimulationEngine;
   
   const mockInitialParams: SimulationParameters = {
     initialPairs: 4,
@@ -39,17 +32,23 @@ describe('SimulationController', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Reset the mock engine
-    vi.mocked(SimulationEngine).mockClear();
+    // Setup the mock engine WITHOUT implementation
+    mockEngine = {
+      getCurrentState: vi.fn(),
+      nextStep: vi.fn(),
+      step: vi.fn(),
+      reset: vi.fn(),
+      updateParams: vi.fn()
+    };
+
+    // Set default return value for getCurrentState
+    vi.mocked(mockEngine.getCurrentState).mockReturnValue({ ...mockInitialState });
     
-    // Setup the mock engine's behavior for initial state
-    mockEngineFactory.getCurrentState.mockReturnValue({ ...mockInitialState });
+    // Mock the createEngine function to return our mock engine
+    vi.mocked(createEngine).mockReturnValue(mockEngine);
     
     // Create a spy for the state change callback
     onStateChange = vi.fn();
-    
-    // Create a new controller with mocked dependencies
-    controller = new SimulationController(mockInitialParams, onStateChange);
   });
 
   afterEach(() => {
@@ -58,28 +57,46 @@ describe('SimulationController', () => {
 
   describe('Initialization', () => {
     test('should create engine with initial params and notify with initial state', () => {
-      // The engine constructor should be called with our params
-      expect(SimulationEngine).toHaveBeenCalledWith(mockInitialParams);
+      controller = new SimulationController(mockInitialParams, onStateChange);
+      
+      // The engine factory should be called with our params
+      expect(createEngine).toHaveBeenCalledWith(EngineType.Average, mockInitialParams);
       
       // The controller should read initial state and notify
-      expect(mockEngineFactory.getCurrentState).toHaveBeenCalledTimes(1);
+      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(1);
       expect(onStateChange).toHaveBeenCalledTimes(1);
       expect(onStateChange).toHaveBeenCalledWith(mockInitialState);
+    });
+    
+    test('should create average engine when specified', () => {
+      controller = new SimulationController(mockInitialParams, onStateChange, EngineType.Average);
+      
+      expect(createEngine).toHaveBeenCalledWith(EngineType.Average, mockInitialParams);
+    });
+    
+    test('should create monte carlo engine when specified', () => {
+      controller = new SimulationController(mockInitialParams, onStateChange, EngineType.MonteCarlo);
+      
+      expect(createEngine).toHaveBeenCalledWith(EngineType.MonteCarlo, mockInitialParams);
     });
   });
 
   describe('State progression methods', () => {
+    beforeEach(() => {
+      controller = new SimulationController(mockInitialParams, onStateChange);
+    });
+    
     test('should advance a single step with nextStep()', () => {
       const nextState: SimulationState = {
         ...mockInitialState,
         purificationStep: 'twirled'
       };
       
-      mockEngineFactory.nextStep.mockReturnValue(nextState);
+      vi.mocked(mockEngine.nextStep).mockReturnValue(nextState);
       
       controller.nextStep();
       
-      expect(mockEngineFactory.nextStep).toHaveBeenCalledTimes(1);
+      expect(mockEngine.nextStep).toHaveBeenCalledTimes(1);
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
       expect(onStateChange).toHaveBeenLastCalledWith(nextState);
     });
@@ -108,10 +125,10 @@ describe('SimulationController', () => {
       };
       
       // Initial getCurrentState call returns initial state
-      mockEngineFactory.getCurrentState.mockReturnValueOnce(initialState);
+      vi.mocked(mockEngine.getCurrentState).mockReturnValueOnce(initialState);
       
       // Setup nextStep to return states in sequence
-      mockEngineFactory.nextStep
+      vi.mocked(mockEngine.nextStep)
         .mockReturnValueOnce(twirledState)
         .mockReturnValueOnce(exchangedState)
         .mockReturnValueOnce(completedState);
@@ -120,8 +137,8 @@ describe('SimulationController', () => {
       controller.completeRound();
       
       // Verify interactions
-      expect(mockEngineFactory.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngineFactory.nextStep).toHaveBeenCalledTimes(3); // Called until 'completed'
+      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
+      expect(mockEngine.nextStep).toHaveBeenCalledTimes(3); // Called until 'completed'
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once at end
       expect(onStateChange).toHaveBeenLastCalledWith(completedState);
     });
@@ -133,14 +150,14 @@ describe('SimulationController', () => {
         purificationStep: 'completed'
       };
       
-      mockEngineFactory.getCurrentState.mockReturnValue(completedState);
+      vi.mocked(mockEngine.getCurrentState).mockReturnValue(completedState);
       
       // Call the method under test
       controller.completeRound();
       
       // Verify interactions - should not call nextStep
-      expect(mockEngineFactory.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngineFactory.nextStep).not.toHaveBeenCalled();
+      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
+      expect(mockEngine.nextStep).not.toHaveBeenCalled();
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
       expect(onStateChange).toHaveBeenLastCalledWith(completedState);
     });
@@ -153,14 +170,14 @@ describe('SimulationController', () => {
         purificationStep: 'initial'
       };
       
-      mockEngineFactory.getCurrentState.mockReturnValue(completeState);
+      vi.mocked(mockEngine.getCurrentState).mockReturnValue(completeState);
       
       // Call the method under test
       controller.completeRound();
       
       // Verify interactions - should not call nextStep
-      expect(mockEngineFactory.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngineFactory.nextStep).not.toHaveBeenCalled();
+      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
+      expect(mockEngine.nextStep).not.toHaveBeenCalled();
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
       expect(onStateChange).toHaveBeenLastCalledWith(completeState);
     });
@@ -172,11 +189,11 @@ describe('SimulationController', () => {
         purificationStep: 'initial'
       };
       
-      mockEngineFactory.step.mockReturnValue(stepState);
+      vi.mocked(mockEngine.step).mockReturnValue(stepState);
       
       controller.step();
       
-      expect(mockEngineFactory.step).toHaveBeenCalledTimes(1);
+      expect(mockEngine.step).toHaveBeenCalledTimes(1);
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
       expect(onStateChange).toHaveBeenLastCalledWith(stepState);
     });
@@ -188,11 +205,11 @@ describe('SimulationController', () => {
         round: 0
       };
       
-      mockEngineFactory.reset.mockReturnValue(resetState);
+      vi.mocked(mockEngine.reset).mockReturnValue(resetState);
       
       controller.reset();
       
-      expect(mockEngineFactory.reset).toHaveBeenCalledTimes(1);
+      expect(mockEngine.reset).toHaveBeenCalledTimes(1);
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
       expect(onStateChange).toHaveBeenLastCalledWith(resetState);
     });
@@ -209,19 +226,23 @@ describe('SimulationController', () => {
         pairs: new Array(8)
       };
       
-      mockEngineFactory.getCurrentState.mockReturnValue(updatedState);
+      vi.mocked(mockEngine.getCurrentState).mockReturnValue(updatedState);
       
       controller.updateParameters(newParams);
       
-      expect(mockEngineFactory.updateParams).toHaveBeenCalledTimes(1);
-      expect(mockEngineFactory.updateParams).toHaveBeenCalledWith(newParams);
-      expect(mockEngineFactory.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
+      expect(mockEngine.updateParams).toHaveBeenCalledTimes(1);
+      expect(mockEngine.updateParams).toHaveBeenCalledWith(newParams);
+      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
       expect(onStateChange).toHaveBeenLastCalledWith(updatedState);
     });
   });
   
   describe('runUntilComplete()', () => {
+    beforeEach(() => {
+      controller = new SimulationController(mockInitialParams, onStateChange);
+    });
+
     test('should run until complete when state becomes complete', () => {
       // Setup sequence of states with the last one being complete
       const initialState: SimulationState = {
@@ -249,18 +270,18 @@ describe('SimulationController', () => {
       };
       
       // Initial state check
-      mockEngineFactory.getCurrentState.mockReturnValueOnce(initialState);
+      vi.mocked(mockEngine.getCurrentState).mockReturnValueOnce(initialState);
       
       // Step progression
-      mockEngineFactory.step
+      vi.mocked(mockEngine.step)
         .mockReturnValueOnce(step1State)
         .mockReturnValueOnce(step2State)
         .mockReturnValueOnce(completeState);
       
       controller.runUntilComplete();
       
-      expect(mockEngineFactory.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngineFactory.step).toHaveBeenCalledTimes(3);
+      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
+      expect(mockEngine.step).toHaveBeenCalledTimes(3);
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once at end
       expect(onStateChange).toHaveBeenLastCalledWith(completeState);
     });
@@ -272,13 +293,13 @@ describe('SimulationController', () => {
         complete: false
       };
       
-      mockEngineFactory.getCurrentState.mockReturnValue(notCompleteState);
-      mockEngineFactory.step.mockReturnValue(notCompleteState);
+      vi.mocked(mockEngine.getCurrentState).mockReturnValue(notCompleteState);
+      vi.mocked(mockEngine.step).mockReturnValue(notCompleteState);
       
       controller.runUntilComplete();
       
-      expect(mockEngineFactory.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngineFactory.step).toHaveBeenCalledTimes(100); // Should cap at 100 calls
+      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
+      expect(mockEngine.step).toHaveBeenCalledTimes(100); // Should cap at 100 calls
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once at end
       expect(onStateChange).toHaveBeenLastCalledWith(notCompleteState);
     });
@@ -290,14 +311,116 @@ describe('SimulationController', () => {
         complete: true
       };
       
-      mockEngineFactory.getCurrentState.mockReturnValue(completeState);
+      vi.mocked(mockEngine.getCurrentState).mockReturnValue(completeState);
       
       controller.runUntilComplete();
       
-      expect(mockEngineFactory.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngineFactory.step).not.toHaveBeenCalled();
+      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
+      expect(mockEngine.step).not.toHaveBeenCalled();
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
       expect(onStateChange).toHaveBeenLastCalledWith(completeState);
+    });
+  });
+  
+  describe('Engine Switching', () => {
+    test('should be able to switch engine types by recreating controller', () => {
+      // Create controller with Average engine
+      new SimulationController(
+        mockInitialParams, 
+        onStateChange, 
+        EngineType.Average
+      );
+      
+      // Verify average engine was created
+      expect(createEngine).toHaveBeenCalledWith(EngineType.Average, mockInitialParams);
+      
+      // Clear the call history but keep the mock implementation
+      vi.mocked(createEngine).mockClear();
+      
+      // Create a second mock engine for the Monte Carlo case
+      const monteMockEngine: ISimulationEngine = {
+        getCurrentState: vi.fn().mockReturnValue({ ...mockInitialState }),
+        nextStep: vi.fn(),
+        step: vi.fn(),
+        reset: vi.fn(),
+        updateParams: vi.fn()
+      };
+      
+      // Update the createEngine mock to return the new engine
+      vi.mocked(createEngine).mockReturnValue(monteMockEngine);
+      
+      // Create a new controller with Monte Carlo engine
+      new SimulationController(
+        mockInitialParams, 
+        onStateChange, 
+        EngineType.MonteCarlo
+      );
+      
+      // Verify monte carlo engine was created
+      expect(createEngine).toHaveBeenCalledWith(EngineType.MonteCarlo, mockInitialParams);
+    });
+  });
+
+  describe('Engine type switching', () => {
+    beforeEach(() => {
+      controller = new SimulationController(mockInitialParams, onStateChange);
+      // Reset the call counts since constructor calls createEngine
+      vi.mocked(createEngine).mockClear();
+      vi.mocked(onStateChange).mockClear();
+    });
+    
+    test('should create a new engine when updateEngineType is called', () => {
+      // Create a new mock engine for the second call
+      const newMockEngine = {
+        getCurrentState: vi.fn(),
+        nextStep: vi.fn(),
+        step: vi.fn(),
+        reset: vi.fn(),
+        updateParams: vi.fn()
+      };
+      
+      const newMockState = {
+        ...mockInitialState,
+        round: 0
+      };
+      
+      // Mock the new engine's getCurrentState method
+      vi.mocked(newMockEngine.getCurrentState).mockReturnValue(newMockState);
+      
+      // Make createEngine return the new mock engine
+      vi.mocked(createEngine).mockReturnValueOnce(newMockEngine);
+      
+      // Call method under test
+      controller.updateEngineType(EngineType.MonteCarlo);
+      
+      // Verify interactions
+      expect(createEngine).toHaveBeenCalledTimes(1);
+      expect(createEngine).toHaveBeenCalledWith(EngineType.MonteCarlo, mockInitialParams);
+      expect(newMockEngine.getCurrentState).toHaveBeenCalledTimes(1);
+      expect(onStateChange).toHaveBeenCalledTimes(1);
+      expect(onStateChange).toHaveBeenCalledWith(newMockState);
+    });
+    
+    test('should use current parameters when creating new engine', () => {
+      // First update parameters
+      const updatedParams = {
+        initialPairs: 8,
+        noiseParameter: 0.2,
+        targetFidelity: 0.98
+      };
+      
+      controller.updateParameters(updatedParams);
+      
+      // Reset mocks
+      vi.mocked(createEngine).mockClear();
+      vi.mocked(onStateChange).mockClear();
+      
+      // Then update engine type
+      controller.updateEngineType(EngineType.MonteCarlo);
+      
+      // Verify createEngine called with updated params
+      expect(createEngine).toHaveBeenCalledTimes(1);
+      expect(createEngine).toHaveBeenCalledWith(EngineType.MonteCarlo, updatedParams);
     });
   });
 }); 

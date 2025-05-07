@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { SimulationParameters, PurificationStep } from '../engine/types';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { SimulationParameters, PurificationStep, EngineType, Basis } from '../engine/types';
 import './ControlPanel.css';
+import HelpPanel from './HelpPanel';
+import Popup from './Popup';
 
 interface ControlPanelProps {
   onNextStep: () => void;
@@ -8,10 +11,14 @@ interface ControlPanelProps {
   onRunAll: () => void;
   onReset: () => void;
   onParametersChanged: (params: SimulationParameters) => void;
+  onEngineTypeChanged: (type: EngineType) => void;
+  onViewBasisChanged: (basis: Basis) => void;
   isComplete: boolean;
   currentRound: number;
   currentStep: PurificationStep;
   pairsRemaining: number;
+  engineType: EngineType;
+  viewBasis: Basis;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -20,14 +27,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   onRunAll,
   onReset,
   onParametersChanged,
+  onEngineTypeChanged,
+  onViewBasisChanged,
   isComplete,
   currentRound,
   currentStep,
-  pairsRemaining
+  pairsRemaining,
+  engineType,
+  viewBasis
 }) => {
   const [initialPairs, setInitialPairs] = useState(10);
   const [noiseParameter, setNoiseParameter] = useState(0.3);
   const [targetFidelity, setTargetFidelity] = useState(0.95);
+  const [showHelp, setShowHelp] = useState(false);
   
   const handleParameterChange = () => {
     onParametersChanged({
@@ -37,6 +49,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     });
   };
   
+  // Register keyboard shortcuts with enableOnFormTags to ensure they work when select elements have focus
+  useHotkeys('n', () => !isComplete && onNextStep(), { enabled: !isComplete, enableOnFormTags: true });
+  useHotkeys('c', () => !isComplete && onCompleteRound(), { enabled: !isComplete, enableOnFormTags: true });
+  useHotkeys('a', () => !isComplete && onRunAll(), { enabled: !isComplete, enableOnFormTags: true });
+  useHotkeys('r', onReset, { enableOnFormTags: true });
+  useHotkeys('p', handleParameterChange, { enableOnFormTags: true });
+  useHotkeys('?', () => setShowHelp(prev => !prev), { enableOnFormTags: true });
+  
   // Helper function to get the name of the current/next step
   const getStepName = (step: PurificationStep): string => {
     switch(step) {
@@ -44,7 +64,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       case 'twirled': return 'Exchange States';
       case 'exchanged': return 'Apply CNOT';
       case 'cnot': return 'Measure';
-      case 'measured': return 'Process Results';
+      case 'measured': return 'Discard Failures';
+      case 'discard': return 'Twirl + Exchange';
+      case 'twirlExchange': return 'Start Next Round';
       case 'completed': return 'Start Next Round';
       default: return `Unknown step: ${step}`;
     }
@@ -53,14 +75,53 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   // Get next step button text
   const nextStepText = isComplete 
     ? 'Complete' 
-    : `Next Step: ${getStepName(currentStep)}`;
+    : `Next Step: ${getStepName(currentStep)} [N]`;
   
   return (
     <div className="control-panel">
-      <h2>Simulation Controls</h2>
+      <div className="header">
+        <h2>Simulation Controls</h2>
+        <button 
+          className="help-button" 
+          onClick={() => setShowHelp(prev => !prev)}
+          title="Show keyboard shortcuts"
+        >
+          ?
+        </button>
+      </div>
+      
+      {showHelp && (
+        <Popup title="Help" isOpen={true} onClose={() => setShowHelp(false)}>
+          <HelpPanel />
+        </Popup>
+      )}
       
       <div className="parameter-section">
         <h3>Parameters</h3>
+        <div className="parameter-input">
+          <label htmlFor="engineType">Engine Type:</label>
+          <select
+            id="engineType"
+            value={engineType}
+            onChange={(e) => onEngineTypeChanged(e.target.value as EngineType)}
+          >
+            <option value={EngineType.Average}>Average</option>
+            <option value={EngineType.MonteCarlo}>Monte Carlo</option>
+          </select>
+        </div>
+        
+        <div className="parameter-input">
+          <label htmlFor="viewBasis">View Basis:</label>
+          <select
+            id="viewBasis"
+            value={viewBasis}
+            onChange={(e) => onViewBasisChanged(e.target.value as Basis)}
+          >
+            <option value={Basis.Bell}>Bell</option>
+            <option value={Basis.Computational}>Computational</option>
+          </select>
+        </div>
+        
         <div className="parameter-input">
           <label htmlFor="initialPairs">Initial Pairs:</label>
           <input
@@ -101,7 +162,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <span>{targetFidelity.toFixed(2)}</span>
         </div>
         
-        <button onClick={handleParameterChange}>Apply Parameters</button>
+        <button onClick={handleParameterChange}>Apply Parameters [P]</button>
       </div>
       
       <div className="simulation-controls">
@@ -110,10 +171,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           {nextStepText}
         </button>
         <button onClick={onCompleteRound} disabled={isComplete}>
-          Complete Round
+          Complete Round [C]
         </button>
-        <button onClick={onRunAll} disabled={isComplete}>Run All</button>
-        <button onClick={onReset}>Reset</button>
+        <button onClick={onRunAll} disabled={isComplete}>
+          Run All [A]
+        </button>
+        <button onClick={onReset}>
+          Reset [R]
+        </button>
       </div>
       
       <div className="status-section">

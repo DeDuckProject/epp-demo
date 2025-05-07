@@ -10,6 +10,7 @@ export default defineConfig({
       'tests/**/*.test.ts',
       'tests/**/*.test.tsx',
     ],
+    setupFiles: ['tests/setup.ts'],
     coverage: {
       provider: 'istanbul',
     },

@@ -1,12 +1,17 @@
-import { SimulationEngine } from '../engine/simulationEngine';
-import { SimulationParameters, SimulationState } from '../engine/types';
+import { ISimulationEngine, SimulationParameters, SimulationState, EngineType, createEngine } from '../engine/types';
 
 export class SimulationController {
-  private engine: SimulationEngine;
+  private engine: ISimulationEngine;
   private onStateChange: (state: SimulationState) => void;
+  private currentParams: SimulationParameters;
   
-  constructor(initialParams: SimulationParameters, onStateChange: (state: SimulationState) => void) {
-    this.engine = new SimulationEngine(initialParams);
+  constructor(
+    initialParams: SimulationParameters, 
+    onStateChange: (state: SimulationState) => void,
+    engineType: EngineType = EngineType.Average
+  ) {
+    this.currentParams = initialParams;
+    this.engine = createEngine(engineType, initialParams);
     this.onStateChange = onStateChange;
     
     // Initial state notification
@@ -55,7 +60,13 @@ export class SimulationController {
   }
   
   public updateParameters(params: SimulationParameters): void {
+    this.currentParams = params;
     this.engine.updateParams(params);
+    this.onStateChange(this.engine.getCurrentState());
+  }
+
+  public updateEngineType(type: EngineType): void {
+    this.engine = createEngine(type, this.currentParams);
     this.onStateChange(this.engine.getCurrentState());
   }
 } 
