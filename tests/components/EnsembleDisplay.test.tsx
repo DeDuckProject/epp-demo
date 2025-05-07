@@ -32,6 +32,26 @@ vi.mock('../../src/components/DensityMatrixView', () => ({
   )
 }));
 
+// Mock Popup component
+vi.mock('../../src/components/Popup', () => ({
+  default: ({ title, subtitle, isOpen, onClose, children }: any) => (
+    isOpen ? (
+      <div className="popup-overlay" data-testid="popup-overlay">
+        <div className="popup">
+          <div className="popup-header">
+            <h3>{title}</h3>
+            {subtitle && <span className="popup-subtitle">{subtitle}</span>}
+            <button className="close-button" onClick={onClose}>×</button>
+          </div>
+          <div className="popup-content">
+            {children}
+          </div>
+        </div>
+      </div>
+    ) : null
+  )
+}));
+
 describe('EnsembleDisplay', () => {
   // Test data
   const createTestPairs = (count: number) => 
@@ -384,20 +404,20 @@ describe('EnsembleDisplay', () => {
       />
     );
     
-    // Before clicking, joint state popup should not exist
-    expect(container.querySelector('.joint-state-popup')).toBeNull();
+    // Before clicking, popup should not exist
+    expect(container.querySelector('.popup')).toBeNull();
     
     // Click on the control pair
     const controlPair = screen.getAllByTestId(`qubit-pair-${testPairs[0].id}`)[0];
     fireEvent.click(controlPair);
     
-    // After clicking, joint state popup should exist
-    expect(container.querySelector('.joint-state-popup')).not.toBeNull();
+    // After clicking, popup should exist
+    expect(container.querySelector('.popup')).not.toBeNull();
     
-    // Check popup content shows the right pair IDs
-    const popupContent = container.querySelector('.joint-state-info');
-    expect(popupContent?.textContent).toContain('Control Pair 1');
-    expect(popupContent?.textContent).toContain('Target Pair 2');
+    // Check popup content shows the right pair IDs in subtitle
+    const popupSubtitle = container.querySelector('.popup-subtitle');
+    expect(popupSubtitle?.textContent).toContain('Control Pair 1');
+    expect(popupSubtitle?.textContent).toContain('Target Pair 2');
   });
   
   test('also shows joint state when clicking on a target pair', () => {
@@ -424,9 +444,9 @@ describe('EnsembleDisplay', () => {
     fireEvent.click(targetPair);
     
     // Popup should still show with the correct pair IDs
-    const popupContent = container.querySelector('.joint-state-info');
-    expect(popupContent?.textContent).toContain('Control Pair 1');
-    expect(popupContent?.textContent).toContain('Target Pair 2');
+    const popupSubtitle = container.querySelector('.popup-subtitle');
+    expect(popupSubtitle?.textContent).toContain('Control Pair 1');
+    expect(popupSubtitle?.textContent).toContain('Target Pair 2');
   });
   
   test('closes joint state view when clicking the close button', () => {
@@ -453,7 +473,7 @@ describe('EnsembleDisplay', () => {
     fireEvent.click(controlPair);
     
     // Confirm popup is shown
-    let popup = container.querySelector('.joint-state-popup');
+    let popup = container.querySelector('.popup');
     expect(popup).not.toBeNull();
     
     // Click the close button
@@ -461,7 +481,7 @@ describe('EnsembleDisplay', () => {
     fireEvent.click(closeButton as HTMLElement);
     
     // Check that popup is no longer shown
-    popup = container.querySelector('.joint-state-popup');
+    popup = container.querySelector('.popup');
     expect(popup).toBeNull();
   });
   
@@ -490,7 +510,7 @@ describe('EnsembleDisplay', () => {
     fireEvent.click(controlPair);
     
     // Joint state popup should not appear in 'measured' step
-    const popup = container.querySelector('.joint-state-popup');
+    const popup = container.querySelector('.popup');
     expect(popup).toBeNull();
   });
 }); 

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { SimulationParameters, PurificationStep, EngineType, Basis } from '../engine/types';
 import './ControlPanel.css';
+import HelpPanel from './HelpPanel';
 
 interface ControlPanelProps {
   onNextStep: () => void;
@@ -36,6 +38,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   const [initialPairs, setInitialPairs] = useState(10);
   const [noiseParameter, setNoiseParameter] = useState(0.3);
   const [targetFidelity, setTargetFidelity] = useState(0.95);
+  const [showHelp, setShowHelp] = useState(false);
   
   const handleParameterChange = () => {
     onParametersChanged({
@@ -44,6 +47,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       targetFidelity
     });
   };
+  
+  // Register keyboard shortcuts
+  useHotkeys('n', () => !isComplete && onNextStep(), { enabled: !isComplete });
+  useHotkeys('c', () => !isComplete && onCompleteRound(), { enabled: !isComplete });
+  useHotkeys('a', () => !isComplete && onRunAll(), { enabled: !isComplete });
+  useHotkeys('r', onReset);
+  useHotkeys('p', handleParameterChange);
+  useHotkeys('?', () => setShowHelp(prev => !prev));
   
   // Helper function to get the name of the current/next step
   const getStepName = (step: PurificationStep): string => {
@@ -63,11 +74,22 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   // Get next step button text
   const nextStepText = isComplete 
     ? 'Complete' 
-    : `Next Step: ${getStepName(currentStep)}`;
+    : `Next Step: ${getStepName(currentStep)} [N]`;
   
   return (
     <div className="control-panel">
-      <h2>Simulation Controls</h2>
+      <div className="header">
+        <h2>Simulation Controls</h2>
+        <button 
+          className="help-button" 
+          onClick={() => setShowHelp(prev => !prev)}
+          title="Show keyboard shortcuts"
+        >
+          ?
+        </button>
+      </div>
+      
+      {showHelp && <HelpPanel />}
       
       <div className="parameter-section">
         <h3>Parameters</h3>
@@ -135,7 +157,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <span>{targetFidelity.toFixed(2)}</span>
         </div>
         
-        <button onClick={handleParameterChange}>Apply Parameters</button>
+        <button onClick={handleParameterChange}>Apply Parameters [P]</button>
       </div>
       
       <div className="simulation-controls">
@@ -144,10 +166,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           {nextStepText}
         </button>
         <button onClick={onCompleteRound} disabled={isComplete}>
-          Complete Round
+          Complete Round [C]
         </button>
-        <button onClick={onRunAll} disabled={isComplete}>Run All</button>
-        <button onClick={onReset}>Reset</button>
+        <button onClick={onRunAll} disabled={isComplete}>
+          Run All [A]
+        </button>
+        <button onClick={onReset}>
+          Reset [R]
+        </button>
       </div>
       
       <div className="status-section">

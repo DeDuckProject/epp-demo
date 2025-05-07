@@ -122,16 +122,16 @@ describe('App', () => {
     fireEvent.click(screen.getByText(/Next Step/));
     expect(mockNextStep).toHaveBeenCalledTimes(1);
     
-    // Click Complete Round button
-    fireEvent.click(screen.getByText('Complete Round'));
+    // Click Complete Round button - use regex to match with possible keyboard shortcut
+    fireEvent.click(screen.getByText(/Complete Round/));
     expect(mockCompleteRound).toHaveBeenCalledTimes(1);
     
-    // Click Run All button
-    fireEvent.click(screen.getByText('Run All'));
+    // Click Run All button - use regex to match with possible keyboard shortcut
+    fireEvent.click(screen.getByText(/Run All/));
     expect(mockRunUntilComplete).toHaveBeenCalledTimes(1);
     
-    // Click Reset button
-    fireEvent.click(screen.getByText('Reset'));
+    // Click Reset button - use regex to match with possible keyboard shortcut
+    fireEvent.click(screen.getByText(/Reset/));
     expect(mockReset).toHaveBeenCalledTimes(1);
   });
 
@@ -148,8 +148,8 @@ describe('App', () => {
     fireEvent.change(noiseSlider, { target: { value: '0.5' } });
     fireEvent.change(fidelitySlider, { target: { value: '0.9' } });
     
-    // Apply parameters
-    fireEvent.click(screen.getByText('Apply Parameters'));
+    // Apply parameters - use regex to match with possible keyboard shortcut
+    fireEvent.click(screen.getByText(/Apply Parameters/));
     
     // Verify controller method was called with correct parameters
     expect(mockUpdateParameters).toHaveBeenCalledTimes(1);

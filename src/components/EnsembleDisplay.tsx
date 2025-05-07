@@ -4,6 +4,7 @@ import QubitPair from './QubitPair';
 import DensityMatrixView from './DensityMatrixView';
 import './EnsembleDisplay.css';
 import { DensityMatrix } from '../engine_real_calculations';
+import Popup from './Popup';
 
 interface EnsembleDisplayProps {
   pairs: QubitPairType[];
@@ -326,27 +327,21 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
         }}
       ></svg>
 
-      {/* Joint state popup */}
-      {selectedJointState && (
-        <div className="joint-state-overlay" onClick={closeJointStateView}>
-          <div className="joint-state-popup" onClick={e => e.stopPropagation()}>
-            <div className="joint-state-header">
-              <h3>4-Qubit Joint State</h3>
-              <span className="joint-state-info">
-                Between Control Pair {selectedJointState.controlId} and Target Pair {selectedJointState.targetId}
-              </span>
-              <button className="close-button" onClick={closeJointStateView}>×</button>
-            </div>
-            <div className="joint-state-content">
-              <DensityMatrixView 
-                matrix={selectedJointState.jointState} 
-                isWerner={false} 
-                basis={viewBasis}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Joint state popup using the new Popup component */}
+      <Popup
+        isOpen={selectedJointState !== null}
+        onClose={closeJointStateView}
+        title="4-Qubit Joint State"
+        subtitle={selectedJointState ? `Between Control Pair ${selectedJointState.controlId} and Target Pair ${selectedJointState.targetId}` : ''}
+      >
+        {selectedJointState && (
+          <DensityMatrixView 
+            matrix={selectedJointState.jointState} 
+            isWerner={false} 
+            basis={viewBasis}
+          />
+        )}
+      </Popup>
     </div>
   );
 };
