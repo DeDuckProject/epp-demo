@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { applyDepolarizing, applyDephasing } from '../../../src/engine_real_calculations/channels/noise';
+import { applyDepolarizing, applyDephasing, applyAmplitudeDamping } from '../../../src/engine_real_calculations/channels/noise';
 import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
 import { ComplexNum } from '../../../src/engine_real_calculations/types/complex';
 
@@ -89,5 +89,57 @@ describe('Quantum Noise Channels', () => {
     // State should be mixed, but not completely
     expect(depolarized.get(0, 0).re).toBeGreaterThan(0.5);
     expect(depolarized.get(2, 2).re).toBeGreaterThan(0);
+  });
+
+  test('applyAmplitudeDamping on |1> moves population to |0> for γ=1', () => {
+    // |1⟩⟨1| should decay to |0⟩⟨0| for full damping
+    const one = new DensityMatrix([
+      [ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.one()]
+    ]);
+    const damped = applyAmplitudeDamping(one, 0, 1);
+    expect(damped.get(0, 0).re).toBeCloseTo(1);
+    expect(damped.get(1, 1).re).toBeCloseTo(0);
+    expect(damped.trace().re).toBeCloseTo(1);
+  });
+
+  test('applyAmplitudeDamping is identity for γ=0', () => {
+    // |1⟩⟨1| should remain unchanged for zero damping
+    const one = new DensityMatrix([
+      [ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.one()]
+    ]);
+    const damped0 = applyAmplitudeDamping(one, 0, 0);
+    for (let i = 0; i < 2; i++) {
+      for (let j = 0; j < 2; j++) {
+        expect(damped0.get(i, j).re).toBeCloseTo(one.get(i, j).re);
+        expect(damped0.get(i, j).im).toBeCloseTo(one.get(i, j).im);
+      }
+    }
+  });
+
+  test('applyAmplitudeDamping on |0> leaves state unchanged for any γ', () => {
+    // |0⟩⟨0| is the ground state, should not change
+    const zero = new DensityMatrix([
+      [ComplexNum.one(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero()]
+    ]);
+    const damped = applyAmplitudeDamping(zero, 0, 0.7);
+    expect(damped.get(0, 0).re).toBeCloseTo(1);
+    expect(damped.get(1, 1).re).toBeCloseTo(0);
+    expect(damped.trace().re).toBeCloseTo(1);
+  });
+
+  test('applyAmplitudeDamping preserves trace for mixed state', () => {
+    // ρ = 0.5|0⟩⟨0| + 0.5|1⟩⟨1|, γ=0.5
+    const mixed = new DensityMatrix([
+      [ComplexNum.fromReal(0.5), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.fromReal(0.5)]
+    ]);
+    const damped = applyAmplitudeDamping(mixed, 0, 0.5);
+    expect(damped.trace().re).toBeCloseTo(1);
+    // Population should shift from |1> to |0>
+    expect(damped.get(0, 0).re).toBeGreaterThan(0.5);
+    expect(damped.get(1, 1).re).toBeLessThan(0.5);
   });
 }); 

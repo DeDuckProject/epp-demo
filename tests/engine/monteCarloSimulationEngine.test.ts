@@ -339,6 +339,14 @@ describe('MonteCarloSimulationEngine', () => {
     });
 
     test('completes post-measurement purification (measured -> discard -> initial)', () => {
+      const noiseParameter = 0.30;
+      const initialParams: SimulationParameters = {
+        initialPairs: 64,
+        noiseParameter: noiseParameter,
+        targetFidelity: 0.99
+      };
+      engine = new MonteCarloSimulationEngine(initialParams);
+
       // Mock Math.random for deterministic measurement outcomes
       const originalMathRandom = Math.random;
       const mockRandom = vi.fn(() => 0.1); // Assume 0.1 leads to success
@@ -442,6 +450,14 @@ describe('MonteCarloSimulationEngine', () => {
   
   describe('step() method with new purification steps', () => {
     test('step() method executes the full sequence including new steps', () => {
+      const noiseParameter = 0.30;
+      const initialParams: SimulationParameters = {
+        initialPairs: 64,
+        noiseParameter: noiseParameter,
+        targetFidelity: 0.99
+      };
+      engine = new MonteCarloSimulationEngine(initialParams);
+
       // Mock Math.random for deterministic outcomes
       const originalMathRandom = Math.random;
       const mockRandom = vi.fn(() => 0.1); // Assume 0.1 leads to success

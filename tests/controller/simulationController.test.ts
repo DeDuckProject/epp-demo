@@ -102,84 +102,45 @@ describe('SimulationController', () => {
     });
     
     test('should complete a full round when completeRound() is called', () => {
-      // Setup a sequence of states to simulate progression through a round
-      const initialState: SimulationState = {
+      const stepState: SimulationState = {
         ...mockInitialState,
+        round: 1,
         purificationStep: 'initial'
       };
       
-      const twirledState: SimulationState = {
-        ...mockInitialState,
-        purificationStep: 'twirled'
-      };
+      vi.mocked(mockEngine.step).mockReturnValue(stepState);
       
-      const exchangedState: SimulationState = {
-        ...mockInitialState,
-        purificationStep: 'exchanged'
-      };
-      
-      const completedState: SimulationState = {
-        ...mockInitialState,
-        purificationStep: 'completed',
-        round: 1
-      };
-      
-      // Initial getCurrentState call returns initial state
-      vi.mocked(mockEngine.getCurrentState).mockReturnValueOnce(initialState);
-      
-      // Setup nextStep to return states in sequence
-      vi.mocked(mockEngine.nextStep)
-        .mockReturnValueOnce(twirledState)
-        .mockReturnValueOnce(exchangedState)
-        .mockReturnValueOnce(completedState);
-      
-      // Call the method under test
       controller.completeRound();
       
-      // Verify interactions
-      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngine.nextStep).toHaveBeenCalledTimes(3); // Called until 'completed'
-      expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once at end
-      expect(onStateChange).toHaveBeenLastCalledWith(completedState);
-    });
-    
-    test('should not call nextStep if already at completed step during completeRound', () => {
-      // Setup the initial state to be already completed
-      const completedState: SimulationState = {
-        ...mockInitialState,
-        purificationStep: 'completed'
-      };
-      
-      vi.mocked(mockEngine.getCurrentState).mockReturnValue(completedState);
-      
-      // Call the method under test
-      controller.completeRound();
-      
-      // Verify interactions - should not call nextStep
-      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngine.nextStep).not.toHaveBeenCalled();
+      expect(mockEngine.step).toHaveBeenCalledTimes(1);
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(onStateChange).toHaveBeenLastCalledWith(completedState);
+      expect(onStateChange).toHaveBeenLastCalledWith(stepState);
     });
     
-    test('should not call nextStep if simulation is already complete during completeRound', () => {
-      // Setup the initial state to be already complete
-      const completeState: SimulationState = {
+    test('completeRound() should behave the same as step()', () => {
+      const stepState: SimulationState = {
         ...mockInitialState,
-        complete: true,
+        round: 1,
         purificationStep: 'initial'
       };
       
-      vi.mocked(mockEngine.getCurrentState).mockReturnValue(completeState);
+      vi.mocked(mockEngine.step).mockReturnValue(stepState);
       
-      // Call the method under test
       controller.completeRound();
       
-      // Verify interactions - should not call nextStep
-      expect(mockEngine.getCurrentState).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(mockEngine.nextStep).not.toHaveBeenCalled();
+      expect(mockEngine.step).toHaveBeenCalledTimes(1);
       expect(onStateChange).toHaveBeenCalledTimes(2); // Once in constructor, once now
-      expect(onStateChange).toHaveBeenLastCalledWith(completeState);
+      
+      // Reset mock call counts
+      vi.mocked(mockEngine.step).mockClear();
+      vi.mocked(onStateChange).mockClear();
+      
+      // Call step() and verify same behavior
+      controller.step();
+      
+      expect(mockEngine.step).toHaveBeenCalledTimes(1);
+      expect(onStateChange).toHaveBeenCalledTimes(1);
+      expect(onStateChange).toHaveBeenCalledWith(stepState);
     });
     
     test('should execute a single full round step when step() is called', () => {

@@ -55,4 +55,38 @@ export function applyDephasing(
   return applyKraus(rho, [K0, K1]);
 }
 
-export const _testing = { applyKraus }; 
+// Amplitude-damping channel on a single qubit
+export function applyAmplitudeDamping(
+  rho: DensityMatrix,
+  qubit: number,
+  gamma: number
+): DensityMatrix {
+  const n = Math.log2(rho.rows);
+  if (!Number.isInteger(n)) {
+    throw new Error('DensityMatrix dimension must be a power of 2');
+  }
+  const sqrt = Math.sqrt;
+  // Local 2×2 Kraus operators
+  const K0_local = new Matrix([
+    [ComplexNum.one(), ComplexNum.zero()],
+    [ComplexNum.zero(), ComplexNum.fromReal(sqrt(1 - gamma))]
+  ]);
+  const K1_local = new Matrix([
+    [ComplexNum.zero(), ComplexNum.fromReal(sqrt(gamma))],
+    [ComplexNum.zero(), ComplexNum.zero()]
+  ]);
+  // Embed onto the full n-qubit space
+  function embed(localOp: Matrix): Matrix {
+    let op: Matrix | null = null;
+    for (let q = 0; q < n; q++) {
+      const m = q === qubit ? localOp : Matrix.identity(2);
+      op = op ? op.tensor(m) : m;
+    }
+    return op!;
+  }
+  const K0 = embed(K0_local);
+  const K1 = embed(K1_local);
+  return applyKraus(rho, [K0, K1]);
+}
+
+export const _testing = { applyKraus, applyAmplitudeDamping }; 

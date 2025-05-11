@@ -4,7 +4,7 @@ import { DensityMatrix } from './matrix/densityMatrix';
 import { bitstringToIndex, indexToBitstring } from './utils/indexing';
 import { pauliMatrix, pauliOperator } from './gates/pauli';
 import { cnotMatrix } from './gates/cnot';
-import { applyDepolarizing, applyDephasing } from './channels/noise';
+import { applyDepolarizing, applyDephasing, applyAmplitudeDamping } from './channels/noise';
 import { measureQubit } from './measurement/measure';
 import { applyGate } from './operations/applyGate';
 import { partialTrace } from './operations/partialTrace';
@@ -22,6 +22,7 @@ export {
   cnotMatrix,
   applyDepolarizing,
   applyDephasing,
+  applyAmplitudeDamping,
   measureQubit,
   applyGate,
   partialTrace

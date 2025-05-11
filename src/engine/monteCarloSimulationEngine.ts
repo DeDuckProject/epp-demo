@@ -1,6 +1,6 @@
 import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine, Basis} from './types';
 import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
-import {applyDephasing} from "../engine_real_calculations/channels/noise";
+import {applyAmplitudeDamping} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
 import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
 import {applyPauli, applyCNOT, tensor, measureQubit} from "../engine_real_calculations";
@@ -29,7 +29,8 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
       const pureRho = DensityMatrix.bellPsiMinus();
       
       // Apply dephasing noise to Bob's qubit (qubit 1)
-      const noisyRho = applyDephasing(pureRho, /* bobQubit= */ 1, this.params.noiseParameter);
+      // const noisyRho = applyDephasing(pureRho, /* bobQubit= */ 1, this.params.noiseParameter);
+      const noisyRho = applyAmplitudeDamping(pureRho, /* bobQubit= */ 1, this.params.noiseParameter);
       
       // Calculate fidelity with respect to the Psi-Minus Bell state
       const fidelity = fidelityFromComputationalBasisMatrix(noisyRho, BellState.PSI_MINUS);
