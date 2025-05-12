@@ -117,4 +117,10 @@
 .qubit-pair.will-be-discarded:hover {
   transform: scale(1.05);
   opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+  .qubit-pair      { width: 40px; height: 40px; }
+  .qubit-id        { font-size: 12px; }
+  .qubit-fidelity  { font-size: 10px; }
 } 

@@ -76,6 +76,12 @@
   height: 20px;
 }
 
+.pair-connections-svg {
+  height: 20px;
+  width: 100%;
+  display: block;
+}
+
 /* Entanglement lines */
 .entanglement-line {
   position: absolute;
@@ -105,6 +111,13 @@
   .participant-section {
     padding-left: 0;
   }
+}
+
+@media (max-width: 768px) {
+  .ensemble-display       { padding: 10px; }
+  .participant-section    { display: flex; flex-direction: column; }
+  .participant-label      { position: static !important; margin-bottom: 8px; }
+  .pair-row               { gap: 12px; overflow-x: auto; }
 }
 
 /* Update scrollbar styling to target the container */

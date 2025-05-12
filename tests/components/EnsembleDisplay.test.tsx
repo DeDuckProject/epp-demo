@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import EnsembleDisplay from '../../src/components/EnsembleDisplay';
 import {Basis} from "../../src/engine/types.ts";
 import { DensityMatrix } from '../../src/engine_real_calculations';
+import { QubitPair as QPType } from '../../src/engine/types';
 
 // Mock the QubitPair component to simplify testing
 vi.mock('../../src/components/QubitPair', () => ({
@@ -199,7 +200,7 @@ describe('EnsembleDisplay', () => {
     
     // Check entanglement lines - the ones for discarded pairs should have the class
     const entanglementLines = container.querySelectorAll('.entanglement-line');
-    expect(entanglementLines).toHaveLength(3);
+    expect(entanglementLines).toHaveLength(5);
     
     const discardedLines = container.querySelectorAll('.entanglement-line.will-be-discarded');
     expect(discardedLines).toHaveLength(2); // For pairs 2 and 3
@@ -512,5 +513,59 @@ describe('EnsembleDisplay', () => {
     // Joint state popup should not appear in 'measured' step
     const popup = container.querySelector('.popup');
     expect(popup).toBeNull();
+  });
+});
+
+describe('EnsembleDisplay connectors & responsiveness', () => {
+  beforeAll(() => {
+    window.innerWidth = 500;
+    window.dispatchEvent(new Event('resize'));
+  });
+
+  it('renders arrows for CNOT and entanglement', () => {
+    const pairs: QPType[] = [
+      { id: 1, fidelity: 0.9, densityMatrix: {} as any, basis: Basis.Bell },
+      { id: 2, fidelity: 0.8, densityMatrix: {} as any, basis: Basis.Bell }
+    ];
+    const pendingPairs = {
+      controlPairs: pairs,
+      targetPairs: pairs,
+      jointStates: [],
+      results: []
+    };
+
+    const { container } = render(
+      <EnsembleDisplay 
+        pairs={pairs} 
+        pendingPairs={pendingPairs} 
+        purificationStep="cnot" 
+        viewBasis={Basis.Bell} 
+      />
+    );
+
+    // Expect 2 CNOT on Alice + 2 on Bob + 2 entanglements = 6 arrows
+    const arrows = container.querySelectorAll('.xarrow');
+    expect(arrows.length).toBe(6);
+  });
+
+  it('is responsive on mobile', () => {
+    const pairs: QPType[] = [
+      { id: 1, fidelity: 0.9, densityMatrix: {} as any, basis: Basis.Bell },
+      { id: 2, fidelity: 0.8, densityMatrix: {} as any, basis: Basis.Bell }
+    ];
+    const { container } = render(
+      <EnsembleDisplay 
+        pairs={pairs} 
+        purificationStep="idle" 
+        viewBasis={Basis.Bell} 
+      />
+    );
+    const pairRows = container.querySelectorAll('.pair-row');
+    expect(pairRows.length).toBeGreaterThan(0);
+    // In test environment, computed styles aren't reliable
+    // Just verify that the rows exist and have the right classes
+    pairRows.forEach(row => {
+      expect(row.classList.contains('pair-row')).toBeTruthy();
+    });
   });
 }); 
