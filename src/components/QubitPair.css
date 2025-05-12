@@ -13,25 +13,27 @@
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   border: 3px solid transparent;
   flex-shrink: 0;
+  box-sizing: content-box;
 }
 
 .qubit-pair.alice {
-  background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+  background-color: var(--alice-color);
 }
 
 .qubit-pair.bob {
-  background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+  background-color: var(--bob-color);
 }
 
 .qubit-pair:hover {
   transform: scale(1.15);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   z-index: 20;
-  border-color: #3498db;
+  border-color: var(--primary-color);
 }
 
 .pair-role{
   height: 40px;
+  box-sizing: content-box;
 }
 
 .qubit-info {
@@ -42,6 +44,7 @@
   justify-content: center;
   height: 100%;
   width: 100%;
+  box-sizing: content-box;
 }
 
 /* Size adjustments for qubit contents */
@@ -49,15 +52,17 @@
   font-weight: bold;
   font-size: 14px;
   margin-bottom: 2px;
+  box-sizing: content-box;
 }
 
 .qubit-fidelity {
   font-size: 12px;
   font-weight: bold;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.8);
   color: #333;
-  padding: 2px 4px;
+  padding: 2px 2px;
   border-radius: 8px;
+  box-sizing: content-box;
 }
 
 /* Density Matrix View - Styled as a popover */
@@ -70,8 +75,11 @@
   background-color: white;
   padding: 20px;
   min-width: 320px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--soft-gray);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
   animation: fadeIn 0.2s ease-out;
+  box-sizing: content-box;
 }
 
 /* Add popover arrow */
