@@ -24,14 +24,7 @@ export class SimulationController {
   }
   
   public completeRound(): void {
-    let state = this.engine.getCurrentState();
-    
-    // If we're already at the completed step, this will do nothing
-    while (!state.complete && state.purificationStep !== 'completed') {
-      state = this.engine.nextStep();
-    }
-    
-    this.onStateChange(state);
+    this.step();
   }
   
   public step(): void {
