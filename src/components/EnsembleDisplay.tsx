@@ -170,7 +170,7 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
           </div>
         </div>
         {/* CNOT connections */}
-        {pendingPairs && ['cnot','measured'].includes(purificationStep) && pendingPairs.controlPairs.map((control, idx) => {
+        {pendingPairs && purificationStep === 'cnot' && pendingPairs.controlPairs.map((control, idx) => {
           const target = pendingPairs.targetPairs[idx];
           // Skip if target is undefined 
           if (!target) return null;
@@ -182,19 +182,18 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
                 end={`alice-${target.id}`}
                 path="grid"
                 lineColor="#000"
-                strokeWidth={1}
+                strokeWidth={2}
                 startAnchor="middle"
                 endAnchor="middle"
                 showHead={false}
-                showTail={true}
-                // tailShape="circle"
+                showTail={false}
                 tailSize={6}
                 tailColor="#000"
                 curveness={0.8}
                 headSize={10}
-                divContainerProps={{ className: "xarrow entanglement-line" }}
-                labels={{ end: <span style={{fontWeight:'bold',fontSize:16, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -75%)'}}>⊕</span>,
-                  start: <span style={{fontWeight:'bold',fontSize:16, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -25%)'}}>●</span>
+                divContainerProps={{ className: "xarrow entanglement-line cnot-connection" }}
+                labels={{ end: <span style={{fontWeight:'bold',fontSize:18, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -75%)', color: '#000'}}>⊕</span>,
+                  start: <span style={{fontWeight:'bold',fontSize:18, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -25%)', color: '#000'}}>●</span>
                 }}
               />
               <Xarrow
@@ -202,24 +201,71 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
                 end={`bob-${target.id}`}
                 path="grid"
                 lineColor="#000"
-                strokeWidth={1}
+                strokeWidth={2}
                 startAnchor="middle"
                 endAnchor="middle"
                 showHead={false}
-                showTail={true}
-                // tailShape="circle"
+                showTail={false}
                 tailSize={6}
                 tailColor="#000"
                 curveness={0.8}
                 headSize={10}
-                divContainerProps={{ className: "xarrow entanglement-line" }}
-                labels={{ end: <span style={{fontWeight:'bold',fontSize:16, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -75%)'}}>⊕</span>,
-                  start: <span style={{fontWeight:'bold',fontSize:16, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -25%)'}}>●</span>
+                divContainerProps={{ className: "xarrow entanglement-line cnot-connection" }}
+                labels={{ end: <span style={{fontWeight:'bold',fontSize:18, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -75%)', color: '#000'}}>⊕</span>,
+                  start: <span style={{fontWeight:'bold',fontSize:18, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -25%)', color: '#000'}}>●</span>
                 }}
               />
             </React.Fragment>
           );
         })}
+
+        {/* Measured connections */}
+        {pendingPairs && purificationStep === 'measured' && pendingPairs.controlPairs.map((control, idx) => {
+          const target = pendingPairs.targetPairs[idx];
+          // Skip if target is undefined 
+          if (!target) return null;
+          
+          // Find result for this control pair
+          const result = pendingPairs.results?.find(r => r.control.id === control.id);
+          const isSuccessful = result?.successful ?? false;
+          const lineColor = isSuccessful ? '#4ade80' : '#ef4444'; // green for success, red for failure
+          
+          return (
+            <React.Fragment key={`measured-${control.id}`}>
+              <Xarrow
+                start={`alice-${control.id}`}
+                end={`alice-${target.id}`}
+                path="grid"
+                lineColor={lineColor}
+                strokeWidth={2}
+                startAnchor="middle"
+                endAnchor="middle"
+                showHead={false}
+                showTail={false}
+                curveness={0.8}
+                divContainerProps={{ 
+                  className: `xarrow entanglement-line measured-connection ${isSuccessful ? 'successful' : 'failed'}`
+                }}
+              />
+              <Xarrow
+                start={`bob-${control.id}`}
+                end={`bob-${target.id}`}
+                path="grid"
+                lineColor={lineColor}
+                strokeWidth={2}
+                startAnchor="middle"
+                endAnchor="middle"
+                showHead={false}
+                showTail={false}
+                curveness={0.8}
+                divContainerProps={{ 
+                  className: `xarrow entanglement-line measured-connection ${isSuccessful ? 'successful' : 'failed'}`
+                }}
+              />
+            </React.Fragment>
+          );
+        })}
+        
         {/* Entanglement lines */}
         {pairs.map(pair => (
           <Xarrow 

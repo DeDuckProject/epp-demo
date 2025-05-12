@@ -514,6 +514,89 @@ describe('EnsembleDisplay', () => {
     const popup = container.querySelector('.popup');
     expect(popup).toBeNull();
   });
+
+  test('renders connection lines with colors based on success in measured step', () => {
+    const testPairs = createTestPairs(4);
+    const pendingPairs = {
+      controlPairs: [testPairs[0], testPairs[1]],
+      targetPairs: [testPairs[2], testPairs[3]],
+      results: [
+        { control: testPairs[0], successful: true },
+        { control: testPairs[1], successful: false }
+      ]
+    };
+    
+    const { container } = render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        pendingPairs={pendingPairs}
+        purificationStep="measured" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // Check for successful connections (should be green)
+    const successfulConnections = container.querySelectorAll('.measured-connection.successful');
+    expect(successfulConnections).toHaveLength(2); // One for Alice, one for Bob
+    
+    // Check for failed connections (should be red)
+    const failedConnections = container.querySelectorAll('.measured-connection.failed');
+    expect(failedConnections).toHaveLength(2); // One for Alice, one for Bob
+    
+    // Verify that CNOT symbols are not present in measured step
+    expect(container.textContent?.includes('⊕')).toBe(false);
+    expect(container.textContent?.includes('●')).toBe(false);
+  });
+  
+  test('renders CNOT symbols only in the CNOT step', () => {
+    const testPairs = createTestPairs(2);
+    const pendingPairs = {
+      controlPairs: [testPairs[0]],
+      targetPairs: [testPairs[1]]
+    };
+    
+    const { container, rerender } = render(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        pendingPairs={pendingPairs}
+        purificationStep="cnot" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // Check that CNOT connections have their specific class
+    const cnotConnections = container.querySelectorAll('.cnot-connection');
+    expect(cnotConnections).toHaveLength(2); // One for Alice, one for Bob
+    
+    // Verify that CNOT symbols are present in CNOT step
+    expect(container.textContent?.includes('⊕')).toBe(true);
+    expect(container.textContent?.includes('●')).toBe(true);
+    
+    // Now rerender with measured step and same pending pairs plus results
+    const pendingPairsWithResults = {
+      ...pendingPairs,
+      results: [
+        { control: testPairs[0], successful: true }
+      ]
+    };
+    
+    rerender(
+      <EnsembleDisplay 
+        pairs={testPairs} 
+        pendingPairs={pendingPairsWithResults}
+        purificationStep="measured" 
+        viewBasis={Basis.Bell}
+      />
+    );
+    
+    // Check that measured connections exist and CNOT connections don't
+    expect(container.querySelectorAll('.measured-connection')).toHaveLength(2);
+    expect(container.querySelectorAll('.cnot-connection')).toHaveLength(0);
+    
+    // Verify no CNOT symbols in measured step
+    expect(container.textContent?.includes('⊕')).toBe(false);
+    expect(container.textContent?.includes('●')).toBe(false);
+  });
 });
 
 describe('EnsembleDisplay connectors & responsiveness', () => {
