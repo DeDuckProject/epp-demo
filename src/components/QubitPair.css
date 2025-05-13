@@ -123,4 +123,9 @@
   .qubit-pair      { width: 40px; height: 40px; }
   .qubit-id        { font-size: 12px; }
   .qubit-fidelity  { font-size: 10px; }
+  
+  /* We now use React portals for mobile, so these styles are no longer needed */
+  .matrix-popup {
+    display: none; /* Hide the standard popup in mobile as we use portals instead */
+  }
 } 
