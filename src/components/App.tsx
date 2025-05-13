@@ -10,6 +10,7 @@ const App: React.FC = () => {
   const [controller, setController] = useState<SimulationController | null>(null);
   const [engineType, setEngineType] = useState<EngineType>(EngineType.Average);
   const [viewBasis, setViewBasis] = useState<Basis>(Basis.Bell);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   useEffect(() => {
     // Initialize controller with default parameters
@@ -44,8 +45,25 @@ const App: React.FC = () => {
       </header>
       
       <main>
+        {drawerOpen && (
+          <div
+            data-testid="drawer-overlay"
+            className="drawer-overlay"
+            onClick={() => setDrawerOpen(false)}
+          />
+        )}
+        <button
+          className={`drawer-toggle${drawerOpen ? ' open' : ''}`}
+          aria-label="Toggle controls"
+          onClick={() => setDrawerOpen(o => !o)}
+        >
+          ☰
+        </button>
         <div className="simulation-area">
           <ControlPanel
+            className={drawerOpen ? 'open' : ''}
+            isDrawerOpen={drawerOpen}
+            onDrawerClose={() => setDrawerOpen(false)}
             onNextStep={() => controller.nextStep()}
             onCompleteRound={() => controller.completeRound()}
             onRunAll={() => controller.runUntilComplete()}

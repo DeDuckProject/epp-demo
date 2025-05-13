@@ -1,27 +1,51 @@
-/* Any additional global styles can go here */
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Root variables */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --text-color: #333;
+  --bg-color: #F5F7FA;
+  --card-bg: #ffffff;
+  --primary-color: #3B82F6;
+  --secondary-color: #2c3e50;
+  --soft-gray: #E5E7EB;
+  --highlight-green: #10B981;
+  --alice-color: #FCD34D;
+  --bob-color: #A78BFA;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Apply base styles directly to html and body */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family);
   line-height: 1.5;
   font-weight: 400;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  
-  /* Common variables for use throughout the app, including portals */
-  --font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
-  --text-color: #333;
-  --bg-color: #ffffff;
-  --primary-color: #3498db;
-  --secondary-color: #2c3e50;
-  --border-radius: 8px;
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Force font inheritance to all elements */
+body * {
+  font-family: inherit;
 }
 
 /* Apply font to portals as well */
@@ -30,28 +54,41 @@
   color: var(--text-color);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 0.5em 0;
+  line-height: 1.2;
+  color: var(--secondary-color);
+  font-weight: 600;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2rem;
 }
 
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+a {
+  font-weight: 500;
+  color: var(--primary-color);
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #2563eb;
+}
+
+/* Button styling */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -59,16 +96,32 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--primary-color);
+  color: white;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.2s ease;
 }
+
 button:hover {
-  border-color: #646cff;
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
 }
+
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  border-color: var(--primary-color) !important;
 }
 
 @media (prefers-color-scheme: light) {
@@ -77,9 +130,10 @@ button:focus-visible {
     background-color: #ffffff;
   }
   a:hover {
-    color: #747bff;
+    color: #1d4ed8;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: var(--soft-gray);
+    color: var(--text-color);
   }
 }

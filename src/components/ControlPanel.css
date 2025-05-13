@@ -1,33 +1,38 @@
 /* Control Panel */
 .control-panel {
   flex: 0 0 320px;
-  padding: 20px;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
   position: sticky;
   top: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .header h2 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--secondary-color);
   padding-bottom: 10px;
-  border-bottom: 2px solid #3498db;
+  border-bottom: 2px solid var(--primary-color);
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .help-button {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: #3498db;
+  background-color: var(--primary-color);
   color: white;
   font-weight: bold;
   border: none;
@@ -36,44 +41,51 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
 .help-button:hover {
-  background-color: #2980b9;
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
 }
 
 .parameter-section,
 .simulation-controls,
 .status-section {
-  margin-bottom: 25px;
+  margin-bottom: 28px;
 }
 
 .parameter-section h3,
 .simulation-controls h3,
 .status-section h3 {
-  color: #3498db;
-  font-size: 18px;
-  margin-bottom: 15px;
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
 }
 
 .parameter-input {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
 }
 
 .parameter-input label {
   margin-bottom: 8px;
-  font-weight: bold;
+  font-weight: 500;
   color: #555;
+  font-size: 14px;
 }
 
 .parameter-input input[type="number"] {
-  padding: 10px;
-  border-radius: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
   border: 1px solid #ddd;
-  font-size: 16px;
+  font-size: 15px;
+  font-family: var(--font-family);
+  transition: all 0.2s ease;
 }
 
 .parameter-input input[type="range"] {
@@ -82,11 +94,94 @@
 }
 
 .parameter-input span {
-  font-weight: bold;
-  color: #3498db;
+  font-weight: 600;
+  color: var(--primary-color);
 }
 
 .parameter-input-row {
   display: flex;
   align-items: center;
+}
+
+/* Off-canvas drawer & toggle button */
+.drawer-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .drawer-toggle {
+    display: block;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  
+  .drawer-toggle.open {
+    display: none;
+  }
+
+  .header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .help-button {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+  }
+
+  .drawer-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--secondary-color);
+    z-index: 1101;
+    box-shadow: none;
+    background: none;
+    border-radius: 50%;
+    margin: 0;
+  }
+
+  .drawer-close:hover {
+    transform: translateY(0);
+  }
+
+  .control-panel {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    border-radius: 0;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .control-panel.open {
+    left: 0;
+  }
+
+  /* ensure the main content isn't pushed (we don't need a margin here) */
+  .simulation-area {
+    margin-left: 0;
+  }
 } 

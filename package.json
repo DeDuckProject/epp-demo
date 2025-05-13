@@ -14,11 +14,13 @@
     "mathjs": "^14.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hotkeys-hook": "^5.0.1"
+    "react-hotkeys-hook": "^5.0.1",
+    "react-xarrows": "^2.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@jest/globals": "^29.7.0",
+    "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",

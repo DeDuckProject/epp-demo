@@ -1,11 +1,16 @@
-import { describe, test, expect } from 'vitest';
-import React from 'react';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import React, { ReactNode } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import QubitPair from '../../src/components/QubitPair';
 import { DensityMatrix } from '../../src/engine_real_calculations/matrix/densityMatrix';
 import { ComplexNum } from '../../src/engine_real_calculations/types/complex';
 import {Basis} from "../../src/engine/types.ts";
 import {toBellBasis, toComputationalBasis} from "../../src/engine_real_calculations/bell/bell-basis.ts";
+
+// Mock the React DOM createPortal to render children directly without portal
+vi.mock('react-dom', () => ({
+  createPortal: (children: ReactNode) => children
+}));
 
 describe('QubitPair', () => {
   // Create a simple density matrix for testing
@@ -25,6 +30,34 @@ describe('QubitPair', () => {
   };
 
   const mockMatrix = createTestMatrix();
+
+  // Helper function for tests with viewport width simulation
+  const renderWithMobileWidth = (ui: React.ReactElement) => {
+    // Save original innerWidth
+    const originalInnerWidth = window.innerWidth;
+    
+    // Mock window.innerWidth to be a mobile width
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 500, // Mobile width
+    });
+    
+    const result = render(ui);
+    
+    // Restore after test
+    return {
+      ...result,
+      cleanup: () => {
+        result.unmount();
+        Object.defineProperty(window, 'innerWidth', {
+          writable: true,
+          configurable: true,
+          value: originalInnerWidth,
+        });
+      },
+    };
+  };
 
   test('renders a qubit pair with correct basic properties', () => {
     const pair = {
@@ -441,5 +474,33 @@ describe('QubitPair', () => {
     
     // Check that matrix title now shows Bell basis
     expect(container.querySelector('.matrix-title')?.textContent).toContain('Bell Basis');
+  });
+
+  test('displays matrix popup in mobile layout using portal', () => {
+    const pair = {
+      id: 11,
+      fidelity: 0.85,
+      densityMatrix: mockMatrix,
+      basis: Basis.Bell
+    };
+
+    // Render with simulated mobile width
+    const { container, cleanup } = renderWithMobileWidth(
+      <QubitPair pair={pair} location="alice" purificationStep="initial" viewBasis={Basis.Bell} />
+    );
+
+    const rootElement = container.firstChild as HTMLElement;
+    
+    // Initially the matrix popup should not be visible
+    expect(container.querySelector('.matrix-popup')).toBeNull();
+    
+    // Trigger mouse enter
+    fireEvent.mouseEnter(rootElement);
+    
+    // Now the matrix title should be present in the document (via mocked portal)
+    expect(document.querySelector('.matrix-title')).toBeTruthy();
+    
+    // Clean up
+    cleanup();
   });
 }); 
