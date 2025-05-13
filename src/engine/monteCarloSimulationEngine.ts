@@ -199,7 +199,6 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
     // Process each joint state (4-qubit system after bilateral CNOT)
     for (let i = 0; i < jointStates.length; i++) {
       const controlPair = controlPairs[i];
-      const targetPair = targetPairs[i];
       const jointState = jointStates[i];
       
       // Measure Alice's target qubit (qubit 2)
