@@ -184,7 +184,7 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
       return;
     }
     
-    const { controlPairs, targetPairs, jointStates } = this.state.pendingPairs;
+    const { controlPairs, jointStates } = this.state.pendingPairs;
     
     if (!jointStates || jointStates.length === 0) {
       console.error("No joint states to measure");
