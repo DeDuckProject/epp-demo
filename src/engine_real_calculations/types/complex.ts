@@ -72,3 +72,6 @@ export class ComplexNum {
     return `${this.re} + ${this.im}i`;
   }
 } 
+
+// Add Complex type alias so imports of Complex resolve
+export type Complex = ComplexNum; 

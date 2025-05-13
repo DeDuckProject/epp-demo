@@ -71,7 +71,7 @@ export class AverageSimulationEngine implements ISimulationEngine {
       return;
     }
 
-    const { controlPairs, targetPairs, hasUnpairedPair } = preparePairsForCNOT(this.state.pairs);
+    const { controlPairs, targetPairs } = preparePairsForCNOT(this.state.pairs);
 
     this.state.pendingPairs = {
       controlPairs,
