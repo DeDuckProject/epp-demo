@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import DensityMatrixView from '../../src/components/DensityMatrixView';
 import { DensityMatrix } from '../../src/engine_real_calculations';
+import { Basis } from '../../src/engine/types';
 
 // Mock implementation of DensityMatrix for testing
 class MockDensityMatrix {
@@ -28,7 +29,7 @@ describe('DensityMatrixView', () => {
       Array(4).fill(0).map(() => Array(4).fill({ re: 0, im: 0 }))
     ) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={zeroMatrix} basis="bell" isWerner={true} />);
+    render(<DensityMatrixView matrix={zeroMatrix} basis={Basis.Bell} isWerner={true} />);
     
     // Check for title
     expect(screen.getByText('Density Matrix (Bell Basis)')).toBeDefined();
@@ -48,7 +49,7 @@ describe('DensityMatrixView', () => {
       Array(4).fill(0).map(() => Array(4).fill({ re: 0, im: 0 }))
     ) as unknown as DensityMatrix;
 
-    render(<DensityMatrixView matrix={zeroMatrix} basis="computational" isWerner={true} />);
+    render(<DensityMatrixView matrix={zeroMatrix} basis={Basis.Computational} isWerner={true} />);
     
     // Check for title
     expect(screen.getByText('Density Matrix (Computational Basis)')).toBeDefined();
