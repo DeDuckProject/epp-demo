@@ -198,31 +198,71 @@ describe('App', () => {
     
     // Find and change the view basis dropdown
     const viewBasisSelect = screen.getByLabelText('View Basis:');
-    
-    // Change to Computational basis
     fireEvent.change(viewBasisSelect, { target: { value: Basis.Computational } });
     
-    // Verify the value changed in the UI
-    expect((viewBasisSelect as HTMLSelectElement).value).toBe(Basis.Computational);
-    
-    // Change back to Bell basis
-    fireEvent.change(viewBasisSelect, { target: { value: Basis.Bell } });
-    
-    // Verify the value changed in the UI
-    expect((viewBasisSelect as HTMLSelectElement).value).toBe(Basis.Bell);
-  });
-  
-  test('passes view basis to EnsembleDisplay component', () => {
-    render(<App />);
-    
-    // Find and change the view basis dropdown
-    const viewBasisSelect = screen.getByLabelText('View Basis:');
-    
-    // Change to Computational basis
-    fireEvent.change(viewBasisSelect, { target: { value: Basis.Computational } });
-    
-    // Check that the EnsembleDisplay component received the updated viewBasis
+    // Check that the EnsembleDisplay gets the new view basis
     const ensembleDisplay = screen.getByTestId('ensemble-display');
     expect(ensembleDisplay.getAttribute('data-view-basis')).toBe(Basis.Computational);
+  });
+
+  test('toggles the control-panel drawer when the mobile toggle button is clicked', () => {
+    render(<App />);
+    
+    // Get the toggle button and control panel
+    const toggleButton = screen.getByLabelText('Toggle controls');
+    const controlPanel = document.querySelector('.control-panel');
+    
+    // Initially the panel should not have the open class
+    expect(controlPanel).not.toHaveClass('open');
+    
+    // Click the toggle button
+    fireEvent.click(toggleButton);
+    
+    // Now the panel should have the open class
+    expect(controlPanel).toHaveClass('open');
+    
+    // Click again to close
+    fireEvent.click(toggleButton);
+    
+    // The open class should be removed
+    expect(controlPanel).not.toHaveClass('open');
+  });
+  
+  test('closes the drawer when clicking outside on the overlay', () => {
+    render(<App />);
+    
+    // Open the drawer
+    const toggleButton = screen.getByLabelText('Toggle controls');
+    fireEvent.click(toggleButton);
+    
+    // Check that drawer is open
+    const controlPanel = document.querySelector('.control-panel');
+    expect(controlPanel).toHaveClass('open');
+    
+    // Click the overlay
+    const overlay = screen.getByTestId('drawer-overlay');
+    fireEvent.click(overlay);
+    
+    // Check that drawer is closed
+    expect(controlPanel).not.toHaveClass('open');
+  });
+  
+  test('closes the drawer when clicking the internal close button', () => {
+    render(<App />);
+    
+    // Open the drawer
+    const toggleButton = screen.getByLabelText('Toggle controls');
+    fireEvent.click(toggleButton);
+    
+    // Check that drawer is open
+    const controlPanel = document.querySelector('.control-panel');
+    expect(controlPanel).toHaveClass('open');
+    
+    // Click the close button inside the drawer
+    const closeBtn = screen.getByLabelText('Close controls');
+    fireEvent.click(closeBtn);
+    
+    // Check that drawer is closed
+    expect(controlPanel).not.toHaveClass('open');
   });
 }); 

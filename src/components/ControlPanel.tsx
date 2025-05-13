@@ -19,6 +19,9 @@ interface ControlPanelProps {
   pairsRemaining: number;
   engineType: EngineType;
   viewBasis: Basis;
+  className?: string;
+  isDrawerOpen?: boolean;
+  onDrawerClose?: () => void;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -34,7 +37,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   currentStep,
   pairsRemaining,
   engineType,
-  viewBasis
+  viewBasis,
+  className = '',
+  isDrawerOpen = false,
+  onDrawerClose
 }) => {
   const [initialPairs, setInitialPairs] = useState(10);
   const [noiseParameter, setNoiseParameter] = useState(0.3);
@@ -78,9 +84,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     : `Next Step: ${getStepName(currentStep)} [N]`;
   
   return (
-    <div className="control-panel">
+    <div className={`control-panel${className ? ` ${className}` : ''}`}>
       <div className="header">
         <h2>Simulation Controls</h2>
+        {isDrawerOpen && onDrawerClose && (
+          <button
+            className="drawer-close"
+            aria-label="Close controls"
+            onClick={onDrawerClose}
+          >
+            ×
+          </button>
+        )}
         <button 
           className="help-button" 
           onClick={() => setShowHelp(prev => !prev)}
