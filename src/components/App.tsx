@@ -15,7 +15,7 @@ const App: React.FC = () => {
   useEffect(() => {
     // Initialize controller with default parameters
     const initialParams: SimulationParameters = {
-      initialPairs: 10,
+      initialPairs: 32,
       noiseParameter: 0.3,
       targetFidelity: 0.95,
       noiseChannel: NoiseChannel.UniformNoise

@@ -309,4 +309,77 @@ describe('DensityMatrixView', () => {
     expect(compHeaders[3]?.textContent).toBe('|10⟩');
     expect(compHeaders[4]?.textContent).toBe('|11⟩');
   });
+
+  test('applies dynamic background colors based on absolute value of matrix elements', () => {
+    // Create a matrix with known absolute values for testing color application
+    const matrix = new MockDensityMatrix([
+      [{ re: 1.0, im: 0 }, { re: 0.5, im: 0 }, { re: 0.3, im: 0.4 }, { re: 0, im: 0 }],
+      [{ re: 0.5, im: 0 }, { re: 0.8, im: 0 }, { re: 0.2, im: 0 }, { re: 0.1, im: 0.1 }],
+      [{ re: 0.3, im: -0.4 }, { re: 0.2, im: 0 }, { re: 0.6, im: 0 }, { re: 0, im: 0.7 }],
+      [{ re: 0, im: 0 }, { re: 0.1, im: -0.1 }, { re: 0, im: 0.7 }, { re: 0.9, im: 0 }]
+    ]) as unknown as DensityMatrix;
+
+    const { container } = render(<DensityMatrixView matrix={matrix} isWerner={false} />);
+    
+    // Get all table cells
+    const cells = container.querySelectorAll('td');
+    expect(cells.length).toBe(16);
+    
+    // Test diagonal elements (should have green-tinted backgrounds)
+    const diagonalCells = container.querySelectorAll('td.diagonal');
+    expect(diagonalCells.length).toBe(4);
+    
+    diagonalCells.forEach((cell) => {
+      const style = (cell as HTMLElement).style;
+      expect(style.backgroundColor).toBeTruthy();
+      // Should contain green colors for diagonal elements
+      expect(style.backgroundColor).toMatch(/rgb\(\d+,\s*\d+,\s*\d+\)/);
+    });
+    
+    // Test off-diagonal elements (should have red-tinted backgrounds)
+    const offDiagonalCells = container.querySelectorAll('td.off-diagonal');
+    expect(offDiagonalCells.length).toBe(12);
+    
+    offDiagonalCells.forEach((cell) => {
+      const style = (cell as HTMLElement).style;
+      expect(style.backgroundColor).toBeTruthy();
+      // Should contain red colors
+      expect(style.backgroundColor).toMatch(/rgb\(\d+,\s*\d+,\s*\d+\)/);
+    });
+    
+    // Test specific high-value cell (1,0,0) = abs(1.0) should have deep green
+    const firstCell = diagonalCells[0] as HTMLElement;
+    expect(firstCell.style.backgroundColor).toContain('16'); // Should be deep green (diagonal)
+    
+    // Test zero-value cell should have white background
+    const zeroValueCell = cells[3] as HTMLElement; // (0,3) position has {re: 0, im: 0}
+    expect(zeroValueCell.style.backgroundColor).toBe('rgb(255, 255, 255)');
+  });
+
+  test('calculates complex absolute values correctly for color mapping', () => {
+    // Test matrix with complex numbers to verify absolute value calculations
+    const matrix = new MockDensityMatrix([
+      [{ re: 0.6, im: 0.8 }, { re: 0.3, im: 0.4 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+      [{ re: 0.3, im: -0.4 }, { re: 0.5, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }],
+      [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0.7, im: 0 }, { re: 0, im: 0 }],
+      [{ re: 0, im: 0 }, { re: 0, im: 0 }, { re: 0, im: 0 }, { re: 1, im: 0 }]
+    ]) as unknown as DensityMatrix;
+
+    const { container } = render(<DensityMatrixView matrix={matrix} isWerner={false} />);
+    
+    const cells = container.querySelectorAll('td');
+    
+    // First cell: |0.6 + 0.8i| = √(0.36 + 0.64) = 1.0 (maximum)
+    const firstCell = cells[0] as HTMLElement;
+    expect(firstCell.style.backgroundColor).toContain('16'); // Should be deep green (diagonal)
+    
+    // Second cell: |0.3 + 0.4i| = √(0.09 + 0.16) = 0.5
+    const secondCell = cells[1] as HTMLElement;
+    // Should be red-tinted (off-diagonal) and medium intensity
+    expect(secondCell.style.backgroundColor).toMatch(/rgb\(\d+,\s*\d+,\s*\d+\)/);
+    
+    // Zero cells should be white
+    const zeroCell = cells[2] as HTMLElement;
+    expect(zeroCell.style.backgroundColor).toBe('rgb(255, 255, 255)');
+  });
 }); 

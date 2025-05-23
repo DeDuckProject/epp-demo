@@ -24,6 +24,7 @@
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   --card-gradient: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   --mobile-header-border: 1px solid #e2e8f0;
+  --density-matrix-text: #000000; /* High contrast text for density matrix cells */
 }
 
 /* Apply base styles directly to html and body */

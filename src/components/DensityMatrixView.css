@@ -48,18 +48,19 @@
 }
 
 .density-matrix td.diagonal {
-  background-color: #f0f7fa;
+  /* Background color now applied dynamically based on absolute value */
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--density-matrix-text);
 }
 
 .density-matrix td.off-diagonal {
-  background-color: #fff5f5;
-  color: #ef4444;
+  /* Background color now applied dynamically based on absolute value */
+  color: var(--density-matrix-text);
 }
 
 .density-matrix tr:hover td {
-  background-color: #f8fbff;
+  /* Keep hover effect but use a semi-transparent overlay */
+  background-color: rgba(248, 251, 255, 0.8) !important;
 }
 
 .non-werner-indicator {
