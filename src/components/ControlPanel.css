@@ -118,10 +118,17 @@
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 4px;
-    padding: 8px;
+    border-radius: var(--border-radius);
+    padding: 10px;
     font-size: 1.2rem;
     cursor: pointer;
+    box-shadow: var(--box-shadow);
+    transition: all 0.2s ease;
+  }
+
+  .drawer-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
   }
   
   .drawer-toggle.open {
@@ -129,23 +136,36 @@
   }
 
   .header {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    position: relative;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 32px;
+    padding: 16px 0;
+    border-bottom: var(--mobile-header-border);
+    background: var(--card-gradient);
+    margin: -20px -20px 32px -20px;
+    padding: 20px 20px 16px 20px;
+  }
+
+  .header h2 {
+    font-size: 18px;
+    text-align: center;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin: 0;
   }
 
   .help-button {
-    position: absolute;
-    top: 16px;
-    left: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    position: static;
+    order: 1;
   }
 
   .drawer-close {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+    position: static;
     background: none;
     border: none;
     font-size: 1.5rem;
@@ -153,27 +173,42 @@
     color: var(--secondary-color);
     z-index: 1101;
     box-shadow: none;
-    background: none;
     border-radius: 50%;
     margin: 0;
+    padding: 4px;
+    order: 3;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
   }
 
   .drawer-close:hover {
     transform: translateY(0);
+    background-color: var(--soft-gray);
   }
 
   .control-panel {
     position: fixed;
     top: 0;
     left: -100%;
-    width: 80%;
+    width: 75%;
+    max-width: 300px;
     height: 100vh;
     max-height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
     transition: left 0.3s ease;
     z-index: 1000;
     border-radius: 0;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    background: var(--card-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    padding: 20px;
   }
   
   .control-panel.open {
@@ -183,5 +218,41 @@
   /* ensure the main content isn't pushed (we don't need a margin here) */
   .simulation-area {
     margin-left: 0;
+  }
+}
+
+/* Extra small screens - even smaller drawer */
+@media (max-width: 480px) {
+  .control-panel {
+    width: 85%;
+    max-width: 280px;
+    padding: 16px;
+  }
+  
+  .drawer-toggle {
+    top: 16px;
+    left: 16px;
+    padding: 8px;
+    font-size: 1rem;
+  }
+
+  .header {
+    padding: 16px 16px 12px 16px;
+    margin: -16px -16px 24px -16px;
+  }
+
+  .header h2 {
+    font-size: 16px;
+  }
+
+  .help-button,
+  .drawer-close {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .drawer-close {
+    font-size: 1.3rem;
   }
 } 
