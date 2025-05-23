@@ -241,4 +241,93 @@ describe('Bell Basis to Computational Basis Conversion', () => {
     expect(wernerState.equals(backToComputational, 1e-10)).toBe(true);
     expect(bellBasis.equals(backToBell, 1e-10)).toBe(true);
   });
+});
+
+describe('Testing non-Bell-diagonal matrices', () => {
+  test('Coherent superposition in Bell basis should have correct fidelity', () => {
+    // Create a density matrix that has off-diagonal elements in the Bell basis
+    // This represents a coherent superposition of Bell states
+    const coherentData = [
+      [ComplexNum.fromReal(0.4), ComplexNum.fromReal(0.2), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.fromReal(0.2), ComplexNum.fromReal(0.6), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()]
+    ];
+    const coherentMatrix = new Matrix(coherentData);
+    
+    // Current implementation: should return 0.4 (diagonal element)
+    const fidelity = fidelityFromBellBasisMatrix(coherentMatrix, BellState.PHI_PLUS);
+    console.log('Coherent matrix fidelity (current implementation):', fidelity);
+    
+    // For comparison: if this were a diagonal matrix with same diagonal elements
+    const diagonalData = [
+      [ComplexNum.fromReal(0.4), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.fromReal(0.6), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()]
+    ];
+    const diagonalMatrix = new Matrix(diagonalData);
+    const diagonalFidelity = fidelityFromBellBasisMatrix(diagonalMatrix, BellState.PHI_PLUS);
+    console.log('Diagonal matrix fidelity:', diagonalFidelity);
+    
+    // They should be the same for quantum fidelity F(ρ,|ψ⟩⟨ψ|) = ⟨ψ|ρ|ψ⟩
+    expect(fidelity).toBeCloseTo(0.4, 5);
+    expect(diagonalFidelity).toBeCloseTo(0.4, 5);
+    expect(fidelity).toBeCloseTo(diagonalFidelity, 5);
+  });
+
+  test('Matrix with complex off-diagonal elements', () => {
+    // Create a Hermitian density matrix with complex off-diagonal elements
+    const complexData = [
+      [ComplexNum.fromReal(0.5), new ComplexNum(0.1, 0.2), ComplexNum.zero(), ComplexNum.zero()],
+      [new ComplexNum(0.1, -0.2), ComplexNum.fromReal(0.5), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()],
+      [ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero(), ComplexNum.zero()]
+    ];
+    const complexMatrix = new Matrix(complexData);
+    
+    const fidelity = fidelityFromBellBasisMatrix(complexMatrix, BellState.PHI_PLUS);
+    console.log('Complex matrix fidelity:', fidelity);
+    
+    // Should still be 0.5 (the diagonal element) for F(ρ,|ψ⟩⟨ψ|) = ⟨ψ|ρ|ψ⟩
+    expect(fidelity).toBeCloseTo(0.5, 5);
+  });
+
+  test('Compare computational vs Bell basis fidelity calculation', () => {
+    // Create a state in computational basis that will have off-diagonal elements in Bell basis
+    // Let's use a Werner state: p|Φ+⟩⟨Φ+| + (1-p)I/4, but construct it in computational basis
+    const p = 0.7;
+    
+    // |Φ+⟩ = (|00⟩ + |11⟩)/√2 in computational basis
+    const phiPlusVec = [
+      ComplexNum.fromReal(1/Math.sqrt(2)),
+      ComplexNum.zero(),
+      ComplexNum.zero(),
+      ComplexNum.fromReal(1/Math.sqrt(2))
+    ];
+    const phiPlusComp = DensityMatrix.fromStateVector(phiPlusVec);
+    const identityComp = Matrix.identity(4).scale(ComplexNum.fromReal(0.25));
+    
+    // Werner state in computational basis
+    const wernerComp = phiPlusComp.scale(ComplexNum.fromReal(p))
+      .add(new DensityMatrix(identityComp.data).scale(ComplexNum.fromReal(1-p)));
+    
+    // Calculate fidelity from computational basis
+    const fidelityFromComp = fidelityFromComputationalBasisMatrix(wernerComp, BellState.PHI_PLUS);
+    
+    // Transform to Bell basis and calculate directly
+    const wernerBell = toBellBasis(wernerComp);
+    const fidelityFromBell = fidelityFromBellBasisMatrix(wernerBell, BellState.PHI_PLUS);
+    
+    console.log('Werner state fidelity from computational basis:', fidelityFromComp);
+    console.log('Werner state fidelity from Bell basis:', fidelityFromBell);
+    console.log('Werner state Bell basis matrix diagonal:', wernerBell.get(0,0).re);
+    
+    // Both should give the same result
+    expect(fidelityFromComp).toBeCloseTo(fidelityFromBell, 10);
+    
+    // For Werner state: F = p * 1 + (1-p) * 0.25
+    const expectedFidelity = p * 1 + (1-p) * 0.25;
+    expect(fidelityFromComp).toBeCloseTo(expectedFidelity, 5);
+  });
 }); 
