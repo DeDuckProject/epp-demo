@@ -4,6 +4,7 @@ import {fireEvent, render, screen} from '@testing-library/react';
 import App from '../../src/components/App';
 import {SimulationController} from '../../src/controller/simulationController';
 import {Basis, EngineType, PurificationStep, SimulationParameters, SimulationState} from '../../src/engine/types';
+import {NoiseChannel} from '../../src/engine/types';
 
 // Mock the simulation controller
 vi.mock('../../src/controller/simulationController', () => {
@@ -109,10 +110,14 @@ describe('App', () => {
     render(<App />);
     
     // Check that the ControlPanel shows correct values from the state
-    expect(screen.getByText('Distillation Round: 2')).toBeDefined();
-    expect(screen.getByText('Current Step: cnot')).toBeDefined();
-    expect(screen.getByText('Pairs Remaining: 1')).toBeDefined();
-    expect(screen.getByText('Status: In Progress')).toBeDefined();
+    expect(screen.getByText('Distillation Round:')).toBeDefined();
+    expect(screen.getByText('2')).toBeDefined();
+    expect(screen.getByText('Current Step:')).toBeDefined();
+    expect(screen.getByText('cnot')).toBeDefined();
+    expect(screen.getByText('Pairs Remaining:')).toBeDefined();
+    expect(screen.getByText('1')).toBeDefined();
+    expect(screen.getByText('Status:')).toBeDefined();
+    expect(screen.getByText('In Progress')).toBeDefined();
   });
 
   test('correctly wires ControlPanel buttons to controller methods', () => {
@@ -156,7 +161,8 @@ describe('App', () => {
     expect(mockUpdateParameters).toHaveBeenCalledWith({
       initialPairs: 20,
       noiseParameter: 0.5,
-      targetFidelity: 0.9
+      targetFidelity: 0.9,
+      noiseChannel: NoiseChannel.UniformNoise
     });
   });
 

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { SimulationParameters, PurificationStep, EngineType, Basis } from '../engine/types';
+import { SimulationParameters, PurificationStep, EngineType, Basis, NoiseChannel } from '../engine/types';
 import './ControlPanel.css';
 import HelpPanel from './HelpPanel';
 import Popup from './Popup';
+import CollapsibleSection from './CollapsibleSection';
 
 interface ControlPanelProps {
   onNextStep: () => void;
@@ -42,16 +43,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   isDrawerOpen = false,
   onDrawerClose
 }) => {
-  const [initialPairs, setInitialPairs] = useState(10);
+  const [initialPairs, setInitialPairs] = useState(32);
   const [noiseParameter, setNoiseParameter] = useState(0.3);
   const [targetFidelity, setTargetFidelity] = useState(0.95);
+  const [noiseChannel, setNoiseChannel] = useState<NoiseChannel>(NoiseChannel.UniformNoise);
   const [showHelp, setShowHelp] = useState(false);
   
   const handleParameterChange = () => {
     onParametersChanged({
       initialPairs,
       noiseParameter,
-      targetFidelity
+      targetFidelity,
+      noiseChannel
     });
   };
   
@@ -111,8 +114,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </Popup>
       )}
       
-      <div className="parameter-section">
-        <h3>Parameters</h3>
+      <CollapsibleSection title="Experiment Setup" defaultExpanded={true}>
         <div className="parameter-input">
           <label htmlFor="engineType">Engine Type:</label>
           <select
@@ -120,20 +122,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             value={engineType}
             onChange={(e) => onEngineTypeChanged(e.target.value as EngineType)}
           >
-            <option value={EngineType.Average}>Average</option>
             <option value={EngineType.MonteCarlo}>Monte Carlo</option>
-          </select>
-        </div>
-        
-        <div className="parameter-input">
-          <label htmlFor="viewBasis">View Basis:</label>
-          <select
-            id="viewBasis"
-            value={viewBasis}
-            onChange={(e) => onViewBasisChanged(e.target.value as Basis)}
-          >
-            <option value={Basis.Bell}>Bell</option>
-            <option value={Basis.Computational}>Computational</option>
+            <option value={EngineType.Average}>Average</option>
           </select>
         </div>
         
@@ -148,40 +138,78 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             onChange={(e) => setInitialPairs(parseInt(e.target.value))}
           />
         </div>
+
+        <div className="parameter-input">
+          <label htmlFor="noiseChannel">Noise Channel:</label>
+          <select
+            id="noiseChannel"
+            value={noiseChannel}
+            onChange={(e) => setNoiseChannel(e.target.value as NoiseChannel)}
+          >
+            <option value={NoiseChannel.UniformNoise}>Uniform Noise</option>
+            <option value={NoiseChannel.AmplitudeDamping}>Amplitude Damping</option>
+            <option value={NoiseChannel.Dephasing}>Dephasing</option>
+            <option value={NoiseChannel.Depolarizing}>Depolarizing</option>
+          </select>
+        </div>
         
         <div className="parameter-input">
           <label htmlFor="noiseParameter">Noise Parameter:</label>
-          <input
-            id="noiseParameter"
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={noiseParameter}
-            onChange={(e) => setNoiseParameter(parseFloat(e.target.value))}
-          />
-          <span>{noiseParameter.toFixed(2)}</span>
+          <div className="parameter-input-row">
+            <input
+              id="noiseParameter"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={noiseParameter}
+              onChange={(e) => setNoiseParameter(parseFloat(e.target.value))}
+            />
+            <span>{noiseParameter.toFixed(2)}</span>
+          </div>
         </div>
         
         <div className="parameter-input">
           <label htmlFor="targetFidelity">Target Fidelity:</label>
-          <input
-            id="targetFidelity"
-            type="range"
-            min="0.5"
-            max="1"
-            step="0.01"
-            value={targetFidelity}
-            onChange={(e) => setTargetFidelity(parseFloat(e.target.value))}
-          />
-          <span>{targetFidelity.toFixed(2)}</span>
+          <div className="parameter-input-row">
+            <input
+              id="targetFidelity"
+              type="range"
+              min="0.5"
+              max="1"
+              step="0.01"
+              value={targetFidelity}
+              onChange={(e) => setTargetFidelity(parseFloat(e.target.value))}
+            />
+            <span>{targetFidelity.toFixed(2)}</span>
+          </div>
         </div>
         
         <button onClick={handleParameterChange}>Apply Parameters [P]</button>
-      </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Display & Status" defaultExpanded={true}>
+        <div className="parameter-input">
+          <label htmlFor="viewBasis">View Basis:</label>
+          <select
+            id="viewBasis"
+            value={viewBasis}
+            onChange={(e) => onViewBasisChanged(e.target.value as Basis)}
+          >
+            <option value={Basis.Bell}>Bell</option>
+            <option value={Basis.Computational}>Computational</option>
+          </select>
+        </div>
+        
+        <div className="status-info">
+          <p><strong>Distillation Round:</strong> {currentRound}</p>
+          <p><strong>Current Step:</strong> {currentStep}</p>
+          <p><strong>Pairs Remaining:</strong> {pairsRemaining}</p>
+          <p><strong>Status:</strong> {isComplete ? 'Complete' : 'In Progress'}</p>
+        </div>
+      </CollapsibleSection>
       
-      <div className="simulation-controls">
-        <h3>Simulation</h3>
+      <CollapsibleSection title="Simulation Control" defaultExpanded={true}>
         <button onClick={onNextStep} disabled={isComplete}>
           {nextStepText}
         </button>
@@ -194,15 +222,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         <button onClick={onReset}>
           Reset [R]
         </button>
-      </div>
-      
-      <div className="status-section">
-        <h3>Status</h3>
-        <p>Distillation Round: {currentRound}</p>
-        <p>Current Step: {currentStep}</p>
-        <p>Pairs Remaining: {pairsRemaining}</p>
-        <p>Status: {isComplete ? 'Complete' : 'In Progress'}</p>
-      </div>
+      </CollapsibleSection>
     </div>
   );
 };

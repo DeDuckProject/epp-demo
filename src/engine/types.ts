@@ -6,6 +6,14 @@ export enum Basis {
   'Bell' = 'bell',
   'Computational' = 'computational'
 }
+
+export enum NoiseChannel {
+  UniformNoise = 'uniform-noise',
+  AmplitudeDamping = 'amplitude-damping',
+  Dephasing = 'dephasing',
+  Depolarizing = 'depolarizing'
+}
+
 export type QubitPair = {
   id: number;
   densityMatrix: DensityMatrix; // Placeholder - will be updated later if needed by other files
@@ -17,6 +25,7 @@ export type SimulationParameters = {
   initialPairs: number;
   noiseParameter: number;  // Controls the amount of noise in initial pairs
   targetFidelity: number;  // Purification target
+  noiseChannel: NoiseChannel; // Type of noise to apply
 };
 
 export type PurificationStep = 'initial' | 'twirled' | 'exchanged' | 'cnot' | 'measured' | 'discard' | 'twirlExchange' | 'completed';

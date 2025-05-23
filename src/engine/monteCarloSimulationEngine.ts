@@ -1,6 +1,6 @@
-import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine, Basis} from './types';
+import {QubitPair, SimulationParameters, SimulationState, ISimulationEngine, Basis, NoiseChannel} from './types';
 import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
-import {applyAmplitudeDamping} from "../engine_real_calculations/channels/noise";
+import {applyAmplitudeDamping, applyUniformNoise, applyDepolarizing, applyDephasing} from "../engine_real_calculations/channels/noise";
 import {fidelityFromComputationalBasisMatrix, BellState} from "../engine_real_calculations/bell/bell-basis";
 import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
 import {applyPauli, applyCNOT, tensor, measureQubit} from "../engine_real_calculations";
@@ -28,10 +28,25 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
       // Create a perfect Bell state |Ψ-⟩ = (|01⟩ - |10⟩)/√2
       const pureRho = DensityMatrix.bellPsiMinus();
       
-      // Apply dephasing noise to Bob's qubit (qubit 1)
-      // const noisyRho = applyDephasing(pureRho, /* bobQubit= */ 1, this.params.noiseParameter);
-      const noisyRho = applyAmplitudeDamping(pureRho, /* bobQubit= */ 1, this.params.noiseParameter);
-      
+      // Apply selected noise channel to Bob's qubit (qubit 1)
+      let noisyRho: DensityMatrix;
+      switch (this.params.noiseChannel) {
+        case NoiseChannel.Depolarizing:
+          noisyRho = applyDepolarizing(pureRho, 1, this.params.noiseParameter);
+          break;
+        case NoiseChannel.Dephasing:
+          noisyRho = applyDephasing(pureRho, 1, this.params.noiseParameter);
+          break;
+        case NoiseChannel.AmplitudeDamping:
+          noisyRho = applyAmplitudeDamping(pureRho, 1, this.params.noiseParameter);
+          break;
+        case NoiseChannel.UniformNoise:
+          noisyRho = applyUniformNoise(pureRho, 1, this.params.noiseParameter);
+          break;
+        default:
+          throw new Error(`Unknown noise channel: ${this.params.noiseChannel}`);
+      }
+
       // Calculate fidelity with respect to the Psi-Minus Bell state
       const fidelity = fidelityFromComputationalBasisMatrix(noisyRho, BellState.PSI_MINUS);
       

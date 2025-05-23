@@ -22,6 +22,8 @@ This document provides an in-depth description of the `engine_real_calculations`
     -   [Kraus Operator Application (`noise.ts`)](#kraus-operator-application-noisets)
     -   [Depolarizing Channel (`noise.ts`)](#depolarizing-channel-noisets)
     -   [Dephasing Channel (`noise.ts`)](#dephasing-channel-noisets)
+    -   [Amplitude Damping Channel (`noise.ts`)](#amplitude-damping-channel-noisets)
+    -   [Uniform Noise Channel (`noise.ts`)](#uniform-noise-channel-noisets)
 -   [Measurement (`measurement/`)](#measurement-measurement)
     -   [Single Qubit Measurement (`measure.ts`)](#single-qubit-measurement-measurets)
 -   [Bell Basis (`bell/`)](#bell-basis-bell)
@@ -30,6 +32,8 @@ This document provides an in-depth description of the `engine_real_calculations`
 -   [Utility Functions (`utils/`)](#utility-functions-utils)
     -   [Indexing (`indexing.ts`)](#indexing-indexingts)
     -   [Tensor Product (`tensor.ts`)](#tensor-product-tensorts)
+    -   [Matrix Exponentials (`matrixExp.ts`)](#matrix-exponentials-matrixexpts)
+    -   [Random Unitary Generation (`randomUnitary.ts`)](#random-unitary-generation-randomunitaryts)
 -   [Main Exports (`index.ts`)](#main-exports-indexts)
 
 ## Overview
@@ -161,6 +165,18 @@ This module provides the fundamental tools and operations for simulating quantum
 -   **Functions:**
     -   `applyDephasing(rho: DensityMatrix, qubit: number, p: number): DensityMatrix`: Applies a single-qubit dephasing (phase-flip) channel to the specified `qubit` with probability `p`. The map can be represented using Kraus operators K<sub>0</sub> = sqrt(1 - p/2)I, K<sub>1</sub> = sqrt(p/2)Z.
 
+### Amplitude Damping Channel (`noise.ts`)
+
+-   **File:** `src/engine_real_calculations/channels/noise.ts`
+-   **Functions:**
+    -   `applyAmplitudeDamping(rho: DensityMatrix, qubit: number, gamma: number): DensityMatrix`: Applies a single-qubit amplitude damping channel to the specified `qubit` with decay rate `gamma`. This channel models energy loss from excited states, using Kraus operators that describe the spontaneous emission process.
+
+### Uniform Noise Channel (`noise.ts`)
+
+-   **File:** `src/engine_real_calculations/channels/noise.ts`
+-   **Functions:**
+    -   `applyUniformNoise(rho: DensityMatrix, qubit: number, noiseStrength: number): DensityMatrix`: Applies a uniform noise channel that transforms the specified qubit using fractional random unitaries. The `noiseStrength` parameter (0-1) controls the amount of noise: 0 leaves the state unchanged, 1 applies a full random unitary from the Haar measure to the target qubit. Uses matrix logarithm/exponential for smooth interpolation between identity and the random unitary.
+
 ## Measurement (`measurement/`)
 
 ### Single Qubit Measurement (`measure.ts`)
@@ -202,6 +218,20 @@ This module provides the fundamental tools and operations for simulating quantum
 -   **File:** `src/engine_real_calculations/utils/tensor.ts`
 -   **Functions:**
     -   `kroneckerMatrix(a: Complex[][], b: Complex[][]): Complex[][]`: Computes the Kronecker (tensor) product of two matrices represented as 2D arrays of `Complex` numbers. Used internally by `Matrix.tensor`.
+
+### Matrix Exponentials (`matrixExp.ts`)
+
+-   **File:** `src/engine_real_calculations/utils/matrixExp.ts`
+-   **Functions:**
+    -   `matrixExp(matrix: Matrix): Matrix`: Computes the matrix exponential using series expansion: exp(A) = I + A + A²/2! + A³/3! + ... Limited to 20 terms for numerical stability with convergence checking.
+    -   `matrixLog(matrix: Matrix): Matrix`: Computes the matrix logarithm using element-wise logarithm. Note: This is an approximation for the true matrix logarithm which requires eigenvalue decomposition.
+    -   `isUnitary(matrix: Matrix, tolerance?: number): boolean`: Checks if a matrix is unitary (U * U† = I) within the specified tolerance (default 1e-10).
+
+### Random Unitary Generation (`randomUnitary.ts`)
+
+-   **File:** `src/engine_real_calculations/utils/randomUnitary.ts`
+-   **Functions:**
+    -   `randomUnitary(size: number): Matrix`: Generates a random unitary matrix of the specified size using the Haar measure. Implementation uses QR decomposition of a random Ginibre matrix (complex Gaussian entries) to ensure uniform distribution over the unitary group.
 
 ## Main Exports (`index.ts`)
 

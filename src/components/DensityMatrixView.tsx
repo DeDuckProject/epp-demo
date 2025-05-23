@@ -1,6 +1,7 @@
 import React from 'react';
 import { DensityMatrix } from '../engine_real_calculations';
 import { formatComplex } from '../utils/matrixFormatting';
+import { getDiagonalColor, getOffDiagonalColor, calculateComplexAbsValue } from '../utils/colorUtils';
 import './DensityMatrixView.css';
 import { Basis } from '../engine/types';
 
@@ -62,10 +63,17 @@ const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({
               <th>{labels[rowIdx]}</th>
               {Array.from({ length: matrix.cols }).map((_, cellIdx) => {
                 const cell = matrix.get(rowIdx, cellIdx);
+                const absValue = calculateComplexAbsValue(cell.re, cell.im);
+                const isDiagonal = rowIdx === cellIdx;
+                const backgroundColor = isDiagonal 
+                  ? getDiagonalColor(absValue)
+                  : getOffDiagonalColor(absValue);
+                
                 return (
                   <td 
                     key={cellIdx}
-                    className={rowIdx !== cellIdx ? 'off-diagonal' : 'diagonal'}
+                    className={isDiagonal ? 'diagonal' : 'off-diagonal'}
+                    style={{ backgroundColor }}
                   >
                     {formatComplex(cell)}
                   </td>

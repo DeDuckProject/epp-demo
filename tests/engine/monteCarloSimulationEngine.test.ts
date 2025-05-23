@@ -1,11 +1,121 @@
 import {vi} from 'vitest';
 import {MonteCarloSimulationEngine} from '../../src/engine/monteCarloSimulationEngine';
-import {Basis, SimulationParameters} from '../../src/engine/types';
+import {Basis, SimulationParameters, NoiseChannel} from '../../src/engine/types';
 import {DensityMatrix} from '../../src/engine_real_calculations/matrix/densityMatrix';
 import * as PauliTwirling from '../../src/engine_real_calculations/operations/pauliTwirling';
 import * as RealCalculations from '../../src/engine_real_calculations';
 import * as PartialTrace from '../../src/engine_real_calculations/operations/partialTrace';
 import {BellState, fidelityFromComputationalBasisMatrix} from '../../src/engine_real_calculations/bell/bell-basis';
+
+function expectFidelityRange(fidelity: number, min: number, max: number, message?: string) {
+  expect(fidelity).toBeGreaterThanOrEqual(min);
+  expect(fidelity).toBeLessThanOrEqual(max);
+  if (message) {
+    expect(fidelity >= min && fidelity <= max).toBe(true);
+  }
+}
+
+describe('MonteCarloSimulationEngine - Noise Channel Tests', () => {
+  const testNoiseChannels = [
+    NoiseChannel.AmplitudeDamping,
+    NoiseChannel.Depolarizing,
+    NoiseChannel.Dephasing,
+    NoiseChannel.UniformNoise
+  ];
+
+  testNoiseChannels.forEach(noiseChannel => {
+    test(`should initialize correctly with ${noiseChannel} noise channel`, () => {
+      const params: SimulationParameters = {
+        initialPairs: 4,
+        noiseParameter: 0.2,
+        targetFidelity: 0.95,
+        noiseChannel
+      };
+
+      const engine = new MonteCarloSimulationEngine(params);
+      const state = engine.getCurrentState();
+
+      expect(state.pairs).toHaveLength(4);
+      expect(state.round).toBe(0);
+      expect(state.complete).toBe(false);
+      expect(state.purificationStep).toBe('initial');
+
+      // All pairs should be valid with proper fidelity
+      state.pairs.forEach((pair, index) => {
+        expect(pair.basis).toBe(Basis.Computational);
+        expect(pair.id).toBe(index);
+        expectFidelityRange(pair.fidelity, 0, 1, `Pair ${index} fidelity should be valid for ${noiseChannel}`);
+        
+        // With noise, fidelity should be less than perfect
+        if (params.noiseParameter > 0) {
+          expect(pair.fidelity).toBeLessThan(1);
+        }
+
+        // Density matrix should be valid (trace = 1)
+        expect(pair.densityMatrix.trace().re).toBeCloseTo(1, 5);
+      });
+    });
+
+    test(`should handle zero noise correctly with ${noiseChannel}`, () => {
+      const params: SimulationParameters = {
+        initialPairs: 2,
+        noiseParameter: 0,
+        targetFidelity: 0.95,
+        noiseChannel
+      };
+
+      const engine = new MonteCarloSimulationEngine(params);
+      const state = engine.getCurrentState();
+
+      // With zero noise, all pairs should have perfect fidelity
+      state.pairs.forEach(pair => {
+        expect(pair.fidelity).toBeCloseTo(1, 5);
+      });
+    });
+  });
+
+  test('different noise channels should produce different fidelities', () => {
+    const noiseParam = 0.4;
+    const engines = testNoiseChannels.map(channel => {
+      return new MonteCarloSimulationEngine({
+        initialPairs: 2,
+        noiseParameter: noiseParam,
+        targetFidelity: 0.95,
+        noiseChannel: channel
+      });
+    });
+
+    const states = engines.map(engine => engine.getCurrentState());
+    const fidelities = states.map(state => state.pairs[0].fidelity);
+
+    // Check that at least some pairs of channels produce different fidelities
+    let foundDifference = false;
+    for (let i = 0; i < fidelities.length; i++) {
+      for (let j = i + 1; j < fidelities.length; j++) {
+        if (Math.abs(fidelities[i] - fidelities[j]) > 0.01) {
+          foundDifference = true;
+          break;
+        }
+      }
+      if (foundDifference) break;
+    }
+
+    expect(foundDifference).toBe(true); // At least some noise channels should produce different results
+  });
+
+  test('should throw error for unknown noise channel', () => {
+    const invalidParams = {
+      initialPairs: 2,
+      noiseParameter: 0.3,
+      targetFidelity: 0.95,
+      noiseChannel: 'invalid' as NoiseChannel
+    };
+
+    expect(() => {
+      new MonteCarloSimulationEngine(invalidParams);
+    }).toThrow('Unknown noise channel: invalid');
+  });
+});
 
 describe('MonteCarloSimulationEngine', () => {
   let engine: MonteCarloSimulationEngine;
@@ -13,7 +123,8 @@ describe('MonteCarloSimulationEngine', () => {
   const initialParams: SimulationParameters = {
     initialPairs: 4,
     noiseParameter: noiseParameter,
-    targetFidelity: 0.95
+    targetFidelity: 0.95,
+    noiseChannel: NoiseChannel.AmplitudeDamping // Add default noise channel
   };
 
   beforeEach(() => {
@@ -343,7 +454,8 @@ describe('MonteCarloSimulationEngine', () => {
       const initialParams: SimulationParameters = {
         initialPairs: 64,
         noiseParameter: noiseParameter,
-        targetFidelity: 0.99
+        targetFidelity: 0.99,
+        noiseChannel: NoiseChannel.AmplitudeDamping
       };
       engine = new MonteCarloSimulationEngine(initialParams);
 
@@ -454,7 +566,8 @@ describe('MonteCarloSimulationEngine', () => {
       const initialParams: SimulationParameters = {
         initialPairs: 64,
         noiseParameter: noiseParameter,
-        targetFidelity: 0.99
+        targetFidelity: 0.99,
+        noiseChannel: NoiseChannel.AmplitudeDamping
       };
       engine = new MonteCarloSimulationEngine(initialParams);
 
@@ -503,7 +616,8 @@ describe('MonteCarloSimulationEngine', () => {
       const newParams: SimulationParameters = {
         initialPairs: 6,
         noiseParameter: 0.05,
-        targetFidelity: 0.98
+        targetFidelity: 0.98,
+        noiseChannel: NoiseChannel.AmplitudeDamping
       };
       
       engine.updateParams(newParams);

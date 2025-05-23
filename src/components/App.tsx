@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SimulationController } from '../controller/simulationController';
-import { SimulationState, SimulationParameters, EngineType, Basis } from '../engine/types';
+import { SimulationState, SimulationParameters, EngineType, Basis, NoiseChannel } from '../engine/types';
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
 import './App.css';
@@ -8,16 +8,17 @@ import './App.css';
 const App: React.FC = () => {
   const [state, setState] = useState<SimulationState | null>(null);
   const [controller, setController] = useState<SimulationController | null>(null);
-  const [engineType, setEngineType] = useState<EngineType>(EngineType.Average);
+  const [engineType, setEngineType] = useState<EngineType>(EngineType.MonteCarlo);
   const [viewBasis, setViewBasis] = useState<Basis>(Basis.Bell);
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   useEffect(() => {
     // Initialize controller with default parameters
     const initialParams: SimulationParameters = {
-      initialPairs: 10,
+      initialPairs: 32,
       noiseParameter: 0.3,
-      targetFidelity: 0.95
+      targetFidelity: 0.95,
+      noiseChannel: NoiseChannel.UniformNoise
     };
     
     const newController = new SimulationController(

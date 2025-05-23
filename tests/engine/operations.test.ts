@@ -1,16 +1,29 @@
 import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus} from '../../src/engine/operations';
-import {createNoisyEPR} from '../../src/engine/quantumStates';
+import {createNoisyEPRWithChannel} from '../../src/engine/quantumStates';
 import {ComplexNum} from '../../src/engine_real_calculations/types/complex';
 import {DensityMatrix} from '../../src/engine_real_calculations/matrix/densityMatrix';
 import {fidelityFromBellBasisMatrix} from "../../src/engine_real_calculations/bell/bell-basis";
 import {expectMatrixClose} from "../_test_utils.ts";
+import { NoiseChannel } from '../../src/engine/types';
 
 // Helper function to calculate fidelity wrt |Φ⁺⟩ directly from Bell basis rho
 describe('operations', () => {
   describe('depolarize / twirl', () => {
     test('converts a noisy EPR pair (Werner state form) to its depolarized form', () => {
       const noise = 0.1;
-      const noisyPsiMinus = createNoisyEPR(noise); // Returns DensityMatrix
+      
+      // Create a test state manually that mimics the old createNoisyEPR behavior
+      // The old function created a state in Bell basis with specific diagonal values
+      const noisyPsiMinus = new DensityMatrix(Array(4).fill(0).map(() => 
+        Array(4).fill(0).map(() => ComplexNum.zero())
+      ));
+      
+      // Set diagonal elements as the old createNoisyEPR did
+      noisyPsiMinus.set(0, 0, new ComplexNum(noise / 3, 0)); // |Φ⁺⟩⟨Φ⁺|
+      noisyPsiMinus.set(1, 1, new ComplexNum(noise / 3, 0)); // |Φ⁻⟩⟨Φ⁻|
+      noisyPsiMinus.set(2, 2, new ComplexNum(noise / 3, 0)); // |Ψ⁺⟩⟨Ψ⁺|
+      noisyPsiMinus.set(3, 3, new ComplexNum(1 - noise, 0)); // |Ψ⁻⟩⟨Ψ⁻|
+      
       const p = 1 - 2 * noise; // p = 0.8
 
       // Depolarize should project onto the target state (|Ψ⁻⟩) and the identity
@@ -35,18 +48,17 @@ describe('operations', () => {
       const depolarizedMatrix = depolarize(noisyPsiMinus);
       expectMatrixClose(depolarizedMatrix, expectedDepolarized);
       
-      // Verify the fidelity calculation used within depolarize matches expected F
-      // depolarize itself uses calculateBellBasisFidelity which is wrt |Φ⁺⟩
-      // The twirling operation physically targets |Ψ⁻⟩, but the fidelity check inside seems mismatched.
-      // Let's recalculate what depolarize actually computes:
-      // It calculates f00 = rho[0][0], f11=rho[1][1], f22=rho[2][2], f33=rho[3][3]
-      // f03=rho[0][3], f12=rho[1][2]
-      // Fidelity = f00+f33+f03+f03* (wrt |Φ⁺⟩ ?)
-      // Purity = f00+f11+f22+f33 (trace)
-      // Then constructs a new matrix based on these values. This isn't standard depolarizing channel.
-      // TODO: Revisit the `depolarize` implementation and clarify its purpose / relation to standard operations.
-      // Test that it behaves consistently for now.
-      const testMatrix = createNoisyEPR(0.2); // Returns DensityMatrix
+      // Test the specific depolarize behavior with a known state
+      const testMatrix = new DensityMatrix(Array(4).fill(0).map(() => 
+        Array(4).fill(0).map(() => ComplexNum.zero())
+      ));
+      
+      // Set diagonal elements for test case
+      testMatrix.set(0, 0, new ComplexNum(0.2 / 3, 0));
+      testMatrix.set(1, 1, new ComplexNum(0.2 / 3, 0));
+      testMatrix.set(2, 2, new ComplexNum(0.2 / 3, 0));
+      testMatrix.set(3, 3, new ComplexNum(1 - 0.2, 0));
+      
       const result = depolarize(testMatrix); // Returns DensityMatrix
       expect(result.get(0, 0).re).toBeCloseTo(0.2/3, 2); // Use get()
       expect(result.get(1, 1).re).toBeCloseTo(0.2/3, 2); // Use get()
@@ -90,8 +102,8 @@ describe('operations', () => {
     // Full simulation is complex to verify by hand. 
     // We will test some basic properties.
     test('returns an object with controlPair density matrix and success flag', () => {
-      const controlPair = createNoisyEPR(0.1); // Returns DensityMatrix
-      const targetPair = createNoisyEPR(0.2); // Returns DensityMatrix
+      const controlPair = createNoisyEPRWithChannel(0.1, NoiseChannel.UniformNoise); // Returns DensityMatrix
+      const targetPair = createNoisyEPRWithChannel(0.2, NoiseChannel.UniformNoise); // Returns DensityMatrix
       const result = bilateralCNOT(controlPair, targetPair);
 
       expect(result).toHaveProperty('afterMeasurement');
@@ -106,8 +118,8 @@ describe('operations', () => {
       // than the input fidelity *on average* after many runs, but a single run might decrease it.
       // This test is difficult to make robust without statistical simulation.
       // Let's just check if the fidelity calculation runs.
-      const controlPair = createNoisyEPR(0.1);
-      const targetPair = createNoisyEPR(0.1);
+      const controlPair = createNoisyEPRWithChannel(0.1, NoiseChannel.UniformNoise);
+      const targetPair = createNoisyEPRWithChannel(0.1, NoiseChannel.UniformNoise);
       const result = bilateralCNOT(controlPair, targetPair);
 
       // Original test used calculateBellBasisFidelity(transformToBellBasis(rho))

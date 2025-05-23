@@ -1,0 +1,147 @@
+.collapsible-section {
+  margin-bottom: 28px;
+}
+
+.collapsible-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.collapsible-header:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.collapsible-header:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.collapsible-header h3 {
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.chevron {
+  font-size: 12px;
+  color: var(--primary-color);
+  transition: transform 0.2s ease;
+  transform-origin: center;
+}
+
+.chevron.expanded {
+  transform: rotate(0deg);
+}
+
+.chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.collapsible-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
+.collapsible-content.expanded {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+.collapsible-content.collapsed {
+  display: none;
+}
+
+.content-inner {
+  padding-top: 16px;
+}
+
+/* Ensure parameter inputs within collapsible sections maintain proper spacing */
+.collapsible-section .parameter-input {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.collapsible-section .parameter-input label {
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.collapsible-section .parameter-input input[type="number"],
+.collapsible-section .parameter-input select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  font-family: var(--font-family);
+  transition: all 0.2s ease;
+}
+
+.collapsible-section .parameter-input input[type="range"] {
+  margin-right: 10px;
+  flex: 1;
+}
+
+.collapsible-section .parameter-input span {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.collapsible-section .parameter-input-row {
+  display: flex;
+  align-items: center;
+}
+
+/* Button styling within collapsible sections */
+.collapsible-section button {
+  background: linear-gradient(135deg, var(--primary-color), #2563eb);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.collapsible-section button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+}
+
+.collapsible-section button:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Status information styling */
+.collapsible-section .status-info p {
+  margin: 8px 0;
+  color: #555;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.collapsible-section .status-info p strong {
+  color: var(--primary-color);
+} 
