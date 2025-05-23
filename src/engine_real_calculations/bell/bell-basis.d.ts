@@ -30,7 +30,10 @@ export declare enum BellState {
 /**
  * Calculates the fidelity with respect to a specific Bell state.
  * Assumes the input density matrix is already in the Bell basis.
- * Fidelity is the diagonal element corresponding to the Bell state.
+ * Uses the quantum fidelity formula F(ρ, |ψ⟩⟨ψ|) = ⟨ψ|ρ|ψ⟩ for pure target states.
+ * Since the matrix is in the Bell basis, this is simply the diagonal element
+ * corresponding to the Bell state, which correctly handles both diagonal and
+ * non-diagonal density matrices.
  * @param rhoBell The density matrix in the Bell basis.
  * @param bellState Which Bell state to calculate fidelity against (default: PHI_PLUS).
  * @returns The fidelity value (real number).

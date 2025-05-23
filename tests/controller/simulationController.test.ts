@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach, test } from 'vitest';
 import { SimulationController } from '../../src/controller/simulationController';
-import { SimulationParameters, SimulationState, ISimulationEngine, EngineType, createEngine } from '../../src/engine/types';
+import { SimulationParameters, SimulationState, ISimulationEngine, EngineType, NoiseChannel, createEngine } from '../../src/engine/types';
 
 // Create a mock for the createEngine function
 vi.mock('../../src/engine/types', async () => {
@@ -19,7 +19,8 @@ describe('SimulationController', () => {
   const mockInitialParams: SimulationParameters = {
     initialPairs: 4,
     noiseParameter: 0.1,
-    targetFidelity: 0.9
+    targetFidelity: 0.9,
+    noiseChannel: NoiseChannel.Depolarizing
   };
   
   const mockInitialState: SimulationState = {
@@ -179,7 +180,8 @@ describe('SimulationController', () => {
       const newParams: SimulationParameters = {
         initialPairs: 8,
         noiseParameter: 0.2,
-        targetFidelity: 0.95
+        targetFidelity: 0.95,
+        noiseChannel: NoiseChannel.AmplitudeDamping
       };
       
       const updatedState: SimulationState = {
@@ -367,7 +369,8 @@ describe('SimulationController', () => {
       const updatedParams = {
         initialPairs: 8,
         noiseParameter: 0.2,
-        targetFidelity: 0.98
+        targetFidelity: 0.98,
+        noiseChannel: NoiseChannel.Dephasing
       };
       
       controller.updateParameters(updatedParams);
