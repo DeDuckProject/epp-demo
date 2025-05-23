@@ -1,4 +1,4 @@
-name: Run Tests
+name: Build and Test
 
 on:
   push:
@@ -7,8 +7,36 @@ on:
     branches: [ main, master ]
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Clean up dependencies
+      run: |
+        rm -rf node_modules package-lock.json
+    
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Run build
+      run: npm run build
+
   test:
     runs-on: ubuntu-latest
+    name: Test
 
     strategy:
       matrix:
