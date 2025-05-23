@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import DensityMatrixView from '../../src/components/DensityMatrixView';
-import { DensityMatrix } from '../../src/engine_real_calculations';
+import { DensityMatrix, ComplexNum } from '../../src/engine_real_calculations';
 import { Basis } from '../../src/engine/types';
 
 // Mock implementation of DensityMatrix for testing
@@ -193,5 +193,120 @@ describe('DensityMatrixView', () => {
     // Check the off-diagonal cells have the 'off-diagonal' class
     const offDiagonalCells = container.querySelectorAll('.off-diagonal');
     expect(offDiagonalCells.length).toBe(12); // 4x4 matrix minus the 4 diagonal elements
+  });
+
+  test('applies minimum width to table cells', () => {
+    const matrix = new DensityMatrix([
+      [new ComplexNum(1, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)]
+    ]);
+
+    const { container } = render(<DensityMatrixView matrix={matrix} isWerner={true} />);
+    
+    // Check that table structure exists
+    const table = container.querySelector('table');
+    expect(table).toBeInTheDocument();
+    
+    // Check that table headers exist
+    const headers = container.querySelectorAll('th');
+    expect(headers.length).toBeGreaterThan(0);
+    
+    // Check that table cells exist  
+    const cells = container.querySelectorAll('td');
+    expect(cells.length).toBe(16); // 4x4 matrix
+    
+    // Verify the table is within a density-matrix container
+    const densityMatrixContainer = container.querySelector('.density-matrix');
+    expect(densityMatrixContainer).toBeInTheDocument();
+    expect(densityMatrixContainer).toContainElement(table);
+  });
+
+  test('renders correctly on mobile viewport', () => {
+    // Mock mobile viewport
+    global.innerWidth = 375;
+    global.dispatchEvent(new Event('resize'));
+
+    const matrix = new DensityMatrix([
+      [new ComplexNum(1, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)]
+    ]);
+
+    const { container } = render(<DensityMatrixView matrix={matrix} isWerner={true} />);
+    
+    // Check that the density matrix container exists
+    const densityMatrix = container.querySelector('.density-matrix');
+    expect(densityMatrix).toBeInTheDocument();
+
+    // Check that table exists and has proper structure
+    const table = container.querySelector('table');
+    expect(table).toBeInTheDocument();
+
+    // Reset viewport
+    global.innerWidth = 1024;
+    global.dispatchEvent(new Event('resize'));
+  });
+
+  test('applies mobile-optimized styling for compact density matrix', () => {
+    const matrix = new DensityMatrix([
+      [new ComplexNum(1, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)]
+    ]);
+
+    const { container } = render(<DensityMatrixView matrix={matrix} isWerner={true} />);
+    
+    // Check that the density matrix container has mobile-optimized overflow handling
+    const densityMatrix = container.querySelector('.density-matrix');
+    expect(densityMatrix).toBeInTheDocument();
+    
+    // Verify table structure maintains responsiveness
+    const table = container.querySelector('table');
+    expect(table).toBeInTheDocument();
+    
+    // Verify all cells are present (4x4 = 16 cells)
+    const cells = container.querySelectorAll('td');
+    expect(cells.length).toBe(16);
+    
+    // Verify headers are present (5 total: empty corner + 4 column headers)
+    const headers = container.querySelectorAll('th');
+    expect(headers.length).toBe(9); // 5 in header row + 4 row headers
+  });
+
+  test('maintains single-line headers for all basis labels', () => {
+    const matrix = new DensityMatrix([
+      [new ComplexNum(1, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)],
+      [new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0), new ComplexNum(0, 0)]
+    ]);
+
+    // Test Bell basis labels
+    const { container: bellContainer } = render(
+      <DensityMatrixView matrix={matrix} basis={Basis.Bell} isWerner={true} />
+    );
+    
+    const bellHeaders = bellContainer.querySelectorAll('th');
+    // Check that Bell basis labels are present and not wrapped
+    expect(bellHeaders[1]?.textContent).toBe('|Φ⁺⟩');
+    expect(bellHeaders[2]?.textContent).toBe('|Φ⁻⟩');
+    expect(bellHeaders[3]?.textContent).toBe('|Ψ⁺⟩');
+    expect(bellHeaders[4]?.textContent).toBe('|Ψ⁻⟩');
+
+    // Test Computational basis labels
+    const { container: compContainer } = render(
+      <DensityMatrixView matrix={matrix} basis={Basis.Computational} isWerner={true} />
+    );
+    
+    const compHeaders = compContainer.querySelectorAll('th');
+    // Check that computational basis labels are present
+    expect(compHeaders[1]?.textContent).toBe('|00⟩');
+    expect(compHeaders[2]?.textContent).toBe('|01⟩');
+    expect(compHeaders[3]?.textContent).toBe('|10⟩');
+    expect(compHeaders[4]?.textContent).toBe('|11⟩');
   });
 }); 

@@ -32,6 +32,8 @@
   color: var(--secondary-color);
   border: 1px solid #e2e8f0;
   font-weight: 600;
+  white-space: nowrap;  /* Prevent header text from wrapping */
+  min-width: 60px;      /* Ensure minimum width for headers */
 }
 
 .density-matrix td {
@@ -41,6 +43,8 @@
   font-size: 13px;
   color: var(--secondary-color);
   transition: background-color 0.2s;
+  white-space: nowrap;  /* Prevent cell text from wrapping */
+  min-width: 60px;      /* Ensure minimum width for cells */
 }
 
 .density-matrix td.diagonal {
@@ -76,4 +80,76 @@
   padding: 4px 8px;
   border-radius: 12px;
   border: 1px solid #d1fae5;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .density-matrix {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  .matrix-title {
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  /* Create a scrollable wrapper for the table */
+  .density-matrix table {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .density-matrix th {
+    padding: 4px 6px;
+    font-size: 11px;
+    min-width: 30px;  /* Reduced from 50px */
+    max-width: 60px;  /* Add max-width constraint */
+    white-space: normal;  /* Allow text wrapping on mobile */
+  }
+
+  .density-matrix td {
+    padding: 4px 6px;
+    font-size: 11px;
+    min-width: 30px;  /* Reduced from 50px */
+    max-width: 60px;  /* Add max-width constraint */
+    white-space: normal;  /* Allow text wrapping on mobile */
+  }
+
+  /* Reduce indicator sizes on mobile */
+  .werner-indicator,
+  .non-werner-indicator {
+    font-size: 10px;
+    padding: 2px 6px;
+    margin-left: 4px;
+  }
+
+  /* Add horizontal scroll indicators */
+  .density-matrix {
+    position: relative;
+  }
+
+  /* Optional: Add shadow indicators for horizontal scroll */
+  .density-matrix::before,
+  .density-matrix::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .density-matrix::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(255,255,255,1), rgba(255,255,255,0));
+  }
+
+  .density-matrix::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(255,255,255,1), rgba(255,255,255,0));
+  }
 } 

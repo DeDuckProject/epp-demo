@@ -194,8 +194,10 @@ const QubitPair: React.FC<QubitPairProps> = ({
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
         width: '90vw',
+        maxWidth: '500px',  // Add max-width to prevent too wide on tablets
         maxHeight: '90vh',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        overflowX: 'hidden'  // Prevent horizontal scroll on the popup itself
       }}
       onClick={e => e.stopPropagation()}
     >
