@@ -1,4 +1,4 @@
-import {Basis, ISimulationEngine, QubitPair, SimulationParameters, SimulationState, NoiseChannel} from './types';
+import {Basis, ISimulationEngine, QubitPair, SimulationParameters, SimulationState} from './types';
 import {createNoisyEPRWithChannel} from './quantumStates';
 import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus, preparePairsForCNOT} from './operations';
 import {BellState, fidelityFromBellBasisMatrix, toBellBasis} from "../engine_real_calculations/bell/bell-basis.ts";
