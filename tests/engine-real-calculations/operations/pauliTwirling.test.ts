@@ -2,9 +2,9 @@ import {
   getPauliTwirlOperator, 
   pauliTwirl,
   PAULI_TWIRL_SEQUENCES
-} from '../../../src/engine_real_calculations/operations/pauliTwirling';
-import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix';
-import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix';
+} from '../../../src/engine_real_calculations/operations/pauliTwirling.ts';
+import { DensityMatrix } from '../../../src/engine_real_calculations/matrix/densityMatrix.ts';
+import { Matrix } from '../../../src/engine_real_calculations/matrix/matrix.ts';
 
 describe('Pauli Twirling Operations', () => {
   describe('PAULI_TWIRL_SEQUENCES', () => {
