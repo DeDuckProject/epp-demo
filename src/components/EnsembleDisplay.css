@@ -5,19 +5,17 @@
   padding: 20px 20px 20px 80px; /* Increased left padding to make room for labels */
   background-color: #f8fafc;
   border-radius: var(--border-radius);
-  overflow: visible; /* Allow labels to be visible outside the container */
+  overflow-x: auto; /* Enable horizontal scrolling for desktop */
+  overflow-y: visible; /* Allow labels to be visible outside the container */
 }
 
 .pairs-container {
   display: flex;
   flex-direction: column;
   gap: 40px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--soft-gray) #f8fafc;
-  /* Set a minimum width to ensure container is scrollable */
-  min-width: 100%;
+  /* Set a minimum width to ensure container is scrollable when needed */
+  min-width: fit-content;
+  width: 100%;
 }
 
 .participant-section {
@@ -117,24 +115,24 @@
   .ensemble-display       { padding: 10px; }
   .participant-section    { display: flex; flex-direction: column; }
   .participant-label      { position: static !important; margin-bottom: 8px; }
-  .pair-row               { gap: 12px; overflow-x: auto; }
+  .pair-row               { gap: 12px; overflow-x: visible; }
 }
 
-/* Update scrollbar styling to target the container */
-.pairs-container::-webkit-scrollbar {
+/* Update scrollbar styling to target the ensemble-display container */
+.ensemble-display::-webkit-scrollbar {
   height: 6px;
 }
 
-.pairs-container::-webkit-scrollbar-track {
+.ensemble-display::-webkit-scrollbar-track {
   background: #f8fafc;
   border-radius: 3px;
 }
 
-.pairs-container::-webkit-scrollbar-thumb {
+.ensemble-display::-webkit-scrollbar-thumb {
   background-color: var(--soft-gray);
   border-radius: 3px;
 }
 
-.pairs-container::-webkit-scrollbar-thumb:hover {
+.ensemble-display::-webkit-scrollbar-thumb:hover {
   background-color: #cbd5e1;
 } 

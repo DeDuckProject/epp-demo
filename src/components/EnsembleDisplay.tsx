@@ -132,41 +132,43 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
   return (
     <Xwrapper key={xWrapperKey}>
       <div className="ensemble-display">
-        <div className="participant-section">
-          <div className="participant-label alice-label">Alice</div>
-          <div className="pair-row alice-row">
-            {pairs.map(pair => (
-              <div key={pair.id} id={`alice-${pair.id}`} onClick={() => handlePairClick(pair)}>
-                <QubitPair 
-                  pair={pair} 
-                  location="alice" 
-                  willBeDiscarded={willBeDiscarded(pair)}
-                  pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
-                  partnerId={getPartnerId(pair)}
-                  purificationStep={purificationStep}
-                  viewBasis={viewBasis}
-                />
-              </div>
-            ))}
+        <div className="pairs-container">
+          <div className="participant-section">
+            <div className="participant-label alice-label">Alice</div>
+            <div className="pair-row alice-row">
+              {pairs.map(pair => (
+                <div key={pair.id} id={`alice-${pair.id}`} onClick={() => handlePairClick(pair)}>
+                  <QubitPair 
+                    pair={pair} 
+                    location="alice" 
+                    willBeDiscarded={willBeDiscarded(pair)}
+                    pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
+                    partnerId={getPartnerId(pair)}
+                    purificationStep={purificationStep}
+                    viewBasis={viewBasis}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-        <svg className="pair-connections-svg"></svg>
-        <div className="participant-section">
-          <div className="participant-label bob-label">Bob</div>
-          <div className="pair-row bob-row">
-            {pairs.map(pair => (
-              <div key={pair.id} id={`bob-${pair.id}`} onClick={() => handlePairClick(pair)}>
-                <QubitPair 
-                  pair={pair} 
-                  location="bob" 
-                  willBeDiscarded={willBeDiscarded(pair)}
-                  pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
-                  partnerId={getPartnerId(pair)}
-                  purificationStep={purificationStep}
-                  viewBasis={viewBasis}
-                />
-              </div>
-            ))}
+          <svg className="pair-connections-svg"></svg>
+          <div className="participant-section">
+            <div className="participant-label bob-label">Bob</div>
+            <div className="pair-row bob-row">
+              {pairs.map(pair => (
+                <div key={pair.id} id={`bob-${pair.id}`} onClick={() => handlePairClick(pair)}>
+                  <QubitPair 
+                    pair={pair} 
+                    location="bob" 
+                    willBeDiscarded={willBeDiscarded(pair)}
+                    pairRole={isControlPair(pair) ? 'control' : isTargetPair(pair) ? 'target' : undefined}
+                    partnerId={getPartnerId(pair)}
+                    purificationStep={purificationStep}
+                    viewBasis={viewBasis}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         {/* CNOT connections */}

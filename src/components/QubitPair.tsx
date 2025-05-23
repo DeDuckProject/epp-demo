@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { QubitPair as QubitPairType, Basis } from '../engine/types';
 import DensityMatrixView from './DensityMatrixView';
@@ -29,6 +29,8 @@ const QubitPair: React.FC<QubitPairProps> = ({
   const [showMatrix, setShowMatrix] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
+  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+  const qubitRef = useRef<HTMLDivElement>(null);
   
   // Check if we're in mobile view
   useEffect(() => {
@@ -46,9 +48,33 @@ const QubitPair: React.FC<QubitPairProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   
-  // Create portal container for mobile popup
+  // Calculate popup position for desktop
   useEffect(() => {
-    if (isMobile && showMatrix) {
+    if (!isMobile && showMatrix && qubitRef.current) {
+      const updatePosition = () => {
+        const rect = qubitRef.current!.getBoundingClientRect();
+        setPopupPosition({
+          top: rect.bottom + 20, // 20px below the qubit
+          left: rect.left + rect.width / 2 // Centered horizontally
+        });
+      };
+      
+      updatePosition();
+      
+      // Update position on scroll or resize
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+      
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
+    }
+  }, [showMatrix, isMobile]);
+  
+  // Create portal container for both mobile and desktop popups
+  useEffect(() => {
+    if (showMatrix) {
       // Create portal container if it doesn't exist
       let container = document.getElementById('matrix-popup-portal') as HTMLDivElement;
       if (!container) {
@@ -60,39 +86,44 @@ const QubitPair: React.FC<QubitPairProps> = ({
         container.style.width = '100%';
         container.style.height = '100%';
         container.style.zIndex = '2000';
+        document.body.appendChild(container);
+      }
+      
+      // Configure container based on mobile/desktop
+      if (isMobile) {
+        container.style.pointerEvents = 'auto';
         container.style.display = 'flex';
         container.style.justifyContent = 'center';
         container.style.alignItems = 'center';
         container.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        
-        // Add click handler to close when clicking outside
-        container.addEventListener('click', (e) => {
-          if (e.target === container) {
-            setShowMatrix(false);
-          }
-        });
-        
-        document.body.appendChild(container);
+      } else {
+        container.style.pointerEvents = 'none';
+        container.style.display = 'block';
+        container.style.backgroundColor = 'transparent';
       }
       
+      // Handle click outside for mobile
+      const handleClickOutside = (e: MouseEvent) => {
+        if (isMobile && e.target === container) {
+          setShowMatrix(false);
+        }
+      };
+      
+      container.addEventListener('click', handleClickOutside);
       setPortalContainer(container);
+      
+      // Cleanup function
+      return () => {
+        container.removeEventListener('click', handleClickOutside);
+        if (document.getElementById('matrix-popup-portal') === container) {
+          document.body.removeChild(container);
+        }
+      };
     } else {
-      // Remove portal container when not needed
-      const container = document.getElementById('matrix-popup-portal');
-      if (container && document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
+      // Clean up when not showing
       setPortalContainer(null);
     }
-    
-    // Cleanup on unmount
-    return () => {
-      const container = document.getElementById('matrix-popup-portal');
-      if (container && document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
-    };
-  }, [isMobile, showMatrix]);
+  }, [showMatrix, isMobile]);
   
   // Map fidelity to a more vibrant color gradient
   // TODO consider making use of css styles here instead
@@ -130,6 +161,28 @@ const QubitPair: React.FC<QubitPairProps> = ({
     : viewBasis === Basis.Bell
       ? new DensityMatrix(toBellBasis(pair.densityMatrix))
       : new DensityMatrix(toComputationalBasis(pair.densityMatrix));
+  
+  // Desktop portal popup content
+  const DesktopPopupContent = () => (
+    <div 
+      className="matrix-popup"
+      style={{
+        position: 'fixed',
+        top: `${popupPosition.top}px`,
+        left: `${popupPosition.left}px`,
+        transform: 'translateX(-50%)',
+        pointerEvents: 'auto'
+      }}
+      onMouseEnter={() => setShowMatrix(true)}
+      onMouseLeave={() => setShowMatrix(false)}
+    >
+      <DensityMatrixView 
+        matrix={displayMatrix} 
+        isWerner={werner} 
+        basis={viewBasis}
+      />
+    </div>
+  );
   
   // Mobile portal popup content
   const MobilePopupContent = () => (
@@ -170,6 +223,7 @@ const QubitPair: React.FC<QubitPairProps> = ({
   
   return (
     <div 
+      ref={qubitRef}
       className={`qubit-pair ${location} ${willBeDiscarded ? 'will-be-discarded' : ''} ${showConnection ? getRoleClass() : ''}`}
       style={{ 
         boxShadow: getBorderGlow(),
@@ -188,21 +242,12 @@ const QubitPair: React.FC<QubitPairProps> = ({
         )}
       </div>
       
-      {/* Only show inline popup for desktop */}
-      {showMatrix && !isMobile && (
-        <div className="matrix-popup">
-          <DensityMatrixView 
-            matrix={displayMatrix} 
-            isWerner={werner} 
-            basis={viewBasis}
-          />
-        </div>
+      {/* Render popup in portal for both mobile and desktop */}
+      {portalContainer && showMatrix && (
+        isMobile 
+          ? createPortal(<MobilePopupContent />, portalContainer)
+          : createPortal(<DesktopPopupContent />, portalContainer)
       )}
-      
-      {/* Render popup in portal for mobile */}
-      {isMobile && portalContainer && showMatrix && 
-        createPortal(<MobilePopupContent />, portalContainer)
-      }
     </div>
   );
 };
