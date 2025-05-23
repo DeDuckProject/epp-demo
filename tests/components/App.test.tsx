@@ -110,10 +110,14 @@ describe('App', () => {
     render(<App />);
     
     // Check that the ControlPanel shows correct values from the state
-    expect(screen.getByText('Distillation Round: 2')).toBeDefined();
-    expect(screen.getByText('Current Step: cnot')).toBeDefined();
-    expect(screen.getByText('Pairs Remaining: 1')).toBeDefined();
-    expect(screen.getByText('Status: In Progress')).toBeDefined();
+    expect(screen.getByText('Distillation Round:')).toBeDefined();
+    expect(screen.getByText('2')).toBeDefined();
+    expect(screen.getByText('Current Step:')).toBeDefined();
+    expect(screen.getByText('cnot')).toBeDefined();
+    expect(screen.getByText('Pairs Remaining:')).toBeDefined();
+    expect(screen.getByText('1')).toBeDefined();
+    expect(screen.getByText('Status:')).toBeDefined();
+    expect(screen.getByText('In Progress')).toBeDefined();
   });
 
   test('correctly wires ControlPanel buttons to controller methods', () => {

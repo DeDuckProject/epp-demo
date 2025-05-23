@@ -36,6 +36,24 @@ vi.mock('../../src/components/Popup', () => ({
     ) : null
 }));
 
+// Mock the CollapsibleSection component
+vi.mock('../../src/components/CollapsibleSection', () => ({
+  default: ({ title, children, defaultExpanded = true }: {
+    title: string;
+    children: React.ReactNode;
+    defaultExpanded?: boolean;
+  }) => (
+    <div data-testid={`collapsible-section-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+      <div data-testid={`section-header-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+        {title}
+      </div>
+      <div data-testid={`section-content-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+        {children}
+      </div>
+    </div>
+  )
+}));
+
 describe('ControlPanel', () => {
   const defaultProps = {
     onNextStep: vi.fn(),
@@ -222,5 +240,116 @@ describe('ControlPanel', () => {
     expect(defaultProps.onRunAll).toHaveBeenCalledTimes(1);
     expect(defaultProps.onReset).toHaveBeenCalledTimes(1);
     expect(defaultProps.onParametersChanged).toHaveBeenCalledTimes(1);
+  });
+
+  describe('Collapsible Section Structure', () => {
+    test('renders all three collapsible sections with correct titles', () => {
+      render(<ControlPanel {...defaultProps} />);
+      
+      expect(screen.getByTestId('collapsible-section-experiment-setup')).toBeInTheDocument();
+      expect(screen.getByTestId('collapsible-section-display-&-status')).toBeInTheDocument();
+      expect(screen.getByTestId('collapsible-section-simulation-control')).toBeInTheDocument();
+      
+      expect(screen.getByTestId('section-header-experiment-setup')).toHaveTextContent('Experiment Setup');
+      expect(screen.getByTestId('section-header-display-&-status')).toHaveTextContent('Display & Status');
+      expect(screen.getByTestId('section-header-simulation-control')).toHaveTextContent('Simulation Control');
+    });
+
+    test('experiment setup section contains all parameter controls', () => {
+      render(<ControlPanel {...defaultProps} />);
+      
+      const experimentSection = screen.getByTestId('section-content-experiment-setup');
+      
+      // Check that all experiment setup controls are in this section
+      expect(experimentSection).toContainElement(screen.getByLabelText('Engine Type:'));
+      expect(experimentSection).toContainElement(screen.getByLabelText('Initial Pairs:'));
+      expect(experimentSection).toContainElement(screen.getByLabelText('Noise Channel:'));
+      expect(experimentSection).toContainElement(screen.getByLabelText('Noise Parameter:'));
+      expect(experimentSection).toContainElement(screen.getByLabelText('Target Fidelity:'));
+      expect(experimentSection).toContainElement(screen.getByText(/Apply Parameters \[P\]/));
+    });
+
+    test('display & status section contains view basis and status information', () => {
+      render(<ControlPanel {...defaultProps} />);
+      
+      const displaySection = screen.getByTestId('section-content-display-&-status');
+      
+      // Check that view basis and status info are in this section
+      expect(displaySection).toContainElement(screen.getByLabelText('View Basis:'));
+      expect(displaySection).toContainElement(screen.getByText(/Distillation Round:/));
+      expect(displaySection).toContainElement(screen.getByText(/Current Step:/));
+      expect(displaySection).toContainElement(screen.getByText(/Pairs Remaining:/));
+      expect(displaySection).toContainElement(screen.getByText(/Status:/));
+    });
+
+    test('simulation control section contains all action buttons', () => {
+      render(<ControlPanel {...defaultProps} />);
+      
+      const controlSection = screen.getByTestId('section-content-simulation-control');
+      
+      // Check that all simulation control buttons are in this section
+      expect(controlSection).toContainElement(screen.getByText(/Next Step.*\[N\]/));
+      expect(controlSection).toContainElement(screen.getByText(/Complete Round \[C\]/));
+      expect(controlSection).toContainElement(screen.getByText(/Run All \[A\]/));
+      expect(controlSection).toContainElement(screen.getByText(/Reset \[R\]/));
+    });
+
+    test('parameter changes still work within collapsible sections', () => {
+      render(<ControlPanel {...defaultProps} />);
+      
+      // Change engine type
+      const engineTypeSelect = screen.getByLabelText('Engine Type:');
+      fireEvent.change(engineTypeSelect, { target: { value: EngineType.MonteCarlo } });
+      expect(defaultProps.onEngineTypeChanged).toHaveBeenCalledWith(EngineType.MonteCarlo);
+      
+      // Change view basis
+      const viewBasisSelect = screen.getByLabelText('View Basis:');
+      fireEvent.change(viewBasisSelect, { target: { value: Basis.Computational } });
+      expect(defaultProps.onViewBasisChanged).toHaveBeenCalledWith(Basis.Computational);
+      
+      // Change initial pairs
+      const initialPairsInput = screen.getByLabelText('Initial Pairs:');
+      fireEvent.change(initialPairsInput, { target: { value: '20' } });
+      // The value should be updated in the input
+      expect(initialPairsInput).toHaveValue(20);
+    });
+
+    test('status information updates correctly within display section', () => {
+      const { rerender } = render(<ControlPanel {...defaultProps} />);
+      
+      const displaySection = screen.getByTestId('section-content-display-&-status');
+      
+      // Initial status - check for the text content within the status section
+      expect(screen.getByText('Distillation Round:')).toBeInTheDocument();
+      expect(screen.getByText('1')).toBeInTheDocument();
+      expect(screen.getByText('Current Step:')).toBeInTheDocument();
+      expect(screen.getByText('initial')).toBeInTheDocument();
+      expect(screen.getByText('Pairs Remaining:')).toBeInTheDocument();
+      expect(screen.getByText('10')).toBeInTheDocument();
+      expect(screen.getByText('Status:')).toBeInTheDocument();
+      expect(screen.getByText('In Progress')).toBeInTheDocument();
+      
+      // Update props and rerender
+      rerender(<ControlPanel 
+        {...defaultProps} 
+        currentRound={2}
+        currentStep={'measured' as PurificationStep}
+        pairsRemaining={5}
+        isComplete={true}
+      />);
+      
+      // Updated status - check for new values
+      expect(screen.getByText('Distillation Round:')).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
+      expect(screen.getByText('Current Step:')).toBeInTheDocument();
+      expect(screen.getByText('measured')).toBeInTheDocument();
+      expect(screen.getByText('Pairs Remaining:')).toBeInTheDocument();
+      expect(screen.getByText('5')).toBeInTheDocument();
+      expect(screen.getByText('Status:')).toBeInTheDocument();
+      
+      // Check specifically within the display section to avoid button conflict
+      const statusInfo = displaySection.querySelector('.status-info');
+      expect(statusInfo).toHaveTextContent('Complete');
+    });
   });
 }); 
