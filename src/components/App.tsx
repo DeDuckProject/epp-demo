@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SimulationController } from '../controller/simulationController';
-import { SimulationState, SimulationParameters, EngineType, Basis } from '../engine/types';
+import { SimulationState, SimulationParameters, EngineType, Basis, NoiseChannel } from '../engine/types';
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
 import './App.css';
@@ -17,7 +17,8 @@ const App: React.FC = () => {
     const initialParams: SimulationParameters = {
       initialPairs: 10,
       noiseParameter: 0.3,
-      targetFidelity: 0.95
+      targetFidelity: 0.95,
+      noiseChannel: NoiseChannel.AmplitudeDamping
     };
     
     const newController = new SimulationController(

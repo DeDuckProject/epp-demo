@@ -4,6 +4,7 @@ import {fireEvent, render, screen} from '@testing-library/react';
 import App from '../../src/components/App';
 import {SimulationController} from '../../src/controller/simulationController';
 import {Basis, EngineType, PurificationStep, SimulationParameters, SimulationState} from '../../src/engine/types';
+import {NoiseChannel} from '../../src/engine/types';
 
 // Mock the simulation controller
 vi.mock('../../src/controller/simulationController', () => {
@@ -156,7 +157,8 @@ describe('App', () => {
     expect(mockUpdateParameters).toHaveBeenCalledWith({
       initialPairs: 20,
       noiseParameter: 0.5,
-      targetFidelity: 0.9
+      targetFidelity: 0.9,
+      noiseChannel: NoiseChannel.AmplitudeDamping
     });
   });
 

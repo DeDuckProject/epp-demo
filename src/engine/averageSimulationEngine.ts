@@ -1,7 +1,8 @@
-import {Basis, ISimulationEngine, QubitPair, SimulationParameters, SimulationState} from './types';
-import {createNoisyEPR} from './quantumStates';
+import {Basis, ISimulationEngine, QubitPair, SimulationParameters, SimulationState, NoiseChannel} from './types';
+import {createNoisyEPRWithChannel} from './quantumStates';
 import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus, preparePairsForCNOT} from './operations';
-import {BellState, fidelityFromBellBasisMatrix} from "../engine_real_calculations/bell/bell-basis.ts";
+import {BellState, fidelityFromBellBasisMatrix, toBellBasis} from "../engine_real_calculations/bell/bell-basis.ts";
+import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
 
 export class AverageSimulationEngine implements ISimulationEngine {
   private params: SimulationParameters;
@@ -16,7 +17,13 @@ export class AverageSimulationEngine implements ISimulationEngine {
     const pairs: QubitPair[] = [];
     // Create initial noisy EPR pairs in Bell basis
     for (let i = 0; i < this.params.initialPairs; i++) {
-      const densityMatrix = createNoisyEPR(this.params.noiseParameter);
+      // Use noise channel selection for better consistency between engines
+      let densityMatrix = createNoisyEPRWithChannel(this.params.noiseParameter, this.params.noiseChannel)
+      
+      // Convert to Bell basis (since createNoisyEPRWithChannel returns computational basis)
+      densityMatrix = new DensityMatrix(toBellBasis(densityMatrix));
+
+      // Now all matrices are in Bell basis, so use Bell basis fidelity calculation
       const fidelity = fidelityFromBellBasisMatrix(densityMatrix, BellState.PSI_MINUS);
 
       pairs.push({
