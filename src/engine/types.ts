@@ -8,10 +8,10 @@ export enum Basis {
 }
 
 export enum NoiseChannel {
-  Depolarizing = 'depolarizing',
-  Dephasing = 'dephasing',
+  UniformNoise = 'uniform-noise',
   AmplitudeDamping = 'amplitude-damping',
-  UniformNoise = 'uniform-noise'
+  Dephasing = 'dephasing',
+  Depolarizing = 'depolarizing'
 }
 
 export type QubitPair = {

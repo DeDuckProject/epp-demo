@@ -8,7 +8,7 @@ import './App.css';
 const App: React.FC = () => {
   const [state, setState] = useState<SimulationState | null>(null);
   const [controller, setController] = useState<SimulationController | null>(null);
-  const [engineType, setEngineType] = useState<EngineType>(EngineType.Average);
+  const [engineType, setEngineType] = useState<EngineType>(EngineType.MonteCarlo);
   const [viewBasis, setViewBasis] = useState<Basis>(Basis.Bell);
   const [drawerOpen, setDrawerOpen] = useState(false);
   
@@ -18,7 +18,7 @@ const App: React.FC = () => {
       initialPairs: 10,
       noiseParameter: 0.3,
       targetFidelity: 0.95,
-      noiseChannel: NoiseChannel.AmplitudeDamping
+      noiseChannel: NoiseChannel.UniformNoise
     };
     
     const newController = new SimulationController(

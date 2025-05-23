@@ -42,10 +42,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   isDrawerOpen = false,
   onDrawerClose
 }) => {
-  const [initialPairs, setInitialPairs] = useState(10);
+  const [initialPairs, setInitialPairs] = useState(32);
   const [noiseParameter, setNoiseParameter] = useState(0.3);
   const [targetFidelity, setTargetFidelity] = useState(0.95);
-  const [noiseChannel, setNoiseChannel] = useState<NoiseChannel>(NoiseChannel.AmplitudeDamping);
+  const [noiseChannel, setNoiseChannel] = useState<NoiseChannel>(NoiseChannel.UniformNoise);
   const [showHelp, setShowHelp] = useState(false);
   
   const handleParameterChange = () => {
@@ -122,22 +122,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             value={engineType}
             onChange={(e) => onEngineTypeChanged(e.target.value as EngineType)}
           >
-            <option value={EngineType.Average}>Average</option>
             <option value={EngineType.MonteCarlo}>Monte Carlo</option>
-          </select>
-        </div>
-        
-        <div className="parameter-input">
-          <label htmlFor="noiseChannel">Noise Channel:</label>
-          <select
-            id="noiseChannel"
-            value={noiseChannel}
-            onChange={(e) => setNoiseChannel(e.target.value as NoiseChannel)}
-          >
-            <option value={NoiseChannel.AmplitudeDamping}>Amplitude Damping</option>
-            <option value={NoiseChannel.Depolarizing}>Depolarizing</option>
-            <option value={NoiseChannel.Dephasing}>Dephasing</option>
-            <option value={NoiseChannel.UniformNoise}>Uniform Noise</option>
+            <option value={EngineType.Average}>Average</option>
           </select>
         </div>
         
@@ -163,6 +149,20 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             value={initialPairs}
             onChange={(e) => setInitialPairs(parseInt(e.target.value))}
           />
+        </div>
+
+        <div className="parameter-input">
+          <label htmlFor="noiseChannel">Noise Channel:</label>
+          <select
+            id="noiseChannel"
+            value={noiseChannel}
+            onChange={(e) => setNoiseChannel(e.target.value as NoiseChannel)}
+          >
+            <option value={NoiseChannel.UniformNoise}>Uniform Noise</option>
+            <option value={NoiseChannel.AmplitudeDamping}>Amplitude Damping</option>
+            <option value={NoiseChannel.Dephasing}>Dephasing</option>
+            <option value={NoiseChannel.Depolarizing}>Depolarizing</option>
+          </select>
         </div>
         
         <div className="parameter-input">

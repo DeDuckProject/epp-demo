@@ -158,7 +158,7 @@ describe('App', () => {
       initialPairs: 20,
       noiseParameter: 0.5,
       targetFidelity: 0.9,
-      noiseChannel: NoiseChannel.AmplitudeDamping
+      noiseChannel: NoiseChannel.UniformNoise
     });
   });
 
