@@ -1,4 +1,4 @@
-import {createNoisyEPR, createNoisyEPRWithChannel} from '../../src/engine/quantumStates';
+import {createNoisyEPRWithChannel} from '../../src/engine/quantumStates';
 import {fidelityFromBellBasisMatrix, BellState, fidelityFromComputationalBasisMatrix} from '../../src/engine_real_calculations/bell/bell-basis';
 import { NoiseChannel } from '../../src/engine/types';
 
@@ -9,42 +9,6 @@ function expectFidelityRange(fidelity: number, min: number, max: number, message
     expect(fidelity >= min && fidelity <= max).toBe(true);
   }
 }
-
-describe('createNoisyEPR', () => {
-  test('createNoisyEPR(0) should be pure |Ψ⁻⟩ state in Bell basis', () => {
-    const actual = createNoisyEPR(0);
-    
-    // Check matrix dimensions
-    expect(actual.rows).toBe(4);
-    expect(actual.cols).toBe(4);
-    
-    // Check that it's a valid density matrix
-    expect(actual.trace().re).toBeCloseTo(1, 5);
-    
-    // With noiseParam=0, the [3,3] element should be 1 (perfect |Ψ⁻⟩ fidelity)
-    expect(actual.get(3, 3).re).toBeCloseTo(1, 5);
-    
-    // Other diagonal elements should be 0 (no noise)
-    expect(actual.get(0, 0).re).toBeCloseTo(0, 5);
-    expect(actual.get(1, 1).re).toBeCloseTo(0, 5);
-    expect(actual.get(2, 2).re).toBeCloseTo(0, 5);
-  });
-
-  test('createNoisyEPR should produce a Werner-like state for noiseParam > 0', () => {
-    const noise = 0.3;
-    const state = createNoisyEPR(noise);
-    
-    // For Bell basis, diagonal should have proper distribution
-    expect(state.get(3, 3).re).toBeCloseTo(1 - noise, 3); // |Ψ⁻⟩ component
-    expect(state.get(0, 0).re).toBeCloseTo(noise / 3, 3); // |Φ⁺⟩ component
-  });
-
-  test('fidelity of createNoisyEPR (w.r.t |Φ⁺⟩) increases with noiseParam', () => {
-    // Note: This test checks fidelity w.r.t Φ⁺, not Ψ⁻
-    const fidelityWrtPhiPlus = (noise: number) => fidelityFromBellBasisMatrix(createNoisyEPR(noise));
-    expect(fidelityWrtPhiPlus(0.6)).toBeGreaterThan(fidelityWrtPhiPlus(0.3));
-  });
-});
 
 describe('createNoisyEPRWithChannel', () => {
   const testParams = [0.1, 0.3, 0.5];

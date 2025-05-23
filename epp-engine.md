@@ -88,18 +88,18 @@ This file provides functions for creating and manipulating quantum states.
 
 ### Key Functions
 
-#### `createNoisyEPR(noiseParam: number): DensityMatrix`
+#### `createNoisyEPRWithChannel(noiseParam: number, noiseChannel: NoiseChannel): DensityMatrix`
 
-Creates a noisy EPR pair in the Bell basis with the specified noise parameter.
+Creates a noisy EPR pair using the specified noise channel and parameter.
 
 ```typescript
 // Usage
-const noisyState = createNoisyEPR(0.2);  // Creates a state with 20% noise
+const noisyState = createNoisyEPRWithChannel(0.2, NoiseChannel.UniformNoise);  // Creates a state with 20% uniform noise
 ```
 
 The function:
-- Creates a Bell state |Ψ⁻⟩ in the Bell basis
-- Adds noise proportional to the noiseParam
+- Creates a perfect Bell state |Ψ⁻⟩ in the computational basis
+- Applies the specified noise channel to Bob's qubit
 - Returns a density matrix representing the noisy state
 
 ## Quantum Operations (`operations.ts`)
