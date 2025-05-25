@@ -54,6 +54,7 @@ export interface SimulationState {
   round: number;
   complete: boolean;
   purificationStep: PurificationStep;
+  averageFidelity: number; // Average fidelity across all pairs
   pendingPairs?: {
     controlPairs: QubitPair[];
     targetPairs: QubitPair[];
@@ -238,6 +239,18 @@ The engine module relies on calculations from the `engine_real_calculations` mod
 This separation ensures that the engine module can focus on the protocol implementation while delegating mathematical calculations to specialized components.
 
 The Monte Carlo engine in particular makes extensive use of the computational basis operators in the real calculations module.
+
+## Average Fidelity Calculation
+
+Both simulation engines automatically calculate and maintain the average fidelity across all pairs in the current state. This provides a real-time measure of the overall quality of the entangled pairs during the purification process.
+
+The average fidelity is calculated using the `calculateAverageFidelity` utility function from `src/utils/fidelityUtils.ts`, which:
+- Takes an array of QubitPair objects
+- Extracts the fidelity value from each pair
+- Returns the arithmetic mean of all fidelities
+- Handles edge cases (empty arrays return 0)
+
+This metric is automatically updated in the `getCurrentState()` method of both engines and is displayed in the control panel UI for real-time monitoring.
 
 ## Engine Selection
 

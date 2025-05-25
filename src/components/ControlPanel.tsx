@@ -18,6 +18,7 @@ interface ControlPanelProps {
   currentRound: number;
   currentStep: PurificationStep;
   pairsRemaining: number;
+  averageFidelity: number;
   engineType: EngineType;
   viewBasis: Basis;
   className?: string;
@@ -37,6 +38,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   currentRound,
   currentStep,
   pairsRemaining,
+  averageFidelity,
   engineType,
   viewBasis,
   className = '',
@@ -205,6 +207,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <p><strong>Distillation Round:</strong> {currentRound}</p>
           <p><strong>Current Step:</strong> {currentStep}</p>
           <p><strong>Pairs Remaining:</strong> {pairsRemaining}</p>
+          <p><strong>Average Fidelity:</strong> {averageFidelity.toFixed(3)}</p>
           <p><strong>Status:</strong> {isComplete ? 'Complete' : 'In Progress'}</p>
         </div>
       </CollapsibleSection>

@@ -17,6 +17,7 @@ This document defines all UI components used in the EPP (Entanglement Purificati
 - `currentRound`: number - The current purification round
 - `currentStep`: PurificationStep - The current step within the purification process
 - `pairsRemaining`: number - Number of qubit pairs remaining in the simulation
+- `averageFidelity`: number - Average fidelity across all pairs (displayed to 3 decimal places)
 
 **Example Usage**:
 ```tsx
@@ -30,6 +31,7 @@ This document defines all UI components used in the EPP (Entanglement Purificati
   currentRound={currentRound}
   currentStep={purificationStep}
   pairsRemaining={pairs.length}
+  averageFidelity={averageFidelity}
 />
 ```
 

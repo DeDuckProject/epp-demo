@@ -6,6 +6,7 @@ import {pauliTwirl} from "../engine_real_calculations/operations/pauliTwirling";
 import {applyPauli, applyCNOT, tensor, measureQubit} from "../engine_real_calculations";
 import {partialTrace} from "../engine_real_calculations/operations/partialTrace";
 import {preparePairsForCNOT} from "./operations";
+import {calculateAverageFidelity} from '../utils/fidelityUtils';
 
 /**
  * Monte Carlo Simulation Engine that uses the computational basis for calculations
@@ -58,11 +59,14 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
       });
     }
     
+    const averageFidelity = calculateAverageFidelity(pairs);
+    
     return {
       pairs,
       round: 0,
       complete: false,
-      purificationStep: 'initial'
+      purificationStep: 'initial',
+      averageFidelity
     };
   }
   
@@ -394,7 +398,11 @@ export class MonteCarloSimulationEngine implements ISimulationEngine {
   }
   
   public getCurrentState(): SimulationState {
-    return { ...this.state };
+    const averageFidelity = calculateAverageFidelity(this.state.pairs);
+    return { 
+      ...this.state,
+      averageFidelity
+    };
   }
   
   public updateParams(params: SimulationParameters): void {
