@@ -27,7 +27,8 @@ describe('SimulationController', () => {
     pairs: [],
     round: 0,
     complete: false,
-    purificationStep: 'initial'
+    purificationStep: 'initial',
+    averageFidelity: 0
   };
 
   beforeEach(() => {

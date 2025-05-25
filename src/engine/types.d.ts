@@ -27,6 +27,7 @@ export interface SimulationState {
     round: number;
     complete: boolean;
     purificationStep: PurificationStep;
+    averageFidelity: number;
     pendingPairs?: {
         controlPairs: QubitPair[];
         targetPairs: QubitPair[];
