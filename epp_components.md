@@ -85,15 +85,34 @@ This document defines all UI components used in the EPP (Entanglement Purificati
 />
 ```
 
+### InfoWindow
+**Description**: Modal window that provides educational content about entanglement purification, application usage instructions, and credits.  
+**Props**:
+- `isOpen`: boolean - Controls the visibility of the modal
+- `onClose`: () => void - Handler function called when the modal should be closed
+
+**Styling**: Uses dedicated `InfoWindow.css` file for component-specific styles and inherits general modal styles from `index.css`
+
+**Example Usage**:
+```tsx
+<InfoWindow
+  isOpen={showInfo}
+  onClose={() => setShowInfo(false)}
+/>
+```
+
 ## Component Hierarchy
 - App (Root component)
   - ControlPanel (Configures and controls simulation)
   - EnsembleDisplay (Shows collection of qubit pairs)
     - QubitPair (Individual qubit pair display)
       - DensityMatrixView (Visualizes quantum state)
+  - InfoWindow (Educational modal window)
 
 ## Styling Guidelines
-- Components use CSS modules or inline styles for component-specific styling
+- Components use dedicated CSS files for component-specific styling
+- General styles (modal, buttons, etc.) are defined in `index.css`
+- Component-specific styles are in separate CSS files (e.g., `InfoWindow.css`)
 - Color scheme:
   - Successful operations: Green (#2ecc71)
   - Failed operations: Red (#e74c3c)
