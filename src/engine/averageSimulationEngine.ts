@@ -3,6 +3,7 @@ import {createNoisyEPRWithChannel} from './quantumStates';
 import {bilateralCNOT, depolarize, exchangePsiMinusPhiPlus, preparePairsForCNOT} from './operations';
 import {BellState, fidelityFromBellBasisMatrix, toBellBasis} from "../engine_real_calculations/bell/bell-basis.ts";
 import {DensityMatrix} from "../engine_real_calculations/matrix/densityMatrix";
+import {calculateAverageFidelity} from '../utils/fidelityUtils';
 
 export class AverageSimulationEngine implements ISimulationEngine {
   private params: SimulationParameters;
@@ -34,11 +35,14 @@ export class AverageSimulationEngine implements ISimulationEngine {
       });
     }
 
+    const averageFidelity = calculateAverageFidelity(pairs);
+
     return {
       pairs,
       round: 0,
       complete: false,
-      purificationStep: 'initial'
+      purificationStep: 'initial',
+      averageFidelity
     };
   }
 
@@ -245,7 +249,11 @@ export class AverageSimulationEngine implements ISimulationEngine {
   }
 
   public getCurrentState(): SimulationState {
-    return { ...this.state };
+    const averageFidelity = calculateAverageFidelity(this.state.pairs);
+    return { 
+      ...this.state,
+      averageFidelity
+    };
   }
 
   public updateParams(params: SimulationParameters): void {

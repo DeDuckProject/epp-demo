@@ -76,6 +76,7 @@ const App: React.FC = () => {
             currentRound={state.round}
             currentStep={state.purificationStep}
             pairsRemaining={state.pairs.length}
+            averageFidelity={state.averageFidelity}
             engineType={engineType}
             viewBasis={viewBasis}
           />

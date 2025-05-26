@@ -39,6 +39,7 @@ describe('App', () => {
     round: 2,
     complete: false,
     purificationStep: 'cnot' as PurificationStep,
+    averageFidelity: 0.8,
     pendingPairs: {
       controlPairs: [{ id: 1, fidelity: 0.8, densityMatrix: {} as any, basis: Basis.Bell }],
       targetPairs: []
@@ -116,6 +117,9 @@ describe('App', () => {
     expect(screen.getByText('cnot')).toBeDefined();
     expect(screen.getByText('Pairs Remaining:')).toBeDefined();
     expect(screen.getByText('1')).toBeDefined();
+    expect(screen.getByText('Average Fidelity:')).toBeDefined();
+    // Use getAllByText to handle multiple instances of the same value
+    expect(screen.getAllByText('0.800').length).toBeGreaterThan(0);
     expect(screen.getByText('Status:')).toBeDefined();
     expect(screen.getByText('In Progress')).toBeDefined();
   });
@@ -170,7 +174,8 @@ describe('App', () => {
     render(<App />);
     
     // Check that the fidelity value from our mock state is displayed
-    expect(screen.getByText('0.800')).toBeDefined();
+    // Use getAllByText since the value appears in both ControlPanel and EnsembleDisplay
+    expect(screen.getAllByText('0.800').length).toBeGreaterThan(0);
     
     // Check that the data-view-basis attribute is set correctly on the mock EnsembleDisplay
     const ensembleDisplay = screen.getByTestId('ensemble-display');

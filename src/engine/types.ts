@@ -35,6 +35,7 @@ export interface SimulationState {
   round: number;
   complete: boolean;
   purificationStep: PurificationStep;  // Track which step we're on within a round
+  averageFidelity: number; // Add average fidelity calculation
   pendingPairs?: { // Store intermediate state during a round
     controlPairs: QubitPair[];
     targetPairs: QubitPair[];

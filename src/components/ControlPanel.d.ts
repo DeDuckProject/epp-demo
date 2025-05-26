@@ -13,6 +13,7 @@ interface ControlPanelProps {
     currentRound: number;
     currentStep: PurificationStep;
     pairsRemaining: number;
+    averageFidelity: number;
     engineType: EngineType;
     viewBasis: Basis;
     className?: string;

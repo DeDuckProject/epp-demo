@@ -253,6 +253,18 @@ describe('MonteCarloSimulationEngine', () => {
       const state2 = engine.getCurrentState();
       expect(state1).toEqual(state2);
     });
+
+    test('average fidelity is always calculated in getCurrentState', () => {
+        const engine = new MonteCarloSimulationEngine(initialParams);
+        
+        const state1 = engine.getCurrentState();
+        expect(state1.averageFidelity).toBeGreaterThan(0);
+        
+        // Progress and check again
+        engine.nextStep();
+        const state2 = engine.getCurrentState();
+        expect(state2.averageFidelity).toBeGreaterThan(0);
+    });
   });
 
   describe('Step Progression via nextStep()', () => {

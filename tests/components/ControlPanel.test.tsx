@@ -67,6 +67,7 @@ describe('ControlPanel', () => {
     currentRound: 1,
     currentStep: 'initial' as PurificationStep,
     pairsRemaining: 10,
+    averageFidelity: 0.765,
     engineType: EngineType.Average,
     viewBasis: Basis.Bell
   };
@@ -351,5 +352,19 @@ describe('ControlPanel', () => {
       const statusInfo = displaySection.querySelector('.status-info');
       expect(statusInfo).toHaveTextContent('Complete');
     });
+  });
+
+  test('displays average fidelity in status section', () => {
+    render(<ControlPanel {...defaultProps} />);
+    
+    expect(screen.getByText('Average Fidelity:')).toBeInTheDocument();
+    expect(screen.getByText('0.765')).toBeInTheDocument();
+  });
+
+  test('formats average fidelity to 3 decimal places', () => {
+    render(<ControlPanel {...defaultProps} averageFidelity={0.123456789} />);
+    
+    expect(screen.getByText('Average Fidelity:')).toBeInTheDocument();
+    expect(screen.getByText('0.123')).toBeInTheDocument();
   });
 }); 
