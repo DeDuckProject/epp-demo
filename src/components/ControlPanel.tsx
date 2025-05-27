@@ -94,7 +94,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         <h2>Simulation Controls</h2>
         {isDrawerOpen && onDrawerClose && (
           <button
-            className="drawer-close"
+            className="header-button drawer-close"
             aria-label="Close controls"
             onClick={onDrawerClose}
           >
@@ -102,7 +102,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           </button>
         )}
         <button 
-          className="help-button" 
+          className="header-button help-button" 
           onClick={() => setShowHelp(prev => !prev)}
           title="Show keyboard shortcuts"
         >

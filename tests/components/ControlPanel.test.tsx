@@ -112,6 +112,54 @@ describe('ControlPanel', () => {
     expect(screen.queryByTestId('help-panel')).not.toBeInTheDocument();
   });
 
+  test('header buttons have consistent styling and alignment', () => {
+    render(<ControlPanel {...defaultProps} />);
+    
+    // Help button should have header-button class
+    const helpButton = screen.getByRole('button', { name: /\?/ });
+    expect(helpButton).toHaveClass('header-button', 'help-button');
+    
+    // Header should contain the title
+    expect(screen.getByText('Simulation Controls')).toBeInTheDocument();
+  });
+
+  test('drawer close button appears with proper styling when drawer is open', () => {
+    const onDrawerClose = vi.fn();
+    render(<ControlPanel {...defaultProps} isDrawerOpen={true} onDrawerClose={onDrawerClose} />);
+    
+    // Drawer close button should be present and have proper classes
+    const closeButton = screen.getByRole('button', { name: /close controls/i });
+    expect(closeButton).toHaveClass('header-button', 'drawer-close');
+    expect(closeButton).toHaveTextContent('×');
+    
+    // Click should call onDrawerClose
+    fireEvent.click(closeButton);
+    expect(onDrawerClose).toHaveBeenCalledTimes(1);
+  });
+
+  test('drawer close button is not rendered when drawer is closed', () => {
+    render(<ControlPanel {...defaultProps} isDrawerOpen={false} />);
+    
+    // Drawer close button should not be present
+    expect(screen.queryByRole('button', { name: /close controls/i })).not.toBeInTheDocument();
+  });
+
+  test('header buttons have consistent circular styling', () => {
+    const onDrawerClose = vi.fn();
+    render(<ControlPanel {...defaultProps} isDrawerOpen={true} onDrawerClose={onDrawerClose} />);
+    
+    const helpButton = screen.getByRole('button', { name: /\?/ });
+    const closeButton = screen.getByRole('button', { name: /close controls/i });
+    
+    // Both buttons should have the same base classes
+    expect(helpButton).toHaveClass('header-button');
+    expect(closeButton).toHaveClass('header-button');
+    
+    // Both buttons should have the same content styling (× and ? should appear similar)
+    expect(helpButton).toHaveTextContent('?');
+    expect(closeButton).toHaveTextContent('×');
+  });
+
   test('calls onNextStep when N key is pressed', () => {
     render(<ControlPanel {...defaultProps} />);
     
