@@ -46,6 +46,13 @@ const App: React.FC = () => {
   return (
     <div className="app-container">
       <header>
+        <button
+          className={`drawer-toggle${drawerOpen ? ' open' : ''}`}
+          aria-label="Toggle controls"
+          onClick={() => setDrawerOpen(o => !o)}
+        >
+          <HiMenu size={24} />
+        </button>
         <h1>Quantum Entanglement Purification Simulator</h1>
       </header>
       
@@ -57,13 +64,6 @@ const App: React.FC = () => {
             onClick={() => setDrawerOpen(false)}
           />
         )}
-        <button
-          className={`drawer-toggle${drawerOpen ? ' open' : ''}`}
-          aria-label="Toggle controls"
-          onClick={() => setDrawerOpen(o => !o)}
-        >
-          <HiMenu size={24} />
-        </button>
         <div className="simulation-area">
           <ControlPanel
             className={drawerOpen ? 'open' : ''}

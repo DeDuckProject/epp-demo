@@ -103,57 +103,8 @@
   align-items: center;
 }
 
-/* Off-canvas drawer & toggle button */
-.drawer-toggle {
-  display: none;
-}
-
+/* Off-canvas drawer */
 @media (max-width: 768px) {
-  .drawer-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    top: 24px;
-    left: 24px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    width: 56px;
-    height: 56px;
-    font-size: 1.1rem;
-    font-weight: 500;
-    cursor: pointer;
-    box-shadow: var(--box-shadow);
-    transition: all 0.2s ease;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
-
-  .drawer-toggle:hover {
-    background: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
-  }
-
-  .drawer-toggle:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
-  }
-
-  .drawer-toggle svg {
-    transition: all 0.2s ease;
-    width: 24px;
-    height: 24px;
-  }
-
-  .drawer-toggle:hover svg {
-    transform: scale(1.1);
-  }
-
-
-
   .header {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -247,14 +198,6 @@
     width: 85%;
     max-width: 280px;
     padding: 16px;
-  }
-  
-  .drawer-toggle {
-    top: 20px;
-    left: 20px;
-    width: 52px;
-    height: 52px;
-    font-size: 1rem;
   }
 
   .header {
