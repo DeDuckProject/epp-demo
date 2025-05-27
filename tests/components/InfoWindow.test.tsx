@@ -224,4 +224,80 @@ describe('InfoWindow Component', () => {
       expect(h4s.length).toBeGreaterThan(0); // Subsections
     });
   });
+
+  describe('Wikipedia links', () => {
+    beforeEach(() => {
+      render(<InfoWindow isOpen={true} onClose={mockOnClose} />);
+    });
+
+    it('should have Wikipedia links for key quantum computing terms', () => {
+      // Test main quantum computing concepts
+      const entanglementLink = screen.getByRole('link', { name: /Entanglement purification/ });
+      expect(entanglementLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Entanglement_distillation');
+      expect(entanglementLink).toHaveAttribute('target', '_blank');
+      expect(entanglementLink).toHaveAttribute('rel', 'noopener noreferrer');
+
+      const qubitLink = screen.getByRole('link', { name: /qubits/ });
+      expect(qubitLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Qubit');
+
+      const eprLink = screen.getByRole('link', { name: /EPR pairs/ });
+      expect(eprLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/EPR_paradox');
+
+      const fidelityLink = screen.getByRole('link', { name: /fidelity/ });
+      expect(fidelityLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Fidelity_of_quantum_states');
+    });
+
+    it('should have Wikipedia links for protocol-specific terms', () => {
+      const bbpsswLink = screen.getByRole('link', { name: /BBPSSW/ });
+      expect(bbpsswLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Entanglement_distillation#BBPSSW_protocol');
+
+      const bellStatesLink = screen.getByRole('link', { name: /Bell states/ });
+      expect(bellStatesLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Bell_state');
+
+      const cnotLink = screen.getByRole('link', { name: /controlled-NOT gates/ });
+      expect(cnotLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Controlled_NOT_gate');
+    });
+
+    it('should have Wikipedia links for noise channel terms', () => {
+      const depolarizingLinks = screen.getAllByRole('link', { name: /Depolarizing/ });
+      expect(depolarizingLinks[0]).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Depolarizing_channel');
+
+      const pauliLink = screen.getByRole('link', { name: /Pauli gates/ });
+      expect(pauliLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Pauli_matrices');
+
+      const dephasingLink = screen.getByRole('link', { name: /Dephasing/ });
+      expect(dephasingLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Dephasing');
+
+      const amplitudeDampingLink = screen.getByRole('link', { name: /Amplitude Damping/ });
+      expect(amplitudeDampingLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Amplitude_damping_channel');
+    });
+
+    it('should have Wikipedia links for mathematical concepts', () => {
+      const wernerLink = screen.getByRole('link', { name: /Werner form/ });
+      expect(wernerLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Werner_state');
+
+      const densityMatrixLink = screen.getByRole('link', { name: /density matrix/ });
+      expect(densityMatrixLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Density_matrix');
+
+      const monteCarloLink = screen.getByRole('link', { name: /monte-carlo simulation/ });
+      expect(monteCarloLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Monte_Carlo_method');
+
+      const haarLink = screen.getByRole('link', { name: /Haar measure/ });
+      expect(haarLink).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Haar_measure');
+    });
+
+    it('should ensure all Wikipedia links open in new tabs with proper security attributes', () => {
+      const wikipediaLinks = screen.getAllByRole('link').filter(link => 
+        link.getAttribute('href')?.includes('wikipedia.org')
+      );
+
+      wikipediaLinks.forEach(link => {
+        expect(link).toHaveAttribute('target', '_blank');
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+      });
+
+      // Should have multiple Wikipedia links
+      expect(wikipediaLinks.length).toBeGreaterThan(10);
+    });
+  });
 }); 
