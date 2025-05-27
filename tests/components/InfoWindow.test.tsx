@@ -44,16 +44,17 @@ describe('InfoWindow Component', () => {
       expect(title).toHaveAttribute('id', 'info-window-title');
     });
 
-    it('should display all three main sections', () => {
+    it('should display all main sections', () => {
       expect(screen.getByText('What is Entanglement Purification?')).toBeInTheDocument();
+      expect(screen.getByText('Protocol Steps Explained')).toBeInTheDocument();
       expect(screen.getByText('How to Use This Application')).toBeInTheDocument();
       expect(screen.getByText('Credits & References')).toBeInTheDocument();
     });
 
     describe('Entanglement Purification section', () => {
       it('should explain the basic concept', () => {
-        expect(screen.getByText(/Entanglement purification is a quantum protocol/)).toBeInTheDocument();
-        expect(screen.getByText(/BBPSSW.*protocol/)).toBeInTheDocument();
+        expect(screen.getByText(/Entanglement purification is a/)).toBeInTheDocument();
+        expect(screen.getByText(/This simulator implements the BBPSSW/)).toBeInTheDocument();
       });
 
       it('should list the protocol steps', () => {
@@ -62,6 +63,29 @@ describe('InfoWindow Component', () => {
         expect(screen.getByText('Performing measurements to test entanglement quality')).toBeInTheDocument();
         expect(screen.getByText('Keeping only the pairs that pass the test')).toBeInTheDocument();
         expect(screen.getByText('Repeating until target fidelity is achieved')).toBeInTheDocument();
+      });
+    });
+
+    describe('Protocol Steps section', () => {
+      it('should explain all protocol steps', () => {
+        expect(screen.getByText('0. Initialization (before protocol starts)')).toBeInTheDocument();
+        expect(screen.getByText('1. Depolarization/Twirling')).toBeInTheDocument();
+        expect(screen.getByText('2. Exchange Operation')).toBeInTheDocument();
+        expect(screen.getByText('3. Bilateral CNOT')).toBeInTheDocument();
+        expect(screen.getByText('4. Measurement & Post-Selection')).toBeInTheDocument();
+        expect(screen.getByText('5. Round Completion')).toBeInTheDocument();
+      });
+
+      it('should explain noise channels', () => {
+        expect(screen.getByText('Noise Channels')).toBeInTheDocument();
+        expect(screen.getByText(/Depolarizing:/)).toBeInTheDocument();
+        expect(screen.getByText(/Dephasing:/)).toBeInTheDocument();
+        expect(screen.getByText(/Amplitude Damping:/)).toBeInTheDocument();
+        expect(screen.getByText(/Uniform Noise:/)).toBeInTheDocument();
+      });
+
+      it('should include key insight about pair sacrifice', () => {
+        expect(screen.getByText(/Each round sacrifices at least half/)).toBeInTheDocument();
       });
     });
 
@@ -196,7 +220,7 @@ describe('InfoWindow Component', () => {
       const h4s = screen.getAllByRole('heading', { level: 4 });
       
       expect(h2).toBeInTheDocument();
-      expect(h3s).toHaveLength(3); // Three main sections
+      expect(h3s).toHaveLength(4); // Four main sections
       expect(h4s.length).toBeGreaterThan(0); // Subsections
     });
   });
