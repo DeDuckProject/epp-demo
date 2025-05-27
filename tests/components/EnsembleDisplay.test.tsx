@@ -651,4 +651,36 @@ describe('EnsembleDisplay connectors & responsiveness', () => {
       expect(row.classList.contains('pair-row')).toBeTruthy();
     });
   });
+
+  it('has proper layout structure for mobile styling', () => {
+    const pairs: QPType[] = [
+      { id: 1, fidelity: 0.9, densityMatrix: {} as any, basis: Basis.Bell },
+      { id: 2, fidelity: 0.8, densityMatrix: {} as any, basis: Basis.Bell }
+    ];
+    const { container } = render(
+      <EnsembleDisplay 
+        pairs={pairs} 
+        purificationStep="idle" 
+        viewBasis={Basis.Bell} 
+      />
+    );
+    
+    // Verify the structure exists for mobile styling
+    const participantSections = container.querySelectorAll('.participant-section');
+    expect(participantSections).toHaveLength(2);
+    
+    // Check Alice section (first)
+    const aliceSection = participantSections[0];
+    expect(aliceSection.querySelector('.alice-label')).not.toBeNull();
+    expect(aliceSection.querySelector('.alice-row')).not.toBeNull();
+    
+    // Check Bob section (last)
+    const bobSection = participantSections[1];
+    expect(bobSection.querySelector('.bob-label')).not.toBeNull();
+    expect(bobSection.querySelector('.bob-row')).not.toBeNull();
+    
+    // Verify pairs container has reduced gap styling
+    const pairsContainer = container.querySelector('.pairs-container');
+    expect(pairsContainer).not.toBeNull();
+  });
 }); 

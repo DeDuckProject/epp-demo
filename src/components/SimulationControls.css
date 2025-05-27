@@ -1,0 +1,110 @@
+.simulation-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  flex-wrap: wrap;
+}
+
+.control-button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--primary-color);
+  color: white;
+  min-width: 120px;
+  text-align: center;
+}
+
+.control-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.control-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+}
+
+.control-button:disabled {
+  background-color: var(--soft-gray);
+  color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.control-button.primary {
+  background-color: var(--highlight-green);
+  font-weight: 600;
+  min-width: 260px;
+}
+
+.control-button.primary:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.control-button.secondary {
+  background-color: var(--secondary-color);
+}
+
+.control-button.secondary:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .simulation-controls {
+    padding: 12px;
+    gap: 8px;
+    margin-top: 0;
+    margin-bottom: 16px;
+  }
+  
+  .control-button {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-width: 100px;
+  }
+  
+  .control-button.primary {
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .simulation-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 12px;
+    margin-top: 0;
+    margin-bottom: 16px;
+  }
+  
+  .control-button {
+    width: 100%;
+    min-width: unset;
+    padding: 12px 8px;
+    font-size: 12px;
+    text-align: center;
+    min-height: 55px;
+  }
+  
+  .control-button.primary {
+    min-width: unset;
+    /* Remove grid-column to allow 2-button layout */
+  }
+
+  /* .control-button.primary {
+    min-height: 55px;
+  } */
+} 

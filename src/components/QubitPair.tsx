@@ -201,20 +201,6 @@ const QubitPair: React.FC<QubitPairProps> = ({
       }}
       onClick={e => e.stopPropagation()}
     >
-      <button
-        style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          border: 'none',
-          background: 'none',
-          fontSize: '24px',
-          cursor: 'pointer'
-        }}
-        onClick={() => setShowMatrix(false)}
-      >
-        ×
-      </button>
       <DensityMatrixView 
         matrix={displayMatrix} 
         isWerner={werner} 

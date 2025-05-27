@@ -56,14 +56,9 @@ vi.mock('../../src/components/CollapsibleSection', () => ({
 
 describe('ControlPanel', () => {
   const defaultProps = {
-    onNextStep: vi.fn(),
-    onCompleteRound: vi.fn(),
-    onRunAll: vi.fn(),
-    onReset: vi.fn(),
     onParametersChanged: vi.fn(),
     onEngineTypeChanged: vi.fn(),
     onViewBasisChanged: vi.fn(),
-    isComplete: false,
     currentRound: 1,
     currentStep: 'initial' as PurificationStep,
     pairsRemaining: 10,
@@ -77,13 +72,9 @@ describe('ControlPanel', () => {
     (window as any).__hotkeyCallbacks = {};
   });
 
-  test('renders with all button labels showing keyboard shortcuts', () => {
+  test('renders with parameter controls showing keyboard shortcuts', () => {
     render(<ControlPanel {...defaultProps} />);
     
-    expect(screen.getByText(/Next Step.*\[N\]/)).toBeInTheDocument();
-    expect(screen.getByText(/Complete Round \[C\]/)).toBeInTheDocument();
-    expect(screen.getByText(/Run All \[A\]/)).toBeInTheDocument();
-    expect(screen.getByText(/Reset \[R\]/)).toBeInTheDocument();
     expect(screen.getByText(/Apply Parameters \[P\]/)).toBeInTheDocument();
   });
 
@@ -112,45 +103,55 @@ describe('ControlPanel', () => {
     expect(screen.queryByTestId('help-panel')).not.toBeInTheDocument();
   });
 
-  test('calls onNextStep when N key is pressed', () => {
+  test('header buttons have consistent styling and alignment', () => {
     render(<ControlPanel {...defaultProps} />);
     
-    // Simulate pressing the N key
-    const nCallback = (window as any).__hotkeyCallbacks['n'];
-    nCallback();
+    // Help button should have header-button class
+    const helpButton = screen.getByRole('button', { name: /\?/ });
+    expect(helpButton).toHaveClass('header-button', 'help-button');
     
-    expect(defaultProps.onNextStep).toHaveBeenCalledTimes(1);
+    // Header should contain the title
+    expect(screen.getByText('Simulation Controls')).toBeInTheDocument();
   });
 
-  test('calls onCompleteRound when C key is pressed', () => {
-    render(<ControlPanel {...defaultProps} />);
+  test('drawer close button appears with proper styling when drawer is open', () => {
+    const onDrawerClose = vi.fn();
+    render(<ControlPanel {...defaultProps} isDrawerOpen={true} onDrawerClose={onDrawerClose} />);
     
-    // Simulate pressing the C key
-    const cCallback = (window as any).__hotkeyCallbacks['c'];
-    cCallback();
+    // Drawer close button should be present and have proper classes
+    const closeButton = screen.getByRole('button', { name: /close controls/i });
+    expect(closeButton).toHaveClass('header-button', 'drawer-close');
+    expect(closeButton).toHaveTextContent('×');
     
-    expect(defaultProps.onCompleteRound).toHaveBeenCalledTimes(1);
+    // Click should call onDrawerClose
+    fireEvent.click(closeButton);
+    expect(onDrawerClose).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onRunAll when A key is pressed', () => {
-    render(<ControlPanel {...defaultProps} />);
+  test('drawer close button is not rendered when drawer is closed', () => {
+    render(<ControlPanel {...defaultProps} isDrawerOpen={false} />);
     
-    // Simulate pressing the A key
-    const aCallback = (window as any).__hotkeyCallbacks['a'];
-    aCallback();
-    
-    expect(defaultProps.onRunAll).toHaveBeenCalledTimes(1);
+    // Drawer close button should not be present
+    expect(screen.queryByRole('button', { name: /close controls/i })).not.toBeInTheDocument();
   });
 
-  test('calls onReset when R key is pressed', () => {
-    render(<ControlPanel {...defaultProps} />);
+  test('header buttons have consistent circular styling', () => {
+    const onDrawerClose = vi.fn();
+    render(<ControlPanel {...defaultProps} isDrawerOpen={true} onDrawerClose={onDrawerClose} />);
     
-    // Simulate pressing the R key
-    const rCallback = (window as any).__hotkeyCallbacks['r'];
-    rCallback();
+    const helpButton = screen.getByRole('button', { name: /\?/ });
+    const closeButton = screen.getByRole('button', { name: /close controls/i });
     
-    expect(defaultProps.onReset).toHaveBeenCalledTimes(1);
+    // Both buttons should have the same base classes
+    expect(helpButton).toHaveClass('header-button');
+    expect(closeButton).toHaveClass('header-button');
+    
+    // Both buttons should have the same content styling (× and ? should appear similar)
+    expect(helpButton).toHaveTextContent('?');
+    expect(closeButton).toHaveTextContent('×');
   });
+
+
 
   test('calls onParametersChanged when P key is pressed', () => {
     render(<ControlPanel {...defaultProps} />);
@@ -162,28 +163,7 @@ describe('ControlPanel', () => {
     expect(defaultProps.onParametersChanged).toHaveBeenCalledTimes(1);
   });
 
-  test('does not call handlers when keys are pressed and simulation is complete', () => {
-    render(<ControlPanel {...defaultProps} isComplete={true} />);
-    
-    // Simulate pressing the keys
-    const nCallback = (window as any).__hotkeyCallbacks['n'];
-    const cCallback = (window as any).__hotkeyCallbacks['c'];
-    const aCallback = (window as any).__hotkeyCallbacks['a'];
-    
-    nCallback();
-    cCallback();
-    aCallback();
-    
-    // These should not be called because isComplete is true
-    expect(defaultProps.onNextStep).not.toHaveBeenCalled();
-    expect(defaultProps.onCompleteRound).not.toHaveBeenCalled();
-    expect(defaultProps.onRunAll).not.toHaveBeenCalled();
-    
-    // Reset should still work even when simulation is complete
-    const rCallback = (window as any).__hotkeyCallbacks['r'];
-    rCallback();
-    expect(defaultProps.onReset).toHaveBeenCalledTimes(1);
-  });
+
 
   test('toggles help panel when ? key is pressed', async () => {
     render(<ControlPanel {...defaultProps} />);
@@ -213,7 +193,7 @@ describe('ControlPanel', () => {
     expect(screen.queryByTestId('help-panel')).not.toBeInTheDocument();
   });
 
-  test('hotkeys work when select elements are in focus', async () => {
+  test('parameter hotkey works when select elements are in focus', async () => {
     render(<ControlPanel {...defaultProps} />);
     
     // Find the select elements
@@ -222,38 +202,23 @@ describe('ControlPanel', () => {
     // Focus the select element
     fireEvent.focus(engineTypeSelect);
     
-    // Simulate pressing the hotkeys while select is focused
-    const nCallback = (window as any).__hotkeyCallbacks['n'];
-    const cCallback = (window as any).__hotkeyCallbacks['c'];
-    const aCallback = (window as any).__hotkeyCallbacks['a'];
-    const rCallback = (window as any).__hotkeyCallbacks['r'];
+    // Simulate pressing the parameter hotkey while select is focused
     const pCallback = (window as any).__hotkeyCallbacks['p'];
-    
-    nCallback();
-    cCallback();
-    aCallback();
-    rCallback();
     pCallback();
     
-    // Verify that all the right handlers were called
-    expect(defaultProps.onNextStep).toHaveBeenCalledTimes(1);
-    expect(defaultProps.onCompleteRound).toHaveBeenCalledTimes(1);
-    expect(defaultProps.onRunAll).toHaveBeenCalledTimes(1);
-    expect(defaultProps.onReset).toHaveBeenCalledTimes(1);
+    // Verify that the parameter handler was called
     expect(defaultProps.onParametersChanged).toHaveBeenCalledTimes(1);
   });
 
   describe('Collapsible Section Structure', () => {
-    test('renders all three collapsible sections with correct titles', () => {
+    test('renders collapsible sections with correct titles', () => {
       render(<ControlPanel {...defaultProps} />);
       
       expect(screen.getByTestId('collapsible-section-experiment-setup')).toBeInTheDocument();
       expect(screen.getByTestId('collapsible-section-display-&-status')).toBeInTheDocument();
-      expect(screen.getByTestId('collapsible-section-simulation-control')).toBeInTheDocument();
       
       expect(screen.getByTestId('section-header-experiment-setup')).toHaveTextContent('Experiment Setup');
       expect(screen.getByTestId('section-header-display-&-status')).toHaveTextContent('Display & Status');
-      expect(screen.getByTestId('section-header-simulation-control')).toHaveTextContent('Simulation Control');
     });
 
     test('experiment setup section contains all parameter controls', () => {
@@ -283,17 +248,7 @@ describe('ControlPanel', () => {
       expect(displaySection).toContainElement(screen.getByText(/Status:/));
     });
 
-    test('simulation control section contains all action buttons', () => {
-      render(<ControlPanel {...defaultProps} />);
-      
-      const controlSection = screen.getByTestId('section-content-simulation-control');
-      
-      // Check that all simulation control buttons are in this section
-      expect(controlSection).toContainElement(screen.getByText(/Next Step.*\[N\]/));
-      expect(controlSection).toContainElement(screen.getByText(/Complete Round \[C\]/));
-      expect(controlSection).toContainElement(screen.getByText(/Run All \[A\]/));
-      expect(controlSection).toContainElement(screen.getByText(/Reset \[R\]/));
-    });
+
 
     test('parameter changes still work within collapsible sections', () => {
       render(<ControlPanel {...defaultProps} />);
@@ -330,20 +285,19 @@ describe('ControlPanel', () => {
       expect(screen.getByText('Status:')).toBeInTheDocument();
       expect(screen.getByText('In Progress')).toBeInTheDocument();
       
-      // Update props and rerender
+      // Update props and rerender with completed step
       rerender(<ControlPanel 
         {...defaultProps} 
         currentRound={2}
-        currentStep={'measured' as PurificationStep}
+        currentStep={'completed' as PurificationStep}
         pairsRemaining={5}
-        isComplete={true}
       />);
       
       // Updated status - check for new values
       expect(screen.getByText('Distillation Round:')).toBeInTheDocument();
       expect(screen.getByText('2')).toBeInTheDocument();
       expect(screen.getByText('Current Step:')).toBeInTheDocument();
-      expect(screen.getByText('measured')).toBeInTheDocument();
+      expect(screen.getByText('completed')).toBeInTheDocument();
       expect(screen.getByText('Pairs Remaining:')).toBeInTheDocument();
       expect(screen.getByText('5')).toBeInTheDocument();
       expect(screen.getByText('Status:')).toBeInTheDocument();

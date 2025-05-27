@@ -1,8 +1,8 @@
 /* Global styles for buttons and common elements */
 button {
   padding: 10px 18px;
-  margin-right: 10px;
-  margin-bottom: 10px;
+  /* margin-right: 10px; */
+  /* margin-bottom: 10px; */
   background-color: var(--primary-color);
   color: white;
   border: none;

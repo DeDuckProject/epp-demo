@@ -3,7 +3,7 @@
   position: relative;
   margin-bottom: 30px;
   padding: 20px 20px 20px 80px; /* Increased left padding to make room for labels */
-  background-color: #f8fafc;
+  background-color: #e2e8f0;
   border-radius: var(--border-radius);
   overflow-x: auto; /* Enable horizontal scrolling for desktop */
   overflow-y: visible; /* Allow labels to be visible outside the container */
@@ -12,7 +12,7 @@
 .pairs-container {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 20px;
   /* Set a minimum width to ensure container is scrollable when needed */
   min-width: fit-content;
   width: 100%;
@@ -109,6 +109,16 @@
   .participant-section {
     padding-left: 0;
   }
+
+  /* Move Bob label below Bob's row on mobile */
+  .participant-section:last-child {
+    flex-direction: column-reverse;
+  }
+
+  .participant-section:last-child .participant-label {
+    margin-bottom: 0;
+    margin-top: 8px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -116,6 +126,16 @@
   .participant-section    { display: flex; flex-direction: column; }
   .participant-label      { position: static !important; margin-bottom: 8px; }
   .pair-row               { gap: 12px; overflow-x: visible; }
+  
+  /* Move Bob label below Bob's row on mobile */
+  .participant-section:last-child {
+    flex-direction: column-reverse;
+  }
+  
+  .participant-section:last-child .participant-label {
+    margin-bottom: 0;
+    margin-top: 8px;
+  }
 }
 
 /* Update scrollbar styling to target the ensemble-display container */
@@ -124,15 +144,15 @@
 }
 
 .ensemble-display::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: var(--background-color);
   border-radius: 3px;
 }
 
 .ensemble-display::-webkit-scrollbar-thumb {
-  background-color: var(--soft-gray);
+  background-color: var(--scrollbar-thumb-color);
   border-radius: 3px;
 }
 
 .ensemble-display::-webkit-scrollbar-thumb:hover {
-  background-color: #cbd5e1;
+  background-color: var(--scrollbar-thumb-hover-color);
 } 

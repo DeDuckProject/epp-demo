@@ -1,10 +1,10 @@
 .help-panel {
-  background-color: #f8fafc;
-  border: 1px solid var(--soft-gray);
-  border-radius: var(--border-radius);
-  padding: 20px;
-  margin-bottom: 24px;
-  box-shadow: var(--box-shadow);
+  /*background-color: #f8fafc;*/
+  /*border: 1px solid var(--soft-gray);*/
+  /*border-radius: var(--border-radius);*/
+  /*padding: 20px;*/
+  /*margin-bottom: 24px;*/
+  /*box-shadow: var(--box-shadow);*/
 }
 
 .shortcuts-section {

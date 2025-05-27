@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { HiMenu, HiX } from 'react-icons/hi';
 import { SimulationController } from '../controller/simulationController';
 import { SimulationState, SimulationParameters, EngineType, Basis, NoiseChannel } from '../engine/types';
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
+import SimulationControls from './SimulationControls';
 import InfoWindow from './InfoWindow';
 import Attribution from './Attribution';
 import './App.css';
@@ -45,6 +47,13 @@ const App: React.FC = () => {
   return (
     <div className="app-container">
       <header>
+        <button
+          className={`drawer-toggle${drawerOpen ? ' open' : ''}`}
+          aria-label="Toggle controls"
+          onClick={() => setDrawerOpen(o => !o)}
+        >
+          <HiMenu size={24} />
+        </button>
         <h1>Quantum Entanglement Purification Simulator</h1>
       </header>
       
@@ -56,40 +65,39 @@ const App: React.FC = () => {
             onClick={() => setDrawerOpen(false)}
           />
         )}
-        <button
-          className={`drawer-toggle${drawerOpen ? ' open' : ''}`}
-          aria-label="Toggle controls"
-          onClick={() => setDrawerOpen(o => !o)}
-        >
-          ☰
-        </button>
         <div className="simulation-area">
-          <ControlPanel
-            className={drawerOpen ? 'open' : ''}
-            isDrawerOpen={drawerOpen}
-            onDrawerClose={() => setDrawerOpen(false)}
+          <SimulationControls
             onNextStep={() => controller.nextStep()}
             onCompleteRound={() => controller.completeRound()}
             onRunAll={() => controller.runUntilComplete()}
             onReset={() => controller.reset()}
-            onParametersChanged={(params) => controller.updateParameters(params)}
-            onEngineTypeChanged={handleEngineTypeChange}
-            onViewBasisChanged={setViewBasis}
             isComplete={state.complete}
-            currentRound={state.round}
             currentStep={state.purificationStep}
-            pairsRemaining={state.pairs.length}
-            averageFidelity={state.averageFidelity}
-            engineType={engineType}
-            viewBasis={viewBasis}
           />
           
-          <EnsembleDisplay 
-            pairs={state.pairs} 
-            pendingPairs={state.pendingPairs} 
-            purificationStep={state.purificationStep} 
-            viewBasis={viewBasis}
-          />
+          <div className="simulation-content">
+            <ControlPanel
+              className={drawerOpen ? 'open' : ''}
+              isDrawerOpen={drawerOpen}
+              onDrawerClose={() => setDrawerOpen(false)}
+              onParametersChanged={(params) => controller.updateParameters(params)}
+              onEngineTypeChanged={handleEngineTypeChange}
+              onViewBasisChanged={setViewBasis}
+              currentRound={state.round}
+              currentStep={state.purificationStep}
+              pairsRemaining={state.pairs.length}
+              averageFidelity={state.averageFidelity}
+              engineType={engineType}
+              viewBasis={viewBasis}
+            />
+            
+            <EnsembleDisplay 
+              pairs={state.pairs} 
+              pendingPairs={state.pendingPairs} 
+              purificationStep={state.purificationStep} 
+              viewBasis={viewBasis}
+            />
+          </div>
         </div>
       </main>
       

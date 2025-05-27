@@ -14,10 +14,13 @@
 }
 
 header {
-  text-align: center;
-  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--soft-gray);
+  position: relative;
 }
 
 header h1 {
@@ -25,12 +28,56 @@ header h1 {
   font-size: 32px;
   font-weight: 700;
   margin-bottom: 8px;
+  text-align: center;
 }
 
 header h2 {
   color: var(--primary-color);
   font-weight: 500;
   font-size: 18px;
+}
+
+/* Drawer toggle button */
+.drawer-toggle {
+  display: none;
+  /* position: absolute; */
+  left: 0;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  width: 56px;
+  height: 56px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--box-shadow);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-toggle:hover {
+  background: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+}
+
+.drawer-toggle:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.drawer-toggle svg {
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+}
+
+.drawer-toggle:hover svg {
+  transform: scale(1.1);
 }
 
 main {
@@ -41,6 +88,13 @@ main {
 
 .simulation-area {
   display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.simulation-content {
+  display: flex;
   gap: 30px;
   align-items: flex-start;
   width: 100%;
@@ -49,7 +103,7 @@ main {
 /* ControlPanel is already set to flex: 0 0 320px in its own CSS file */
 
 /* EnsembleDisplay needs to take remaining space */
-.simulation-area > :nth-child(2) {
+.simulation-content > :nth-child(2) {
   flex: 1;
 }
 
@@ -127,8 +181,11 @@ footer {
   }
 
   header {
-    margin-left: 60px;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
+  }
+
+  .drawer-toggle {
+    display: flex;
   }
 
   header h1 {
@@ -140,12 +197,12 @@ footer {
   }
 
   main {
-    padding-top: 20px; /* Add space for the fixed toggle button */
+    /*padding-top: 20px; !* Add space for the fixed toggle button *!*/
     width: 100%;
     overflow-x: hidden;
   }
 
-  .simulation-area {
+  .simulation-content {
     flex-direction: column;
     gap: 16px;
     width: 100%;
@@ -153,7 +210,7 @@ footer {
   }
 
   /* The drawer now handles the control panel display independently */
-  .simulation-area > :nth-child(2) {
+  .simulation-content > :nth-child(2) {
     width: 100%;
     max-width: 100%;
   }
@@ -165,9 +222,7 @@ footer {
     overflow-x: auto;
   }
   
-  .drawer-toggle.open {
-    display: none;
-  }
+
   
   .drawer-overlay {
     position: fixed;
@@ -186,8 +241,10 @@ footer {
     padding: 12px;
   }
 
-  header {
-    margin-left: 55px;
+  .drawer-toggle {
+    width: 52px;
+    height: 52px;
+    font-size: 1rem;
   }
   
   .simulation-display {
