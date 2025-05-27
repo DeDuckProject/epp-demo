@@ -195,6 +195,10 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ isOpen, onClose }) => {
               which served as a reference for our implementation. It also contains a much deeper explanation then this application provides.
             </p>
             <p>
+              The application was built as a lab assignment at the Hebrew University of Jerusalem
+              under the supervision of Michael Ben-Or.
+            </p>
+            <p>
               This simulator provides both theoretical (average) and realistic (Monte Carlo) approaches 
               to understanding quantum entanglement purification protocols.
             </p>
