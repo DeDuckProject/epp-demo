@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { HiMenu, HiX } from 'react-icons/hi';
 import { SimulationController } from '../controller/simulationController';
 import { SimulationState, SimulationParameters, EngineType, Basis, NoiseChannel } from '../engine/types';
 import ControlPanel from './ControlPanel';
@@ -61,7 +62,7 @@ const App: React.FC = () => {
           aria-label="Toggle controls"
           onClick={() => setDrawerOpen(o => !o)}
         >
-          ☰
+          <HiMenu size={24} />
         </button>
         <div className="simulation-area">
           <ControlPanel

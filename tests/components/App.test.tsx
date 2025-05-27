@@ -288,4 +288,25 @@ describe('App', () => {
     // Check that attribution component is rendered
     expect(screen.getByTestId('attribution-component')).toBeDefined();
   });
+
+  test('shows correct icon based on drawer state', () => {
+    render(<App />);
+    
+    const toggleButton = screen.getByLabelText('Toggle controls');
+    
+    // Initially should show menu icon (HiMenu)
+    expect(toggleButton.querySelector('svg')).toBeInTheDocument();
+    
+    // Click to open drawer
+    fireEvent.click(toggleButton);
+    
+    // Should still have an icon (now HiX)
+    expect(toggleButton.querySelector('svg')).toBeInTheDocument();
+    
+    // Click to close drawer
+    fireEvent.click(toggleButton);
+    
+    // Should still have an icon (back to HiMenu)
+    expect(toggleButton.querySelector('svg')).toBeInTheDocument();
+  });
 }); 

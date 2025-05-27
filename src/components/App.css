@@ -127,7 +127,7 @@ footer {
   }
 
   header {
-    margin-left: 60px;
+    margin-left: 88px;
     margin-bottom: 24px;
   }
 
@@ -165,9 +165,7 @@ footer {
     overflow-x: auto;
   }
   
-  .drawer-toggle.open {
-    display: none;
-  }
+
   
   .drawer-overlay {
     position: fixed;
@@ -187,7 +185,7 @@ footer {
   }
 
   header {
-    margin-left: 55px;
+    margin-left: 84px;
   }
   
   .simulation-display {
