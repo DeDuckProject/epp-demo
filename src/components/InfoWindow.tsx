@@ -92,28 +92,25 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ isOpen, onClose }) => {
             <p>
               Convert the noisy quantum states into <a href="https://en.wikipedia.org/wiki/Werner_state" target="_blank" rel="noopener noreferrer">Werner form</a> through <a href="https://en.wikipedia.org/wiki/Quantum_depolarizing_channel" target="_blank" rel="noopener noreferrer">depolarizing operations</a>. The twirling operation
               keeps the |Ψ⁻⟩ component of the state, balances the components of the other three Bell states, 
-              and removes all off-diagonal elements. This creates a diagonal <a href="https://en.wikipedia.org/wiki/Density_matrix" target="_blank" rel="noopener noreferrer">density matrix</a> in the Bell basis 
-              that's easier to analyze mathematically. <br />
+              and removes all off-diagonal elements. This creates a diagonal <a href="https://en.wikipedia.org/wiki/Density_matrix" target="_blank" rel="noopener noreferrer">density matrix</a> in the Bell basis. <br />
               Note that this explanation describes the average case;
               In the <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method" target="_blank" rel="noopener noreferrer">monte-carlo simulation</a> the twirling is randomized, and will not look as perfect.
             </p>
 
             <h4>2. Exchange Operation</h4>
             <p>
-              Perform a basis transformation that exchanges the |Ψ⁻⟩ and |Φ⁺⟩ Bell state components. This step prepares the states 
-              for the bilateral CNOT operations by ensuring the correct <a href="https://quantumcomputing.stackexchange.com/questions/1410/what-is-meant-by-the-term-computational-basis" target="_blank" rel="noopener noreferrer">computational basis</a> alignment between pairs that will interact.
+              Perform a basis transformation that exchanges the |Ψ⁻⟩ and |Φ⁺⟩ Bell state components.
             </p>
 
             <h4>3. Bilateral CNOT</h4>
             <p>
               Apply <a href="https://en.wikipedia.org/wiki/Controlled_NOT_gate" target="_blank" rel="noopener noreferrer">controlled-NOT gates</a> between pairs of entangled pairs (4 qubits total). Alice performs CNOT operations between 
-              her qubits from two different pairs, and Bob does the same with his qubits. This creates correlations between 
-              the two pairs such that the measurement results on one pair will determine the fate of the other pair.
+              her qubits from two different pairs, and Bob does the same with his qubits. This entangles both pairs.
             </p>
 
             <h4>4. Measurement & Post-Selection</h4>
             <p>
-              Measure the "target" pairs in the computational basis to determine if the purification succeeded. The success event
+              Measure the "target" pairs in the <a href="https://quantumcomputing.stackexchange.com/questions/1410/what-is-meant-by-the-term-computational-basis" target="_blank" rel="noopener noreferrer">computational basis</a> to determine if the purification succeeded. The success event
               occurs when Alice and Bob both get the same result from measuring their target qubits. Based on the <a href="https://en.wikipedia.org/wiki/Quantum_measurement" target="_blank" rel="noopener noreferrer"> measurement</a> outcomes, the "control" pairs are either kept (if measurements indicate success) or discarded (in the case of failure).
               This post-selection step is crucial - it trades quantity for quality.
             </p>
@@ -128,8 +125,8 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ isOpen, onClose }) => {
             </p>
 
             <div className="protocol-note">
-              <strong>Key Insight:</strong> Each round sacrifices at least half the pairs to increase the fidelity of the 
-              remaining pairs. The protocol succeeds when the gain in fidelity outweighs the loss in quantity.
+              <strong>Key Insight:</strong> Each round sacrifices at least half the pairs to increase the fidelity of the
+              remaining pairs. The protocol doesn't always succeed with achieving greater fidelity, but on average it does.
             </div>
 
           </section>
@@ -185,8 +182,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ isOpen, onClose }) => {
             </p>
             <p>
               <strong>Bennett, C. H., Brassard, G., Popescu, S., Schumacher, B., Smolin, J. A., & Wootters, W. K.</strong> (1996). 
-              "Purification of noisy entanglement and faithful teleportation via noisy channels." 
-              <em>Physical Review Letters</em>, 76(5), 722-725.
+              <a href="https://arxiv.org/abs/quant-ph/9511027" target="_blank" rel="noopener noreferrer">"Purification of noisy entanglement and faithful teleportation via noisy channels"</a> <em>Physical Review Letters</em>, 76(5), 722-725.
             </p>
             <p>
               We acknowledge and credit <a href="https://github.com/a-auer/qiskit" target="_blank" rel="noopener noreferrer">
