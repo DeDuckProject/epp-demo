@@ -12,7 +12,7 @@
 .pairs-container {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 20px;
   /* Set a minimum width to ensure container is scrollable when needed */
   min-width: fit-content;
   width: 100%;
@@ -116,6 +116,16 @@
   .participant-section    { display: flex; flex-direction: column; }
   .participant-label      { position: static !important; margin-bottom: 8px; }
   .pair-row               { gap: 12px; overflow-x: visible; }
+  
+  /* Move Bob label below Bob's row on mobile */
+  .participant-section:last-child {
+    flex-direction: column-reverse;
+  }
+  
+  .participant-section:last-child .participant-label {
+    margin-bottom: 0;
+    margin-top: 8px;
+  }
 }
 
 /* Update scrollbar styling to target the ensemble-display container */
