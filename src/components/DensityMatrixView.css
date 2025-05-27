@@ -131,26 +131,4 @@
   .density-matrix {
     position: relative;
   }
-
-  /* Optional: Add shadow indicators for horizontal scroll */
-  .density-matrix::before,
-  .density-matrix::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 20px;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  .density-matrix::before {
-    left: 0;
-    background: linear-gradient(to right, rgba(255,255,255,1), rgba(255,255,255,0));
-  }
-
-  .density-matrix::after {
-    right: 0;
-    background: linear-gradient(to left, rgba(255,255,255,1), rgba(255,255,255,0));
-  }
 } 
