@@ -3,6 +3,7 @@ import { SimulationController } from '../controller/simulationController';
 import { SimulationState, SimulationParameters, EngineType, Basis, NoiseChannel } from '../engine/types';
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
+import InfoWindow from './InfoWindow';
 import './App.css';
 
 const App: React.FC = () => {
@@ -11,6 +12,7 @@ const App: React.FC = () => {
   const [engineType, setEngineType] = useState<EngineType>(EngineType.MonteCarlo);
   const [viewBasis, setViewBasis] = useState<Basis>(Basis.Bell);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   
   useEffect(() => {
     // Initialize controller with default parameters
@@ -89,6 +91,20 @@ const App: React.FC = () => {
           />
         </div>
       </main>
+      
+      <InfoWindow 
+        isOpen={infoOpen}
+        onClose={() => setInfoOpen(false)}
+      />
+      
+      <button 
+        className="info-button floating"
+        onClick={() => setInfoOpen(true)}
+        aria-label="Open information window"
+        title="Learn about entanglement purification"
+      >
+        ?
+      </button>
     </div>
   );
 };

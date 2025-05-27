@@ -24,8 +24,5 @@
     "noUncheckedSideEffectImports": true,
     "types": ["vitest/globals", "node"]
   },
-  "include": ["tests", "src"],
-  "references": [
-    { "path": "./tsconfig.app.json" }
-  ]
+  "include": ["tests"]
 } 
