@@ -32,6 +32,11 @@ vi.mock('../../src/components/EnsembleDisplay', () => ({
   )
 }));
 
+// Mock the Attribution component
+vi.mock('../../src/components/Attribution', () => ({
+  default: () => <div data-testid="attribution-component">Attribution</div>
+}));
+
 describe('App', () => {
   // Create a mock state for testing
   const mockState: SimulationState = {
@@ -275,5 +280,12 @@ describe('App', () => {
     
     // Check that drawer is closed
     expect(controlPanel).not.toHaveClass('open');
+  });
+
+  test('renders attribution component', () => {
+    render(<App />);
+    
+    // Check that attribution component is rendered
+    expect(screen.getByTestId('attribution-component')).toBeDefined();
   });
 }); 
