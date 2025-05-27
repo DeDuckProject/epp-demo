@@ -101,6 +101,24 @@ This document defines all UI components used in the EPP (Entanglement Purificati
 />
 ```
 
+### Attribution
+**Description**: Floating attribution area that displays creator information and social media links. Positioned next to the help button to provide unobtrusive credit and contact information.  
+**Props**: None - Static component with hardcoded creator information
+
+**Features**:
+- Displays "Created by Iftach Yakar" text vertically
+- Provides social media links (GitHub, LinkedIn, X/Twitter, Bluesky) with icons
+- Floating positioning next to help button with proper spacing
+- Responsive design for mobile devices
+- Accessibility features with proper ARIA labels
+
+**Styling**: Uses styles defined in `index.css` with `.attribution-*` classes that follow the existing design system
+
+**Example Usage**:
+```tsx
+<Attribution />
+```
+
 ## Component Hierarchy
 - App (Root component)
   - ControlPanel (Configures and controls simulation)
@@ -108,6 +126,7 @@ This document defines all UI components used in the EPP (Entanglement Purificati
     - QubitPair (Individual qubit pair display)
       - DensityMatrixView (Visualizes quantum state)
   - InfoWindow (Educational modal window)
+  - Attribution (Creator credit and social links)
 
 ## Styling Guidelines
 - Components use dedicated CSS files for component-specific styling

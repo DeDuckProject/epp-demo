@@ -4,6 +4,7 @@ import { SimulationState, SimulationParameters, EngineType, Basis, NoiseChannel 
 import ControlPanel from './ControlPanel';
 import EnsembleDisplay from './EnsembleDisplay';
 import InfoWindow from './InfoWindow';
+import Attribution from './Attribution';
 import './App.css';
 
 const App: React.FC = () => {
@@ -96,6 +97,8 @@ const App: React.FC = () => {
         isOpen={infoOpen}
         onClose={() => setInfoOpen(false)}
       />
+      
+      <Attribution />
       
       <button 
         className="info-button floating"
