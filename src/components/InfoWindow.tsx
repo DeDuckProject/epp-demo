@@ -1,6 +1,10 @@
 import React, { useEffect } from 'react';
-import { InfoWindowProps } from './InfoWindow.d';
 import './InfoWindow.css';
+
+interface InfoWindowProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 const InfoWindow: React.FC<InfoWindowProps> = ({ isOpen, onClose }) => {
   useEffect(() => {

@@ -67,4 +67,31 @@ jobs:
           echo "Test coverage report generated"
         else
           echo "No coverage report found"
-        fi 
+        fi
+
+  type-check:
+    runs-on: ubuntu-latest
+    name: Type Check
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Clean up dependencies
+      run: |
+        rm -rf node_modules package-lock.json
+    
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Run type check
+      run: npm run type-check 
