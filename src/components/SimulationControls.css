@@ -45,7 +45,7 @@
 .control-button.primary {
   background-color: var(--highlight-green);
   font-weight: 600;
-  min-width: 180px;
+  min-width: 260px;
 }
 
 .control-button.primary:hover:not(:disabled) {
@@ -76,7 +76,7 @@
   }
   
   .control-button.primary {
-    min-width: 140px;
+    min-width: 240px;
   }
 }
 
@@ -96,10 +96,15 @@
     padding: 12px 8px;
     font-size: 12px;
     text-align: center;
+    min-height: 55px;
   }
   
   .control-button.primary {
     min-width: unset;
     /* Remove grid-column to allow 2-button layout */
   }
+
+  /* .control-button.primary {
+    min-height: 55px;
+  } */
 } 
