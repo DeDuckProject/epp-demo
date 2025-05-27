@@ -17,7 +17,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--soft-gray);
   position: relative;
@@ -88,6 +88,13 @@ main {
 
 .simulation-area {
   display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.simulation-content {
+  display: flex;
   gap: 30px;
   align-items: flex-start;
   width: 100%;
@@ -96,7 +103,7 @@ main {
 /* ControlPanel is already set to flex: 0 0 320px in its own CSS file */
 
 /* EnsembleDisplay needs to take remaining space */
-.simulation-area > :nth-child(2) {
+.simulation-content > :nth-child(2) {
   flex: 1;
 }
 
@@ -174,7 +181,7 @@ footer {
   }
 
   header {
-    margin-bottom: 24px;
+    margin-bottom: 12px;
   }
 
   .drawer-toggle {
@@ -190,12 +197,12 @@ footer {
   }
 
   main {
-    padding-top: 20px; /* Add space for the fixed toggle button */
+    /*padding-top: 20px; !* Add space for the fixed toggle button *!*/
     width: 100%;
     overflow-x: hidden;
   }
 
-  .simulation-area {
+  .simulation-content {
     flex-direction: column;
     gap: 16px;
     width: 100%;
@@ -203,7 +210,7 @@ footer {
   }
 
   /* The drawer now handles the control panel display independently */
-  .simulation-area > :nth-child(2) {
+  .simulation-content > :nth-child(2) {
     width: 100%;
     max-width: 100%;
   }
