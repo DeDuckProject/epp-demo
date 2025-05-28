@@ -285,7 +285,7 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
             strokeWidth={2} 
             showHead={false}
             animated={true}
-            animationType="flow"
+            animationType="sine-wave"
             divContainerProps={{ 
               className: `xarrow entanglement-line${willBeDiscarded(pair) ? ' will-be-discarded' : ''}`
             }}

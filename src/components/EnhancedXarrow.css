@@ -22,6 +22,13 @@
 
 .enhanced-xarrow.sine-wave {
   /* Sine wave animation specific styles */
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Target the SVG path element for sine wave animation */
+.enhanced-xarrow.sine-wave svg path {
+  stroke-dasharray: 8 4;
+  animation: sine-wave-flow 2s linear infinite;
 }
 
 /* Connection type specific z-index ordering */
@@ -54,16 +61,10 @@
 /* Sine wave path animation */
 @keyframes sine-wave-flow {
   0% {
-    stroke-dasharray: 0 100;
     stroke-dashoffset: 0;
   }
-  50% {
-    stroke-dasharray: 50 50;
-    stroke-dashoffset: -25;
-  }
   100% {
-    stroke-dasharray: 0 100;
-    stroke-dashoffset: -100;
+    stroke-dashoffset: 24; /* Move the dash pattern along the path */
   }
 }
 
