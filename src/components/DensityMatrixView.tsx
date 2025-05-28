@@ -14,28 +14,72 @@ interface DensityMatrixViewProps {
   isWerner: boolean;
 }
 
+/**
+ * Generates Bell state labels for n-qubit systems using tensor product notation
+ * @param numQubits Number of qubits (derived from matrix dimension)
+ * @returns Array of Bell state labels
+ */
+const generateBellLabels = (numQubits: number): string[] => {
+  if (numQubits === 1) {
+    // Single qubit Bell-like states (not standard, but for completeness)
+    return ['|+⟩', '|-⟩'];
+  }
+  
+  if (numQubits === 2) {
+    // Standard 2-qubit Bell states
+    return ['|Φ⁺⟩', '|Φ⁻⟩', '|Ψ⁺⟩', '|Ψ⁻⟩'];
+  }
+  
+  // For multi-qubit systems, use tensor product notation
+  const baseBellStates = ['Φ⁺', 'Φ⁻', 'Ψ⁺', 'Ψ⁻'];
+  const numPairs = numQubits / 2;
+  
+  if (!Number.isInteger(numPairs)) {
+    // Odd number of qubits - use simplified notation
+    return Array.from({ length: 2 ** numQubits }, (_, idx) => `|B${idx}⟩`);
+  }
+  
+  // Generate all combinations for pairs of qubits
+  const labels: string[] = [];
+  const totalStates = 2 ** numQubits;
+  
+  for (let i = 0; i < totalStates; i++) {
+    const stateComponents: string[] = [];
+    let remaining = i;
+    
+    for (let pair = 0; pair < numPairs; pair++) {
+      const stateIndex = remaining % 4;
+      stateComponents.unshift(baseBellStates[stateIndex]);
+      remaining = Math.floor(remaining / 4);
+    }
+    
+    labels.push(`|${stateComponents.join('')}⟩`);
+  }
+  
+  return labels;
+};
+
 const DensityMatrixView: React.FC<DensityMatrixViewProps> = ({ 
   matrix, 
   basis = Basis.Bell,
   isWerner 
 }) => {
-  // Bell basis state labels
-  const bellLabels = ['|Φ⁺⟩', '|Φ⁻⟩', '|Ψ⁺⟩', '|Ψ⁻⟩'];
+  // Calculate number of qubits from matrix dimension
+  const n = Math.log2(matrix.rows);
+  if (!Number.isInteger(n)) {
+    console.error('Matrix dimension is not a power of 2');
+    return <div>Error: Invalid matrix dimension</div>;
+  }
+  
+  // Generate Bell basis state labels dynamically
+  const bellLabels = generateBellLabels(n);
   
   // Computational basis state labels
-  const computationalLabels = (() => {
-    const n = Math.log2(matrix.rows);
-    if (!Number.isInteger(n)) {
-      console.error('Matrix dimension is not a power of 2');
-      return Array(matrix.rows).fill('|?⟩');
-    }
-    
-    return Array.from({ length: matrix.rows }, (_, idx) => {
-      // Convert index to binary string and pad with leading zeros
-      const binaryStr = idx.toString(2).padStart(n, '0');
-      return `|${binaryStr}⟩`;
-    });
-  })();
+  const computationalLabels = Array.from({ length: matrix.rows }, (_, idx) => {
+    // Convert index to binary string and pad with leading zeros
+    const binaryStr = idx.toString(2).padStart(n, '0');
+    return `|${binaryStr}⟩`;
+  });
   
   // Select the labels based on the basis prop
   const labels = basis === Basis.Computational ? computationalLabels : bellLabels;
