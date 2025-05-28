@@ -1,84 +1,148 @@
-# React + TypeScript + Vite
+# Quantum Entanglement Purification Simulator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based interactive simulator for the BBPSSW (Bennett-Brassard-Popescu-Schumacher-Smolin-Wootters) quantum entanglement purification protocol. This application demonstrates how noisy entangled quantum states can be purified to achieve higher fidelity through quantum operations, measurements, and post-selection.
 
-Currently, two official plugins are available:
+## What is Entanglement Purification?
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+[Entanglement purification](https://en.wikipedia.org/wiki/Entanglement_distillation) is a protocol that improves the quality (fidelity) of noisy entangled quantum states (EPR pairs). When quantum systems interact with their environment, they lose their perfect entanglement and become "noisy". This simulator implements the BBPSSW protocol, which uses multiple noisy entangled pairs to create fewer, but higher-fidelity entangled pairs through quantum operations, measurements and classical communication.
 
-## Continuous Integration
+The protocol works by:
+- Starting with multiple noisy entangled pairs
+- Applying quantum operations (twirling, CNOT gates)
+- Performing measurements to test entanglement quality
+- Keeping only the pairs that pass the test
+- Repeating until target fidelity is achieved
 
-This project uses GitHub Actions for continuous integration. The CI pipeline:
+## Technologies Used
 
-- Runs on every push to the main/master branch and on pull requests
-- Tests the codebase against Node.js 18.x and 20.x
-- Executes all tests using Vitest
+- **React 18** - Frontend framework
+- **TypeScript** - Type-safe JavaScript
+- **Vite** - Build tool and development server
+- **Vitest** - Testing framework
+- **ESLint** - Code linting
+- **CSS3** - Styling with custom CSS modules
 
-To view the CI results, check the Actions tab in the GitHub repository.
+## Development Setup
 
-### Troubleshooting CI
+### Prerequisites
+- Node.js 18.x or 20.x
+- npm or yarn
 
-If you encounter issues with platform-specific dependencies in CI:
+### Installation
 
-1. The workflow is configured to clean `node_modules` and `package-lock.json` before installation
-2. We use `npm install` instead of `npm ci` to handle optional dependencies better
-3. We've added `@rollup/rollup-linux-x64-gnu` as an optional dependency to fix common issues on Linux CI runners
+```bash
+# Clone the repository
+git clone <repository-url>
+cd epp-demo
 
-## Running Tests Locally
+# Install dependencies
+npm install
 
-To run tests locally:
+# Start development server
+npm run dev
+```
+
+### Available Scripts
+
+```bash
+# Development
+npm run dev          # Start development server
+npm run build        # Build for production
+
+# Testing
+npm test            # Run all tests
+npm test -- --reporter=verbose  # Run tests with verbose output
+
+# Code Quality
+npm run lint        # Run ESLint
+```
+
+## Project Structure
+
+```
+src/
+├── components/           # React UI components
+│   ├── ControlPanel.tsx     # Simulation controls
+│   ├── EnsembleDisplay.tsx  # Qubit pair visualization
+│   ├── QubitPair.tsx        # Individual pair display
+│   ├── DensityMatrixView.tsx # Quantum state visualization
+│   ├── InfoWindow.tsx       # Educational modal
+│   └── Attribution.tsx      # Creator credits
+├── controller/          # Application state management
+├── engine/             # Simulation engine interface
+├── engine_real_calculations/ # Quantum mechanics implementation
+│   ├── types/              # Complex numbers, basic types
+│   ├── matrix/             # Matrix and density matrix classes
+│   ├── gates/              # Quantum gates (Pauli, CNOT, rotations)
+│   ├── operations/         # Gate application, partial trace
+│   ├── channels/           # Noise channels (depolarizing, dephasing, etc.)
+│   ├── measurement/        # Quantum measurement operations
+│   ├── bell/               # Bell basis transformations
+│   └── utils/              # Utility functions
+├── styles/             # CSS styling
+└── utils/              # General utilities
+
+tests/                  # Test files mirroring src structure
+```
+
+## High-Level Architecture
+
+The application follows a modular architecture:
+
+1. **Components Layer** (`src/components/`) - React UI components for visualization and interaction
+2. **Controller Layer** (`src/controller/`) - Application state management and simulation orchestration
+3. **Engine Layer** (`src/engine/`) - Abstract interface for simulation engines
+4. **Real Calculations Engine** (`src/engine_real_calculations/`) - Quantum mechanics implementation using density matrices
+
+### Key Features
+
+- **Dual Simulation Engines**: Monte Carlo (realistic) and Average (theoretical) approaches
+- **Multiple Noise Channels**: Depolarizing, dephasing, amplitude damping, and uniform noise
+- **Interactive Visualization**: Real-time display of quantum states and operations
+- **Educational Content**: Built-in explanations of quantum concepts and protocol steps
+- **Responsive Design**: Works on desktop and mobile devices
+
+## Testing
+
+The project uses Vitest for testing with comprehensive test coverage:
 
 ```bash
 # Run all tests
 npm test
 
-# Run tests with verbose output
-npm test -- --reporter=verbose
+# Run specific test file
+npm test -- tests/components/InfoWindow.test.ts
 ```
 
-## Expanding the ESLint configuration
+## Continuous Integration
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The project uses GitHub Actions for CI/CD:
+- Runs on Node.js 18.x and 20.x
+- Executes all tests using Vitest
+- Validates code quality with ESLint
+- Builds the application for production
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Usage
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+1. **Configure Parameters**: Set initial pairs, target fidelity, noise type, and noise strength
+2. **Choose Engine**: Select Monte Carlo (realistic) or Average (theoretical) simulation
+3. **Run Simulation**: Use step-by-step execution or run to completion
+4. **Visualize Results**: Observe quantum states, operations, and fidelity improvements
+5. **Learn**: Access educational content through the info window
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Credits & References
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+This implementation is based on the entanglement purification protocol described in:
+
+**Bennett, C. H., Brassard, G., Popescu, S., Schumacher, B., Smolin, J. A., & Wootters, W. K.** (1996). 
+["Purification of noisy entanglement and faithful teleportation via noisy channels"](https://arxiv.org/abs/quant-ph/9511027) *Physical Review Letters*, 76(5), 722-725.
+
+We acknowledge and credit [https://github.com/a-auer/qiskit](https://github.com/a-auer/qiskit) for explaining and implementing the protocol, which served as a reference for our implementation.
+
+The application was built as a project at the Hebrew University of Jerusalem under the supervision of Michael Ben-Or.
+
+This simulator provides both theoretical (average) and realistic (Monte Carlo) approaches to understanding quantum entanglement purification protocols.
+
+## License
+
+This project is open source and available under the MIT License.
