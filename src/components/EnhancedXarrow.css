@@ -64,7 +64,7 @@
     stroke-dashoffset: 0;
   }
   100% {
-    stroke-dashoffset: 24; /* Move the dash pattern along the path */
+    stroke-dashoffset: -24; /* Move the dash pattern in opposite direction */
   }
 }
 
