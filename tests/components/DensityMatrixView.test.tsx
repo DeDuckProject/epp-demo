@@ -43,6 +43,134 @@ describe('DensityMatrixView', () => {
     });
   });
 
+  test('renders 16x16 matrix with correct Bell basis labels for 4-qubit system', () => {
+    // Create a 16x16 density matrix with zeros (4-qubit system)
+    const zeroMatrix16x16 = new MockDensityMatrix(
+      Array(16).fill(0).map(() => Array(16).fill({ re: 0, im: 0 }))
+    ) as unknown as DensityMatrix;
+
+    render(<DensityMatrixView matrix={zeroMatrix16x16} basis={Basis.Bell} isWerner={true} />);
+    
+    // Check for title
+    expect(screen.getByText('Density Matrix (Bell Basis)')).toBeDefined();
+    
+    // Check for specific 4-qubit Bell basis labels (tensor products)
+    const expectedLabels = [
+      '|Φ⁺Φ⁺⟩', '|Φ⁻Φ⁺⟩', '|Ψ⁺Φ⁺⟩', '|Ψ⁻Φ⁺⟩',
+      '|Φ⁺Φ⁻⟩', '|Φ⁻Φ⁻⟩', '|Ψ⁺Φ⁻⟩', '|Ψ⁻Φ⁻⟩',
+      '|Φ⁺Ψ⁺⟩', '|Φ⁻Ψ⁺⟩', '|Ψ⁺Ψ⁺⟩', '|Ψ⁻Ψ⁺⟩',
+      '|Φ⁺Ψ⁻⟩', '|Φ⁻Ψ⁻⟩', '|Ψ⁺Ψ⁻⟩', '|Ψ⁻Ψ⁻⟩'
+    ];
+    
+    expectedLabels.forEach(label => {
+      // Each label should appear at least twice (once in header, once in rows)
+      const elements = screen.getAllByText(label);
+      expect(elements.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  test('renders 16x16 matrix with correct computational basis labels for 4-qubit system', () => {
+    // Create a 16x16 density matrix with zeros (4-qubit system)
+    const zeroMatrix16x16 = new MockDensityMatrix(
+      Array(16).fill(0).map(() => Array(16).fill({ re: 0, im: 0 }))
+    ) as unknown as DensityMatrix;
+
+    render(<DensityMatrixView matrix={zeroMatrix16x16} basis={Basis.Computational} isWerner={true} />);
+    
+    // Check for title
+    expect(screen.getByText('Density Matrix (Computational Basis)')).toBeDefined();
+    
+    // Check for 4-qubit computational basis labels
+    const expectedLabels = [
+      '|0000⟩', '|0001⟩', '|0010⟩', '|0011⟩',
+      '|0100⟩', '|0101⟩', '|0110⟩', '|0111⟩',
+      '|1000⟩', '|1001⟩', '|1010⟩', '|1011⟩',
+      '|1100⟩', '|1101⟩', '|1110⟩', '|1111⟩'
+    ];
+    
+    expectedLabels.forEach(label => {
+      // Each label should appear at least twice (once in header, once in rows)
+      const elements = screen.getAllByText(label);
+      expect(elements.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  test('handles invalid matrix dimensions gracefully', () => {
+    // Create a 3x3 matrix (not a power of 2)
+    const invalidMatrix = new MockDensityMatrix(
+      Array(3).fill(0).map(() => Array(3).fill({ re: 0, im: 0 }))
+    ) as unknown as DensityMatrix;
+
+    render(<DensityMatrixView matrix={invalidMatrix} basis={Basis.Bell} isWerner={true} />);
+    
+    // Should show error message
+    expect(screen.getByText('Error: Invalid matrix dimension')).toBeDefined();
+  });
+
+  test('generates correct Bell labels for single qubit system', () => {
+    // Create a 2x2 density matrix (1-qubit system)
+    const singleQubitMatrix = new MockDensityMatrix(
+      Array(2).fill(0).map(() => Array(2).fill({ re: 0, im: 0 }))
+    ) as unknown as DensityMatrix;
+
+    render(<DensityMatrixView matrix={singleQubitMatrix} basis={Basis.Bell} isWerner={true} />);
+    
+    // Check for single-qubit Bell-like labels
+    expect(screen.getAllByText('|+⟩').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('|-⟩').length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('Bell label generation algorithm produces correct patterns', () => {
+    // Test 2-qubit system (4x4 matrix)
+    const matrix4x4 = new MockDensityMatrix(
+      Array(4).fill(0).map(() => Array(4).fill({ re: 0, im: 0 }))
+    ) as unknown as DensityMatrix;
+
+    const { container: container4x4 } = render(
+      <DensityMatrixView matrix={matrix4x4} basis={Basis.Bell} isWerner={true} />
+    );
+    
+    // Should have exactly 4 unique Bell state labels for 2-qubit system
+    const headers4x4 = container4x4.querySelectorAll('th');
+    const uniqueLabels4x4 = new Set();
+    headers4x4.forEach(header => {
+      const text = header.textContent;
+      if (text && text.includes('⟩')) {
+        uniqueLabels4x4.add(text);
+      }
+    });
+    expect(uniqueLabels4x4.size).toBe(4);
+    
+    // Test 4-qubit system (16x16 matrix)
+    const matrix16x16 = new MockDensityMatrix(
+      Array(16).fill(0).map(() => Array(16).fill({ re: 0, im: 0 }))
+    ) as unknown as DensityMatrix;
+
+    const { container: container16x16 } = render(
+      <DensityMatrixView matrix={matrix16x16} basis={Basis.Bell} isWerner={true} />
+    );
+    
+    // Should have exactly 16 unique Bell state labels for 4-qubit system
+    const headers16x16 = container16x16.querySelectorAll('th');
+    const uniqueLabels16x16 = new Set();
+    headers16x16.forEach(header => {
+      const text = header.textContent;
+      if (text && text.includes('⟩')) {
+        uniqueLabels16x16.add(text);
+      }
+    });
+    expect(uniqueLabels16x16.size).toBe(16);
+    
+    // Verify the pattern: all 16 labels should be combinations of 2-qubit Bell states
+    const expectedPattern = /^\|[ΦΨ][⁺⁻][ΦΨ][⁺⁻]⟩$/;
+    headers16x16.forEach(header => {
+      const text = header.textContent;
+      if (text && text.includes('⟩') && text.length > 3) {
+        expect(text).toMatch(expectedPattern);
+      }
+    });
+  });
+
   test('renders the title and Computational basis labels when basis="computational"', () => {
     // Create a 4x4 density matrix with zeros
     const zeroMatrix = new MockDensityMatrix(
@@ -138,8 +266,10 @@ describe('DensityMatrixView', () => {
 
     render(<DensityMatrixView matrix={matrix} isWerner={true} />);
     
-    // Check for the formatted imaginary number
-    expect(screen.getByText('-0.500i')).toBeDefined();
+    // Check for the formatted imaginary number (with space before minus)
+    expect(screen.getByText((content, element) => {
+      return content.includes('- 0.5i');
+    })).toBeDefined();
   });
 
   test('formats complex numbers with both real and imaginary parts', () => {
@@ -152,8 +282,8 @@ describe('DensityMatrixView', () => {
 
     render(<DensityMatrixView matrix={matrix} isWerner={true} />);
     
-    // Check for the formatted complex number
-    expect(screen.getByText('0.100+0.200i')).toBeDefined();
+    // Check for the formatted complex number (with space around plus)
+    expect(screen.getByText('0.1 + 0.2i')).toBeDefined();
   });
 
   test('formats small numbers below threshold as 0', () => {

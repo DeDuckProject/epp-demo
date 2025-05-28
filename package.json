@@ -9,7 +9,8 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "mathjs": "^14.4.0",

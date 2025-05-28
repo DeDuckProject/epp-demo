@@ -109,6 +109,7 @@
     min-width: 30px;  /* Reduced from 50px */
     max-width: 60px;  /* Add max-width constraint */
     white-space: normal;  /* Allow text wrapping on mobile */
+    height: 40px;
   }
 
   .density-matrix td {
