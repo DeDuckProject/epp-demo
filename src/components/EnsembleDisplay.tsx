@@ -7,10 +7,12 @@ if (typeof SVGElement !== 'undefined' && typeof SVGElement.prototype.getTotalLen
 
 import React, { useState } from 'react';
 import Xarrow, { Xwrapper } from 'react-xarrows';
+import EnhancedXarrow from './EnhancedXarrow';
 import { QubitPair as QubitPairType, Basis } from '../engine/types';
 import QubitPair from './QubitPair';
 import DensityMatrixView from './DensityMatrixView';
 import './EnsembleDisplay.css';
+import './EnhancedXarrow.css';
 import { DensityMatrix } from '../engine_real_calculations';
 import Popup from './Popup';
 
@@ -179,42 +181,78 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
           
           return (
             <React.Fragment key={`cnot-${control.id}`}>
-              <Xarrow
+              <EnhancedXarrow
                 start={`alice-${control.id}`}
                 end={`alice-${target.id}`}
+                fidelity={control.fidelity}
+                connectionType="cnot"
                 path="grid"
-                lineColor="#000"
                 strokeWidth={2}
                 startAnchor="middle"
                 endAnchor="middle"
                 showHead={false}
                 showTail={false}
-                tailSize={6}
-                tailColor="#000"
                 curveness={0.8}
-                headSize={10}
+                animated={false}
                 divContainerProps={{ className: "xarrow entanglement-line cnot-connection" }}
-                labels={{ end: <span style={{fontWeight:'bold',fontSize:18, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -75%)', color: '#000'}}>⊕</span>,
-                  start: <span style={{fontWeight:'bold',fontSize:18, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -25%)', color: '#000'}}>●</span>
+                labels={{ 
+                  start: <span style={{
+                    fontWeight: 'bold',
+                    fontSize: '18px', 
+                    fontFamily: 'math', 
+                    color: '#000',
+                    zIndex: 101,
+                    position: 'relative',
+                    display: 'inline-block',
+                    transform: 'translate(-50%,25%)'
+                  }}>●</span>,
+                  end: <span style={{
+                    fontWeight: 'bold',
+                    fontSize: '18px', 
+                    fontFamily: 'math', 
+                    color: '#000',
+                    zIndex: 101,
+                    position: 'relative',
+                    display: 'inline-block',
+                    transform: 'translate(50%,-25%)'
+                  }}>⊕</span>
                 }}
               />
-              <Xarrow
+              <EnhancedXarrow
                 start={`bob-${control.id}`}
                 end={`bob-${target.id}`}
+                fidelity={control.fidelity}
+                connectionType="cnot"
                 path="grid"
-                lineColor="#000"
                 strokeWidth={2}
                 startAnchor="middle"
                 endAnchor="middle"
                 showHead={false}
                 showTail={false}
-                tailSize={6}
-                tailColor="#000"
                 curveness={0.8}
-                headSize={10}
+                animated={false}
                 divContainerProps={{ className: "xarrow entanglement-line cnot-connection" }}
-                labels={{ end: <span style={{fontWeight:'bold',fontSize:18, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -75%)', color: '#000'}}>⊕</span>,
-                  start: <span style={{fontWeight:'bold',fontSize:18, fontFamily: 'math', position: 'absolute', transform: 'translate(-50%, -25%)', color: '#000'}}>●</span>
+                labels={{ 
+                  start: <span style={{
+                    fontWeight: 'bold',
+                    fontSize: '18px', 
+                    fontFamily: 'math', 
+                    color: '#000',
+                    zIndex: 101,
+                    position: 'relative',
+                    display: 'inline-block',
+                    transform: 'translate(-50%,25%)'
+                  }}>●</span>,
+                  end: <span style={{
+                    fontWeight: 'bold',
+                    fontSize: '18px', 
+                    fontFamily: 'math', 
+                    color: '#000',
+                    zIndex: 101,
+                    position: 'relative',
+                    display: 'inline-block',
+                    transform: 'translate(50%,-25%)'
+                  }}>⊕</span>
                 }}
               />
             </React.Fragment>
@@ -230,36 +268,43 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
           // Find result for this control pair
           const result = pendingPairs.results?.find(r => r.control.id === control.id);
           const isSuccessful = result?.successful ?? false;
-          const lineColor = isSuccessful ? '#4ade80' : '#ef4444'; // green for success, red for failure
           
           return (
             <React.Fragment key={`measured-${control.id}`}>
-              <Xarrow
+              <EnhancedXarrow
                 start={`alice-${control.id}`}
                 end={`alice-${target.id}`}
+                fidelity={control.fidelity}
+                connectionType="measurement"
+                measurementSuccess={isSuccessful}
+                willBeDiscarded={!isSuccessful}
                 path="grid"
-                lineColor={lineColor}
-                strokeWidth={2}
+                strokeWidth={3}
                 startAnchor="middle"
                 endAnchor="middle"
                 showHead={false}
                 showTail={false}
                 curveness={0.8}
+                animated={false}
                 divContainerProps={{ 
                   className: `xarrow entanglement-line measured-connection ${isSuccessful ? 'successful' : 'failed'}`
                 }}
               />
-              <Xarrow
+              <EnhancedXarrow
                 start={`bob-${control.id}`}
                 end={`bob-${target.id}`}
+                fidelity={control.fidelity}
+                connectionType="measurement"
+                measurementSuccess={isSuccessful}
+                willBeDiscarded={!isSuccessful}
                 path="grid"
-                lineColor={lineColor}
-                strokeWidth={2}
+                strokeWidth={3}
                 startAnchor="middle"
                 endAnchor="middle"
                 showHead={false}
                 showTail={false}
                 curveness={0.8}
+                animated={false}
                 divContainerProps={{ 
                   className: `xarrow entanglement-line measured-connection ${isSuccessful ? 'successful' : 'failed'}`
                 }}
@@ -270,14 +315,18 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
         
         {/* Entanglement lines */}
         {pairs.map(pair => (
-          <Xarrow 
+          <EnhancedXarrow 
             key={`entangle-${pair.id}`} 
             start={`alice-${pair.id}`} 
             end={`bob-${pair.id}`} 
+            fidelity={pair.fidelity}
+            connectionType="entanglement"
+            willBeDiscarded={willBeDiscarded(pair)}
             path="straight" 
-            lineColor={willBeDiscarded(pair) ? '#cccccc' : '#3B82F6'} 
             strokeWidth={2} 
             showHead={false}
+            animated={true}
+            animationType="flow"
             divContainerProps={{ 
               className: `xarrow entanglement-line${willBeDiscarded(pair) ? ' will-be-discarded' : ''}`
             }}
