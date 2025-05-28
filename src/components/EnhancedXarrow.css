@@ -1,0 +1,165 @@
+/* Enhanced Xarrow Animations */
+
+.enhanced-xarrow {
+  transition: all 0.3s ease;
+  opacity: 0.9; /* Ensure good visibility */
+  position: relative; /* Ensure z-index works */
+}
+
+.enhanced-xarrow.animated {
+  /* Base animation styles */
+}
+
+.enhanced-xarrow.flow {
+  /* Flowing animation specific styles */
+  animation: flow-pulse 3s ease-in-out infinite;
+}
+
+.enhanced-xarrow.pulse {
+  /* Pulsing animation specific styles */
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.enhanced-xarrow.sine-wave {
+  /* Sine wave animation specific styles */
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Target the SVG path element for sine wave animation */
+.enhanced-xarrow.sine-wave svg path {
+  stroke-dasharray: 8 4;
+  animation: sine-wave-flow 2s linear infinite;
+}
+
+/* Connection type specific z-index ordering */
+.enhanced-xarrow.entanglement {
+  z-index: 1; /* Behind qubit pairs */
+}
+
+.enhanced-xarrow.cnot {
+  z-index: 100 !important; /* Force in front of everything */
+  position: relative !important;
+  animation: none !important; /* No animation for CNOT */
+}
+
+.enhanced-xarrow.measurement {
+  z-index: 50; /* In front of qubit pairs but behind CNOT */
+}
+
+/* Flowing animation */
+@keyframes flow-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+}
+
+/* Sine wave path animation */
+@keyframes sine-wave-flow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -24; /* Move the dash pattern in opposite direction */
+  }
+}
+
+/* Flowing gradient animation */
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Enhanced pulse animation - removed transform to prevent movement */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.8;
+    filter: brightness(1) drop-shadow(0 0 2px var(--base-color));
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.4) drop-shadow(0 0 6px var(--base-color));
+  }
+}
+
+/* High fidelity connections get more prominent animations */
+.enhanced-xarrow[style*="--fidelity: 0.9"],
+.enhanced-xarrow[style*="--fidelity: 1.0"] {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+  opacity: 1;
+}
+
+/* Medium fidelity connections get moderate animations */
+.enhanced-xarrow[style*="--fidelity: 0.5"],
+.enhanced-xarrow[style*="--fidelity: 0.6"],
+.enhanced-xarrow[style*="--fidelity: 0.7"],
+.enhanced-xarrow[style*="--fidelity: 0.8"] {
+  animation: flow-pulse 2.5s ease-in-out infinite;
+  animation-delay: 0.3s;
+  opacity: 0.9;
+}
+
+/* Low fidelity connections get subtle animations */
+.enhanced-xarrow[style*="--fidelity: 0.1"],
+.enhanced-xarrow[style*="--fidelity: 0.2"],
+.enhanced-xarrow[style*="--fidelity: 0.3"],
+.enhanced-xarrow[style*="--fidelity: 0.4"] {
+  animation: flow-pulse 4s ease-in-out infinite;
+  animation-delay: 1s;
+  opacity: 0.7;
+}
+
+/* Entanglement line specific styles */
+.enhanced-xarrow.entanglement-line {
+  z-index: 1; /* Behind qubit pairs */
+  stroke-width: 3px; /* Ensure minimum visibility */
+}
+
+.enhanced-xarrow.entanglement-line.will-be-discarded {
+  opacity: 0.4;
+  animation: none;
+  filter: grayscale(0.7);
+}
+
+/* CNOT connection styles */
+.enhanced-xarrow.cnot-connection {
+  z-index: 100 !important; /* Force in front of everything */
+  position: relative !important;
+  stroke-width: 4px; /* Thicker for CNOT operations */
+  animation: none !important; /* Ensure no animation */
+}
+
+/* Override any animations for CNOT connections but allow transforms for positioning */
+.enhanced-xarrow.cnot-connection * {
+  animation: none !important;
+  /* Removed transform: none !important to allow symbol positioning */
+}
+
+/* Measured connection styles */
+.enhanced-xarrow.measured-connection {
+  z-index: 50; /* In front of qubit pairs but behind CNOT */
+  stroke-width: 4px; /* Thicker for measurement operations */
+}
+
+.enhanced-xarrow.measured-connection.successful {
+  animation: none; /* Remove the pulsating movement animation */
+  opacity: 1;
+  filter: brightness(1.2) drop-shadow(0 0 4px var(--base-color)); /* Static glow instead */
+}
+
+.enhanced-xarrow.measured-connection.failed {
+  animation: none;
+  opacity: 0.5;
+  filter: grayscale(0.8);
+} 

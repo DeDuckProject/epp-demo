@@ -5,6 +5,7 @@ import DensityMatrixView from './DensityMatrixView';
 import { isWerner } from '../utils/matrixFormatting';
 import { toBellBasis, toComputationalBasis } from '../engine_real_calculations/bell/bell-basis';
 import { DensityMatrix } from '../engine_real_calculations';
+import { getFidelityColor, getBorderGlow } from '../utils/fidelityColors';
 import './QubitPair.css';
 
 interface QubitPairProps {
@@ -127,20 +128,13 @@ const QubitPair: React.FC<QubitPairProps> = ({
   
   // Map fidelity to a more vibrant color gradient
   // TODO consider making use of css styles here instead
-  const getFidelityColor = () => {
-    if (willBeDiscarded) {
-      return 'rgba(180, 180, 180, 0.5)'; // Grey color for pairs to be discarded
-    }
-    const hue = Math.floor(120 * pair.fidelity); // 0 is red, 120 is green
-    return `hsla(${hue}, 80%, 60%, 0.8)`;
+  const getQubitFidelityColor = () => {
+    return getFidelityColor(pair.fidelity, willBeDiscarded);
   };
   
   // Calculate an opacity/glow based on fidelity
-  const getBorderGlow = () => {
-    if (willBeDiscarded) {
-      return 'none'; // No glow for pairs to be discarded
-    }
-    return `0 0 ${Math.floor(pair.fidelity * 15)}px rgba(46, 204, 113, ${pair.fidelity.toFixed(1)})`;
+  const getQubitBorderGlow = () => {
+    return getBorderGlow(pair.fidelity, willBeDiscarded);
   };
 
   // Determine if this pair should show connection
@@ -214,8 +208,8 @@ const QubitPair: React.FC<QubitPairProps> = ({
       ref={qubitRef}
       className={`qubit-pair ${location} ${willBeDiscarded ? 'will-be-discarded' : ''} ${showConnection ? getRoleClass() : ''}`}
       style={{ 
-        boxShadow: getBorderGlow(),
-        border: `3px solid ${getFidelityColor()}`
+        boxShadow: getQubitBorderGlow(),
+        border: `3px solid ${getQubitFidelityColor()}`
       }}
       onMouseEnter={() => setShowMatrix(true)}
       onMouseLeave={() => setShowMatrix(false)}
