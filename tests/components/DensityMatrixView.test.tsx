@@ -266,8 +266,10 @@ describe('DensityMatrixView', () => {
 
     render(<DensityMatrixView matrix={matrix} isWerner={true} />);
     
-    // Check for the formatted imaginary number
-    expect(screen.getByText('-0.500i')).toBeDefined();
+    // Check for the formatted imaginary number (with space before minus)
+    expect(screen.getByText((content, element) => {
+      return content.includes('- 0.5i');
+    })).toBeDefined();
   });
 
   test('formats complex numbers with both real and imaginary parts', () => {
@@ -280,8 +282,8 @@ describe('DensityMatrixView', () => {
 
     render(<DensityMatrixView matrix={matrix} isWerner={true} />);
     
-    // Check for the formatted complex number
-    expect(screen.getByText('0.100+0.200i')).toBeDefined();
+    // Check for the formatted complex number (with space around plus)
+    expect(screen.getByText('0.1 + 0.2i')).toBeDefined();
   });
 
   test('formats small numbers below threshold as 0', () => {

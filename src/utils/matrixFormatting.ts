@@ -6,6 +6,15 @@ import {ComplexNum, Matrix} from "../engine_real_calculations";
 import {toBellBasis} from "../engine_real_calculations/bell/bell-basis";
 
 /**
+ * Format a number with up to 3 decimal places, removing trailing zeros
+ * @param num Number to format
+ * @returns Formatted string with no trailing zeros
+ */
+function formatNumber(num: number): string {
+  return Number(num.toFixed(3)).toString();
+}
+
+/**
  * Format a complex number for display
  * @param c Complex number to format
  * @param threshold Value below which numbers are treated as zero (default 0.001)
@@ -17,16 +26,28 @@ export function formatComplex(c: ComplexNum, threshold = 0.001): string {
   }
   
   let result = '';
-  
-  if (Math.abs(c.re) >= threshold) {
-    result += c.re.toFixed(3);
+
+  const hasRealPart = Math.abs(c.re) >= threshold;
+  const hasImaginaryPart = Math.abs(c.im) >= threshold;
+
+  if (hasRealPart) {
+    result += formatNumber(c.re);
   }
-  
-  if (Math.abs(c.im) >= threshold) {
-    if (c.im > 0 && result.length > 0) {
-      result += '+';
+
+  if (hasImaginaryPart) {
+    if (hasRealPart) {
+      result += ' ';
     }
-    result += `${c.im.toFixed(3)}i`;
+    const imaginaryComponent = formatNumber(Math.abs(c.im));
+    if (c.im > 0) {
+      if (hasRealPart) {
+        result += `+ `;
+      }
+      result += `${imaginaryComponent}i`;
+
+    } else {
+      result += `- ${imaginaryComponent}i`;
+    }
   }
   
   return result || '0';

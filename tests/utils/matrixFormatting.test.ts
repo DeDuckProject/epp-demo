@@ -12,26 +12,27 @@ describe('Matrix Formatting Utilities', () => {
     });
 
     test('formats purely real values correctly', () => {
-      expect(formatComplex({ re: 1, im: 0 })).toBe('1.000');
-      expect(formatComplex({ re: -0.5, im: 0 })).toBe('-0.500');
+      expect(formatComplex({ re: 1, im: 0 })).toBe('1');
+      expect(formatComplex({ re: -0.5, im: 0 })).toBe('-0.5');
+      expect(formatComplex({ re: -0.50, im: 0 })).toBe('-0.5');
     });
 
     test('formats purely imaginary values correctly', () => {
-      expect(formatComplex({ re: 0, im: 1 })).toBe('1.000i');
-      expect(formatComplex({ re: 0, im: -0.5 })).toBe('-0.500i');
+      expect(formatComplex({ re: 0, im: 1 })).toBe('1i');
+      expect(formatComplex({ re: 0, im: -0.5 })).toBe('- 0.5i');
     });
 
     test('formats complex values correctly', () => {
-      expect(formatComplex({ re: 1, im: 1 })).toBe('1.000+1.000i');
-      expect(formatComplex({ re: 1, im: -1 })).toBe('1.000-1.000i');
-      expect(formatComplex({ re: -1, im: 1 })).toBe('-1.000+1.000i');
-      expect(formatComplex({ re: -1, im: -1 })).toBe('-1.000-1.000i');
+      expect(formatComplex({ re: 1, im: 1 })).toBe('1 + 1i');
+      expect(formatComplex({ re: 1, im: -1 })).toBe('1 - 1i');
+      expect(formatComplex({ re: -1, im: 1 })).toBe('-1 + 1i');
+      expect(formatComplex({ re: -1, im: -1 })).toBe('-1 - 1i');
     });
 
     test('respects threshold parameter', () => {
       expect(formatComplex({ re: 0.01, im: 0.02 }, 0.05)).toBe('0');
-      expect(formatComplex({ re: 0.1, im: 0.02 }, 0.05)).toBe('0.100');
-      expect(formatComplex({ re: 0.01, im: 0.1 }, 0.05)).toBe('0.100i');
+      expect(formatComplex({ re: 0.1, im: 0.02 }, 0.05)).toBe('0.1');
+      expect(formatComplex({ re: 0.01, im: 0.1 }, 0.05)).toBe('0.1i');
     });
   });
 
