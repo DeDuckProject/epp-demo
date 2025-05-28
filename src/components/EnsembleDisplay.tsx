@@ -129,6 +129,73 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
     setSelectedJointState(null);
   };
 
+  // Helper function to create CNOT labels
+  const createCnotLabels = () => ({
+    start: <span style={{
+      fontWeight: 'bold',
+      fontSize: '18px', 
+      fontFamily: 'math', 
+      color: '#000',
+      zIndex: 101,
+      position: 'relative',
+      display: 'inline-block',
+      transform: 'translate(-50%,25%)'
+    }}>●</span>,
+    end: <span style={{
+      fontWeight: 'bold',
+      fontSize: '18px', 
+      fontFamily: 'math', 
+      color: '#000',
+      zIndex: 101,
+      position: 'relative',
+      display: 'inline-block',
+      transform: 'translate(50%,-25%)'
+    }}>⊕</span>
+  });
+
+  // Helper function to render CNOT arrows for a participant
+  const renderCnotArrow = (participant: 'alice' | 'bob', control: QubitPairType, target: QubitPairType) => (
+    <EnhancedXarrow
+      start={`${participant}-${control.id}`}
+      end={`${participant}-${target.id}`}
+      fidelity={control.fidelity}
+      connectionType="cnot"
+      path="grid"
+      strokeWidth={2}
+      startAnchor="middle"
+      endAnchor="middle"
+      showHead={false}
+      showTail={false}
+      curveness={0.8}
+      animated={false}
+      divContainerProps={{ className: "xarrow entanglement-line cnot-connection" }}
+      labels={createCnotLabels()}
+    />
+  );
+
+  // Helper function to render measured arrows for a participant
+  const renderMeasuredArrow = (participant: 'alice' | 'bob', control: QubitPairType, target: QubitPairType, isSuccessful: boolean) => (
+    <EnhancedXarrow
+      start={`${participant}-${control.id}`}
+      end={`${participant}-${target.id}`}
+      fidelity={control.fidelity}
+      connectionType="measurement"
+      measurementSuccess={isSuccessful}
+      willBeDiscarded={!isSuccessful}
+      path="grid"
+      strokeWidth={3}
+      startAnchor="middle"
+      endAnchor="middle"
+      showHead={false}
+      showTail={false}
+      curveness={0.8}
+      animated={false}
+      divContainerProps={{ 
+        className: `xarrow entanglement-line measured-connection ${isSuccessful ? 'successful' : 'failed'}`
+      }}
+    />
+  );
+
   const xWrapperKey = `${purificationStep}-${pairs.map(p => p.id).join(',')}-${pendingPairs ? pendingPairs.controlPairs.map(p => p.id).join(',') : ''}-${pendingPairs ? pendingPairs.targetPairs.map(p => p.id).join(',') : ''}`;
 
   return (
@@ -181,80 +248,8 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
           
           return (
             <React.Fragment key={`cnot-${control.id}`}>
-              <EnhancedXarrow
-                start={`alice-${control.id}`}
-                end={`alice-${target.id}`}
-                fidelity={control.fidelity}
-                connectionType="cnot"
-                path="grid"
-                strokeWidth={2}
-                startAnchor="middle"
-                endAnchor="middle"
-                showHead={false}
-                showTail={false}
-                curveness={0.8}
-                animated={false}
-                divContainerProps={{ className: "xarrow entanglement-line cnot-connection" }}
-                labels={{ 
-                  start: <span style={{
-                    fontWeight: 'bold',
-                    fontSize: '18px', 
-                    fontFamily: 'math', 
-                    color: '#000',
-                    zIndex: 101,
-                    position: 'relative',
-                    display: 'inline-block',
-                    transform: 'translate(-50%,25%)'
-                  }}>●</span>,
-                  end: <span style={{
-                    fontWeight: 'bold',
-                    fontSize: '18px', 
-                    fontFamily: 'math', 
-                    color: '#000',
-                    zIndex: 101,
-                    position: 'relative',
-                    display: 'inline-block',
-                    transform: 'translate(50%,-25%)'
-                  }}>⊕</span>
-                }}
-              />
-              <EnhancedXarrow
-                start={`bob-${control.id}`}
-                end={`bob-${target.id}`}
-                fidelity={control.fidelity}
-                connectionType="cnot"
-                path="grid"
-                strokeWidth={2}
-                startAnchor="middle"
-                endAnchor="middle"
-                showHead={false}
-                showTail={false}
-                curveness={0.8}
-                animated={false}
-                divContainerProps={{ className: "xarrow entanglement-line cnot-connection" }}
-                labels={{ 
-                  start: <span style={{
-                    fontWeight: 'bold',
-                    fontSize: '18px', 
-                    fontFamily: 'math', 
-                    color: '#000',
-                    zIndex: 101,
-                    position: 'relative',
-                    display: 'inline-block',
-                    transform: 'translate(-50%,25%)'
-                  }}>●</span>,
-                  end: <span style={{
-                    fontWeight: 'bold',
-                    fontSize: '18px', 
-                    fontFamily: 'math', 
-                    color: '#000',
-                    zIndex: 101,
-                    position: 'relative',
-                    display: 'inline-block',
-                    transform: 'translate(50%,-25%)'
-                  }}>⊕</span>
-                }}
-              />
+              {renderCnotArrow('alice', control, target)}
+              {renderCnotArrow('bob', control, target)}
             </React.Fragment>
           );
         })}
@@ -271,44 +266,8 @@ const EnsembleDisplay: React.FC<EnsembleDisplayProps> = ({ pairs, pendingPairs, 
           
           return (
             <React.Fragment key={`measured-${control.id}`}>
-              <EnhancedXarrow
-                start={`alice-${control.id}`}
-                end={`alice-${target.id}`}
-                fidelity={control.fidelity}
-                connectionType="measurement"
-                measurementSuccess={isSuccessful}
-                willBeDiscarded={!isSuccessful}
-                path="grid"
-                strokeWidth={3}
-                startAnchor="middle"
-                endAnchor="middle"
-                showHead={false}
-                showTail={false}
-                curveness={0.8}
-                animated={false}
-                divContainerProps={{ 
-                  className: `xarrow entanglement-line measured-connection ${isSuccessful ? 'successful' : 'failed'}`
-                }}
-              />
-              <EnhancedXarrow
-                start={`bob-${control.id}`}
-                end={`bob-${target.id}`}
-                fidelity={control.fidelity}
-                connectionType="measurement"
-                measurementSuccess={isSuccessful}
-                willBeDiscarded={!isSuccessful}
-                path="grid"
-                strokeWidth={3}
-                startAnchor="middle"
-                endAnchor="middle"
-                showHead={false}
-                showTail={false}
-                curveness={0.8}
-                animated={false}
-                divContainerProps={{ 
-                  className: `xarrow entanglement-line measured-connection ${isSuccessful ? 'successful' : 'failed'}`
-                }}
-              />
+              {renderMeasuredArrow('alice', control, target, isSuccessful)}
+              {renderMeasuredArrow('bob', control, target, isSuccessful)}
             </React.Fragment>
           );
         })}
