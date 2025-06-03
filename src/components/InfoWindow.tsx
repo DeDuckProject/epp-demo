@@ -187,7 +187,7 @@ const InfoWindow: React.FC<InfoWindowProps> = ({ isOpen, onClose }) => {
             <p>
               We acknowledge and credit <a href="https://github.com/a-auer/qiskit" target="_blank" rel="noopener noreferrer">
               https://github.com/a-auer/qiskit</a> for explaining and implementing the protocol, 
-              which served as a reference for our implementation. It also contains a much deeper explanation then this application provides.
+              which served as a reference for our implementation. It also contains a much deeper explanation than this application provides.
             </p>
             <p>
               The application was built as a project at the Hebrew University of Jerusalem
