@@ -257,7 +257,6 @@ describe('Testing non-Bell-diagonal matrices', () => {
     
     // Current implementation: should return 0.4 (diagonal element)
     const fidelity = fidelityFromBellBasisMatrix(coherentMatrix, BellState.PHI_PLUS);
-    console.log('Coherent matrix fidelity (current implementation):', fidelity);
     
     // For comparison: if this were a diagonal matrix with same diagonal elements
     const diagonalData = [
@@ -268,7 +267,6 @@ describe('Testing non-Bell-diagonal matrices', () => {
     ];
     const diagonalMatrix = new Matrix(diagonalData);
     const diagonalFidelity = fidelityFromBellBasisMatrix(diagonalMatrix, BellState.PHI_PLUS);
-    console.log('Diagonal matrix fidelity:', diagonalFidelity);
     
     // They should be the same for quantum fidelity F(ρ,|ψ⟩⟨ψ|) = ⟨ψ|ρ|ψ⟩
     expect(fidelity).toBeCloseTo(0.4, 5);
@@ -287,7 +285,6 @@ describe('Testing non-Bell-diagonal matrices', () => {
     const complexMatrix = new Matrix(complexData);
     
     const fidelity = fidelityFromBellBasisMatrix(complexMatrix, BellState.PHI_PLUS);
-    console.log('Complex matrix fidelity:', fidelity);
     
     // Should still be 0.5 (the diagonal element) for F(ρ,|ψ⟩⟨ψ|) = ⟨ψ|ρ|ψ⟩
     expect(fidelity).toBeCloseTo(0.5, 5);
@@ -319,9 +316,6 @@ describe('Testing non-Bell-diagonal matrices', () => {
     const wernerBell = toBellBasis(wernerComp);
     const fidelityFromBell = fidelityFromBellBasisMatrix(wernerBell, BellState.PHI_PLUS);
     
-    console.log('Werner state fidelity from computational basis:', fidelityFromComp);
-    console.log('Werner state fidelity from Bell basis:', fidelityFromBell);
-    console.log('Werner state Bell basis matrix diagonal:', wernerBell.get(0,0).re);
     
     // Both should give the same result
     expect(fidelityFromComp).toBeCloseTo(fidelityFromBell, 10);
