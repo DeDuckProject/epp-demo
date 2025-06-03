@@ -120,7 +120,10 @@ describe('operations', () => {
       // Let's just check if the fidelity calculation runs.
       const controlPair = createNoisyEPRWithChannel(0.1, NoiseChannel.UniformNoise);
       const targetPair = createNoisyEPRWithChannel(0.1, NoiseChannel.UniformNoise);
+      const originalRandom = Math.random;
+      Math.random = () => 0; // force success
       const result = bilateralCNOT(controlPair, targetPair);
+      Math.random = originalRandom;
 
       // Original test used calculateBellBasisFidelity(transformToBellBasis(rho))
       // New approach: Use helper function calculateFidelityWrtPhiPlus
@@ -128,7 +131,8 @@ describe('operations', () => {
       const finalFidelity = fidelityFromBellBasisMatrix(result.afterMeasurement.controlPair); // Helper uses get()
       
       expect(finalFidelity).toBeDefined();
-      console.log(`Bilateral CNOT: Initial Fidelity=${initialFidelity}, Final Fidelity=${finalFidelity}, Success=${result.afterMeasurement.successful}`);
+      expect(result.afterMeasurement.successful).toBe(true);
+      expect(finalFidelity).toBeGreaterThanOrEqual(initialFidelity);
       // TODO: Add more rigorous tests, potentially with known input/output states if the operation simplifies
       // or via statistical analysis if the exact BCNOT+measurement implementation is confirmed.
     });
