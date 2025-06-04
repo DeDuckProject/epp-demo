@@ -61,6 +61,8 @@ describe('App', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    localStorage.setItem('infoWindowSeen', 'true');
     
     // Setup the controller mock to provide immediate state
     (SimulationController as unknown as ReturnType<typeof vi.fn>).mockImplementation(
@@ -328,4 +330,22 @@ describe('App', () => {
     // Verify the header contains the title
     expect(header).toContainElement(headerTitle);
   });
-}); 
+
+  test('shows info window on first run when not previously seen', () => {
+    localStorage.clear();
+
+    render(<App />);
+
+    expect(screen.getByTestId('info-window')).toBeInTheDocument();
+  });
+
+  test('closing info window sets localStorage flag', () => {
+    localStorage.clear();
+
+    render(<App />);
+
+    fireEvent.click(screen.getByLabelText('Close information window'));
+
+    expect(localStorage.getItem('infoWindowSeen')).toBe('true');
+  });
+});
