@@ -1,5 +1,7 @@
 # Quantum Entanglement Purification Simulator
 
+[![DOI](https://zenodo.org/badge/973380431.svg)](https://doi.org/10.5281/zenodo.15799912)
+
 A web-based interactive simulator for the BBPSSW (Bennett-Brassard-Popescu-Schumacher-Smolin-Wootters) quantum entanglement purification protocol. This application demonstrates how noisy entangled quantum states can be purified to achieve higher fidelity through quantum operations, measurements, and post-selection.
 
 ## What is Entanglement Purification?
