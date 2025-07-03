@@ -139,7 +139,7 @@ This implementation is based on the entanglement purification protocol described
 **Bennett, C. H., Brassard, G., Popescu, S., Schumacher, B., Smolin, J. A., & Wootters, W. K.** (1996). 
 ["Purification of noisy entanglement and faithful teleportation via noisy channels"](https://arxiv.org/abs/quant-ph/9511027) *Physical Review Letters*, 76(5), 722-725.
 
-We acknowledge and credit [https://github.com/a-auer/qiskit](https://github.com/a-auer/qiskit) for explaining and implementing the protocol, which served as a reference for our implementation.
+We acknowledge and credit [https://github.com/a-auer/qiskit](https://github.com/a-auer/qiskit) for explaining and implementing the protocol, which served as a reference for our implementation. It also contains a much deeper explanation than this application provides.
 
 The application was built as a project at the Hebrew University of Jerusalem under the supervision of Michael Ben-Or.
 
