@@ -53,6 +53,30 @@ describe('Attribution Component', () => {
       expect(linksContainer).toHaveClass('attribution-links');
       expect(firstLink).toHaveClass('attribution-link');
     });
+
+    it('should display the repository section', () => {
+      render(<Attribution />);
+      
+      expect(screen.getByText('Open Source Project')).toBeInTheDocument();
+      expect(screen.getByText('View on GitHub')).toBeInTheDocument();
+      
+      const repoLink = screen.getByLabelText('View source code on GitHub');
+      expect(repoLink).toBeInTheDocument();
+      expect(repoLink).toHaveAttribute('href', 'https://github.com/DeDuckProject/epp-demo');
+      expect(repoLink).toHaveClass('repository-link');
+    });
+
+    it('should style the repository section correctly', () => {
+      render(<Attribution />);
+      
+      const repoSection = screen.getByText('Open Source Project').closest('.repository-section');
+      const repoText = screen.getByText('Open Source Project');
+      const repoLink = screen.getByLabelText('View source code on GitHub');
+      
+      expect(repoSection).toHaveClass('repository-section');
+      expect(repoText).toHaveClass('repository-text');
+      expect(repoLink).toHaveClass('repository-link');
+    });
   });
 
   describe('when users interact with the attribution', () => {
@@ -74,6 +98,7 @@ describe('Attribution Component', () => {
       expect(screen.getByLabelText('LinkedIn profile')).toBeInTheDocument();
       expect(screen.getByLabelText('X (Twitter) profile')).toBeInTheDocument();
       expect(screen.getByLabelText('Bluesky profile')).toBeInTheDocument();
+      expect(screen.getByLabelText('View source code on GitHub')).toBeInTheDocument();
     });
   });
 
@@ -90,13 +115,20 @@ describe('Attribution Component', () => {
       
       // The story continues: They want to connect with the creator
       const socialLinks = screen.getAllByRole('link');
-      expect(socialLinks).toHaveLength(4);
+      expect(socialLinks).toHaveLength(5); // Updated to include repository link
       
-      // The story concludes: They can easily access the creator's profiles
+      // The story concludes: They can easily access the creator's profiles and the source code
       socialLinks.forEach(link => {
         expect(link).toBeVisible();
         expect(link.getAttribute('href')).toMatch(/^https:\/\//);
       });
+
+      // And they can find the open source repository
+      const repoText = screen.getByText('Open Source Project');
+      const repoLink = screen.getByLabelText('View source code on GitHub');
+      expect(repoText).toBeVisible();
+      expect(repoLink).toBeVisible();
+      expect(repoLink.getAttribute('href')).toBe('https://github.com/DeDuckProject/epp-demo');
     });
   });
 }); 
