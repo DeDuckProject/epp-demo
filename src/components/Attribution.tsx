@@ -49,6 +49,22 @@ const Attribution: React.FC = () => {
           <FaLinkedin />
         </a>
       </div>
+      
+      <div className="repository-section">
+        <div className="repository-text">
+          Open Source Project
+        </div>
+        <a
+          href="https://github.com/DeDuckProject/epp-demo"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="View source code on GitHub"
+          className="repository-link"
+        >
+          <FaGithub />
+          <span>View on GitHub</span>
+        </a>
+      </div>
     </div>
   );
 };
