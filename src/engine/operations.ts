@@ -99,9 +99,16 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
   // In the BBPSSW protocol with |Φ⁺⟩ as the target state after exchange,
   // the success probability depends on the fidelity F
   const f = control.get(0, 0).re;
+
+  // Calculate improved fidelity after successful purification
+  // F' = (f^2 + (1-f)^2/9) / (f^2 + 2f(1-f)/3 + 5(1-f)^2/9)
+  const numerator = f * f + Math.pow(1 - f, 2) / 9;
+  const denominator = f * f + 2 * f * (1 - f) / 3 + 5 * Math.pow(1 - f, 2) / 9;
+  // Handle potential division by zero or NaN
+  const fPrime = denominator === 0 ? 0 : numerator / denominator;
   
   // Success probability is p_success = f^2 + 2 f (1-f) / 3 + 5 (1-f)^2 /9
-  const successProbability = f * f + 2 * f * (1-f) / 3 + 5 * (1-f) * (1-f) / 9;
+  const successProbability = denominator
   
   // Determine success based on probability
   const successful = Math.random() < successProbability;
@@ -109,13 +116,6 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
   let controlPair: DensityMatrix;
   
   if (successful) {
-    // Calculate improved fidelity after successful purification
-    // F' = (f^2 + (1-f)^2/9) / (f^2 + 2f(1-f)/3 + 5(1-f)^2/9)
-    const numerator = f * f + Math.pow(1 - f, 2) / 9;
-    const denominator = f * f + 2 * f * (1 - f) / 3 + 5 * Math.pow(1 - f, 2) / 9;
-    // Handle potential division by zero or NaN
-    const fPrime = denominator === 0 ? 0 : numerator / denominator;
-    
     // Create new density matrix directly and set elements
     const controlPairResult = new DensityMatrix(Array(4).fill(0).map(() => Array(4).fill(0).map(() => ComplexNum.zero())));
     controlPairResult.set(0, 0, new ComplexNum(fPrime, 0));
