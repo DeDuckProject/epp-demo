@@ -100,8 +100,8 @@ export const bilateralCNOT = (control: DensityMatrix, target: DensityMatrix): {
   // the success probability depends on the fidelity F
   const f = control.get(0, 0).re;
   
-  // Success probability is p_success = f^2 + (1-f)^2/9
-  const successProbability = f * f + (1 - f) * (1 - f) / 9;
+  // Success probability is p_success = f^2 + 2 f (1-f) / 3 + 5 (1-f)^2 /9
+  const successProbability = f * f + 2 * f * (1-f) / 3 + 5 * (1-f) * (1-f) / 9;
   
   // Determine success based on probability
   const successful = Math.random() < successProbability;
