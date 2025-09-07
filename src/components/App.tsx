@@ -16,6 +16,13 @@ const App: React.FC = () => {
   const [viewBasis, setViewBasis] = useState<Basis>(Basis.Bell);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+
+  // Show the educational panel automatically on first run
+  useEffect(() => {
+    if (!localStorage.getItem('infoWindowSeen')) {
+      setInfoOpen(true);
+    }
+  }, []);
   
   useEffect(() => {
     // Initialize controller with default parameters
@@ -44,6 +51,11 @@ const App: React.FC = () => {
     setEngineType(type);
   };
   
+  const handleInfoClose = () => {
+    setInfoOpen(false);
+    localStorage.setItem('infoWindowSeen', 'true');
+  };
+
   return (
     <div className="app-container">
       <header>
@@ -101,9 +113,9 @@ const App: React.FC = () => {
         </div>
       </main>
       
-      <InfoWindow 
+      <InfoWindow
         isOpen={infoOpen}
-        onClose={() => setInfoOpen(false)}
+        onClose={handleInfoClose}
       />
       
       <Attribution />
