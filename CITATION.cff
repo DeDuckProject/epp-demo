@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Quantum Entanglement Purification Simulator"
+abstract: "A web-based interactive simulator for the BBPSSW (Bennett-Brassard-Popescu-Schumacher-Smolin-Wootters) quantum entanglement purification protocol. This application demonstrates how noisy entangled quantum states can be purified to achieve higher fidelity through quantum operations, measurements, and post-selection."
+authors:
+  - family-names: "Yakar"
+    given-names: "Iftach"
+    orcid: "https://orcid.org/0009-0003-8795-3794"
+repository-code: "https://github.com/deduckproject/epp-demo"
+url: "https://deduckproject.github.io/epp-demo/"
+license: MIT
+keywords:
+  - quantum-computing
+  - entanglement-purification
+  - quantum-simulation
+  - BBPSSW-protocol
+  - quantum-mechanics
+  - react
+  - typescript
+doi: "10.5281/zenodo.15799912"
+date-released: "2025-07-03"
+version: "1.0.0"
