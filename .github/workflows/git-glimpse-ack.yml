@@ -1,0 +1,21 @@
+name: GitGlimpse Acknowledge
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  ack:
+    if: >-
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '/glimpse')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: React with eyes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/$GITHUB_REPOSITORY/issues/comments/${{ github.event.comment.id }}/reactions \
+            --method POST --field content=eyes || true

@@ -1,0 +1,59 @@
+name: GitGlimpse
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issue_comment:
+    types: [created]
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request != null &&
+       contains(github.event.comment.body, '/glimpse'))
+    permissions:
+      pull-requests: write
+      contents: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'issue_comment' && format('refs/pull/{0}/head', github.event.issue.number) || '' }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      - name: Install FFmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - uses: DeDuckProject/git-glimpse@v1
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: React with hooray on success
+        if: github.event_name == 'issue_comment' && success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/$GITHUB_REPOSITORY/issues/comments/${{ github.event.comment.id }}/reactions \
+            --method POST --field content=hooray || true
+
+      - name: React with confused on failure
+        if: github.event_name == 'issue_comment' && failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/$GITHUB_REPOSITORY/issues/comments/${{ github.event.comment.id }}/reactions \
+            --method POST --field content=confused || true
