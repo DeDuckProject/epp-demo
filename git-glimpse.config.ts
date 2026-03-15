@@ -5,9 +5,6 @@ export default {
     startCommand: 'npm run dev',
     readyWhen: { url: 'http://localhost:5173/epp-demo/' },
   },
-  trigger: {
-    mode: 'auto',
-  },
   recording: {
     format: 'gif',
     maxDuration: 30,
